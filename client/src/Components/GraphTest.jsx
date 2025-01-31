@@ -13,14 +13,18 @@ const GraphTest = () => {
         const queryString = `http://localhost:8080/test_api/neo4j_get/${query}`;
 
         axios.get(queryString).then((data) => {
-            console.log(data.data.result);
-            //this console.log will be in our frontend console
-            setQueryResult(process_neo4j_data(data.data.result))
+            if (data !== undefined) {
+                setQueryResult(process_neo4j_data(data.data.result))
+            }
         })
     }
 
     // Cypher code to send to API as GET request from neo4j database
     const query = 'MATCH (n) -[r]-> (m) RETURN n, r, m'
+    
+    //'MATCH (n) -[r]-> (m) RETURN n, r, m'
+
+    //CREATE (ethan:PLAYER{name:"Ethan Brown", age: 28, number: 0, height: 1.91, weight: 91})
 
     // state containing latest neo4j query results
     const [queryResult, setQueryResult] = useState(null);
