@@ -4,7 +4,7 @@ import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
 import axios from 'axios';
 
-cytoscape.use( fcose );
+cytoscape.use( fcose ); // layout of nodes (fast Compound Spring Embedder)
 
 
 const GraphTest = () => {
@@ -76,7 +76,7 @@ const GraphTest = () => {
 
         var layout = cy.layout({ name: 'fcose' });
 
-        layout.run();
+        layout.run(); // apply fcose layout
     };
 
     // re-render graph when queryResult state changes

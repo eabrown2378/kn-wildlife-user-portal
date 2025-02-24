@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "start": "nodemon start",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -12,5 +13,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "neo4j-driver": "^5.27.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
