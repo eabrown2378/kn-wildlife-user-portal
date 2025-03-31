@@ -14,7 +14,7 @@ const GraphTest = () => {
 
         const queryString = `http://localhost:8080/test_api/neo4j_get/${query}`;
 
-        axios.get(queryString).then((data) => {
+        axios.get(queryString, { crossDomain: true }).then((data) => {
             if (data !== undefined) {
                 setQueryLatest(query);
                 console.log(process_neo4j_data(data.data.result))

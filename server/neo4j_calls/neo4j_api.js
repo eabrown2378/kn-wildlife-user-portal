@@ -14,7 +14,7 @@ exports.get_neo4j = async function (query) {
         // end session
         session.close();
 
-        console.log("RESULT", (!neo4j_data ? null : neo4j_data.records.data));
+        console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
     
         return (!neo4j_data ? null : neo4j_data.records);
 
