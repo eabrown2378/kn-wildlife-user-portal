@@ -1,0 +1,109 @@
+html, body {
+    margin: 0;
+    padding: 0;   
+    background-color: rgb(42, 42, 42) 
+  }
+  
+  * {  
+    font-family:Arial, Helvetica, sans-serif;
+  }
+  
+  .App {
+    display: flex;
+    width: 100%;
+  }
+
+
+  .blurbContainer {
+    position: absolute;
+    width: 250px;
+    height: fit-content;
+    text-wrap: wrap;
+    background-color: lightgray;
+    border: 1px solid black;
+    border-radius: 5px;
+    padding: 4px;
+    color: black;
+  }
+
+  .field {
+    margin-bottom: 8px;
+  }
+  
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .iContainer {
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    bottom: 6px;
+    border: 1px solid #C2E5D3;
+    color: #C2E5D3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: small;
+    margin-right: 4px;
+  }
+  
+  .iContainer:hover {
+    background-color: #C2E5D3;
+    color: rgb(42, 42, 42);
+    cursor: help;
+  }
+  
+  .information {
+    p {
+      position: absolute;
+      z-index: 1;
+    }
+  }
+  
+  .queryfields {
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 325px;
+    border-right: 2px solid black;
+    padding: 12px;
+    label {
+      color: white;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    button {
+      margin-top: 18px;
+      width: 40%;
+      align-self: center;
+    }
+  }
+  
+  .outputwindow {
+    position: fixed;
+    background-color: #C2E5D3;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 12px;
+    width: 100%;
+    height: 100vh;
+    margin-left: 345px;
+    img {
+      border: 4px solid black;
+      margin-bottom: 48px;
+    }
+    button {
+      width: 20%;
+      align-self: center;
+    }
+  }
+  
+  .searchContainer {
+    width: 100%;
+    display: flex;
+  }

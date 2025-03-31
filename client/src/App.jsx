@@ -1,5 +1,5 @@
-import GraphTest from './Components/GraphTest'
-import './App.css'
+import QueryFields from './Components/QueryFields'
+import './styles/App.css'
 
 
 
@@ -9,7 +9,7 @@ function App() {
   return (
     <>
       <div>  
-        <GraphTest/>
+        <QueryFields/>
       </div>
     </>
   )

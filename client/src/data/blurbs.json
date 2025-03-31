@@ -1,0 +1,17 @@
+[
+    {
+        "onlyRisk":"Search will only return results for locations where there was adequate data to calculate risk quotients. If left unchecked, all chemical and biological data that meet search criteria will be returned, even if there was not toxicity data available for risk quotient calculation.",
+        "chemSelect":"Select specific chemicals for which to return risk quotients.",
+        "chemGroups":"Return all risk quotient data for chemicals of the specified classes or types.",
+        "chemExclude":"Search will only return risk quotient data for the chemicals or chemical groups you have selected, regardless of other selections. When unchecked, searches will return data for all chemicals and taxa selected.",
+        "taxLevel":"Level of taxonomic organization to use for aggregating risk quotients. Risk quotients will be averaged accross all members of each taxonomic grouping. It is inadvisable to use species-level data since species identification is not always reliable, especially for macroinvertebrates.",
+        "taxa":"Select which taxa to return risk data for. To change the level of taxonomic organization, use the drop-down menu directly above this one.",
+        "taxExclude":"Search will only return risk quotient data for the taxa you have selected, regardless of other selections. When unchecked, searches will return data for all chemicals and taxa selected.",
+        "stateSelect":"Select states for which to return risk quotient data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
+        "siteSelect":"Select sampling locations for which to return risk quotient data. If you have also selected states, the search will also return data for all locations in those states.",
+        "timeRange":"Time range for which to return risk quotient data. Returns data based on time of biological sampling, not the time of chemical measurements.",
+        "timeBuffer":"Biological and chemical data were not collected simultaneously. The time buffer determines which chemical data to link with biological data when calculating risk quotients. For example, a 1 month time buffer will use all chemical measurements calculated \u00b11 month from the time of biological sampling.",
+        "backBuff":"If checked, calculates risk quotients using only chemical measurements taken before the biological sampling date, instead of before and after (default). For example, if this box is checked and the user selects a 1-month time buffer, risk quotients will only be calculated from chemical data measured up to one month prior to the biological sampling date.",
+        "logRisk":"Applies a natural-log transformation to risk quotients."
+    }
+]
