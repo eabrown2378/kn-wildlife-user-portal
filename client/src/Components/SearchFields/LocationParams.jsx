@@ -21,6 +21,21 @@ function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti
                 isDisabled={isLoading}
             />
             <div style={{display:"flex"}}>
+                <label htmlFor="countySelect">Counties:</label>
+                <Information blurb="countySelect"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.countyOptions}
+                value={tempMulti.countiesTemp}
+                onChange={(selections) => {handleMultiChange(selections, "countiesTemp")}}
+                name="countiesTemp"
+                id="countySelect"
+                className="field"
+                placeholder="Default: all counties"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
                 <label htmlFor="siteSelect">Sampling Locations:</label>
                 <Information blurb="siteSelect"/>
             </div>

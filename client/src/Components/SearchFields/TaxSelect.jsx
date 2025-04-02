@@ -4,8 +4,8 @@ import Information from "../Information";
 function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, tempMulti, query }) {
     return (  
         <fieldset style={{display:'flex', flexDirection:'column'}}>            
-            <legend style={{color:"white"}}>Biological Parameters</legend>
-            <div style={{display:"flex"}}>
+            <legend style={{color:"white"}}>Taxonomic Parameters</legend>
+{/*             <div style={{display:"flex"}}>
                 <label htmlFor="taxLevel">Taxonomic Organization:</label>
                 <Information blurb="taxLevel"/>
             </div>
@@ -15,19 +15,103 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 <option value="family">Family</option>
                 <option value="order">Order</option>
                 <option value="class">Class</option>
-                <option value="Phylum">Phylum</option>
-            </select>
+                <option value="phylum">Phylum</option>
+            </select> */}
             <div style={{display:"flex"}}>
-                <label htmlFor="taxa">Taxa:</label>
-                <Information blurb="taxa"/>
+                <label htmlFor="species">Species:</label>
+                <Information blurb="species"/>
             </div>
             <Select
                 isMulti={true}
-                options={searchOptions.taxaOptions}
-                value={tempMulti.taxaTemp}
-                onChange={(selections) => {handleMultiChange(selections, "taxaTemp")}}
-                name="taxaTemp"
-                id="taxa"
+                options={searchOptions.speciesOptions}
+                value={tempMulti.speciesTemp}
+                onChange={(selections) => {handleMultiChange(selections, "speciesTemp")}}
+                name="speciesTemp"
+                id="species"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="genus">Genus:</label>
+                <Information blurb="genus"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.genusOptions}
+                value={tempMulti.genusTemp}
+                onChange={(selections) => {handleMultiChange(selections, "genusTemp")}}
+                name="genusTemp"
+                id="genus"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="family">Family:</label>
+                <Information blurb="family"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.familyOptions}
+                value={tempMulti.familyTemp}
+                onChange={(selections) => {handleMultiChange(selections, "familyTemp")}}
+                name="familyTemp"
+                id="family"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="order">Order:</label>
+                <Information blurb="order"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.orderOptions}
+                value={tempMulti.orderTemp}
+                onChange={(selections) => {handleMultiChange(selections, "orderTemp")}}
+                name="orderTemp"
+                id="order"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="class">Class:</label>
+                <Information blurb="class"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.classOptions}
+                value={tempMulti.classTemp}
+                onChange={(selections) => {handleMultiChange(selections, "classTemp")}}
+                name="classTemp"
+                id="class"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="phylum">Phylum:</label>
+                <Information blurb="phylum"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.phylumOptions}
+                value={tempMulti.phylumTemp}
+                onChange={(selections) => {handleMultiChange(selections, "phylumTemp")}}
+                name="phylumTemp"
+                id="phylum"
+                className="field"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="kingdom">Kingdom:</label>
+                <Information blurb="kingdom"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={searchOptions.kingdomOptions}
+                value={tempMulti.kingdomTemp}
+                onChange={(selections) => {handleMultiChange(selections, "kingdomTemp")}}
+                name="kingdomTemp"
+                id="kingdom"
                 className="field"
                 isDisabled={isLoading}
             />

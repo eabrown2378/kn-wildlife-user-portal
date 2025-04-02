@@ -5,6 +5,7 @@ import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
+import counties from "../data/counties.json";
 //import {generateSearchRequest} from "../functions/generateSearchRequest";
 
 
@@ -29,7 +30,8 @@ function QueryFields() {
         taxLevel: "genus",
         taxa: ['all'],
         sites: ['all'],
-        states: ['all']
+        states: ['all'],
+        counties: ['all']
     });
 
 
@@ -40,32 +42,39 @@ function QueryFields() {
     const [tempMulti, setTempMulti] = useState({
         taxaTemp: [],
         sitesTemp: [],
-        statesTemp: []
+        statesTemp: [],
+        countiesTemp: []
     });
 
     const [searchOptions, setSearchOptions] = useState({
         taxaOptions: [],
         siteOptions: [],
-        stateOptions: []
+        stateOptions: [],
+        countyOptions: []
     });
 
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     // call to change options on load or when risk checkbox is toggled
     useEffect(() => {
 
-/*         setSearchOptions({
-            taxaOptions: metaData.map((item) => {
+         setSearchOptions({
+/*             taxaOptions: metaData.map((item) => {
                     return item.taxa.split('|');
             }).flat().filter(onlyUnique).map((item) => {
                 return {value: item, label: item};
             }),
             siteOptions: metaData.map((item) => {
                     return {value: item.SiteName, label: item.SiteName};
-            }).filter(Boolean),
+            }).filter(Boolean), */
             stateOptions: states.map((item) => {
                 return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
-            })
+            }),
+            countyOptions: counties.map((item) => {
+                return {value: item.properties.NAME, label: item.properties.NAME}
+            }).sort((a, b) => {
+                return a.label.localeCompare(b.label);
+             })
         });
 
         setTempMulti({
@@ -81,7 +90,7 @@ function QueryFields() {
             };
         });
         
-        setIsLoading(false); */
+        setIsLoading(false); 
 
     }, [query.taxLevel]);
 
