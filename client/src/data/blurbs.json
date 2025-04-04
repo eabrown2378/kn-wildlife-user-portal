@@ -1,11 +1,15 @@
 [
     {
-        "taxLevel":"Level of taxonomic organization to use for aggregating wildlife data. If data are density or abundance, these values will be averaged accross all members of the taxonomic grouping.",
-        "taxa":"Select which taxa to return risk data for. To change the level of taxonomic organization, use the drop-down menu directly above this one.",
-        "taxExclude":"Search will only return wildlife data for the taxa you have selected, regardless of other selections. When unchecked, searches will return data for all chemicals and taxa selected.",
+        "species":"Search wildlife data by species.",
+        "genus":"Search wildlife data by genus.",
+        "family":"Search wildlife data by taxonomic family. Note that, depending on the family, it may take a while to retrieve all data.",
+        "order":"Search wildlife data by taxonomic order. Note that, depending on the order, it may take a while to retrieve all data.",
+        "class":"Search wildlife data by taxonomic class. Note that, depending on the class, it may take a while to retrieve all data.",
+        "phylum":"Search wildlife data by phylum. Note that, depending on the phylum, it may take a while to retrieve all data.",
         "stateSelect":"Select states for which to return wildlife data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
-        "countySelect":"Select counties for which to return wildlife data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
+        "countySelect":"Select counties for which to return wildlife data. If you have selected individual sampling locations that are not in the specified counties, those results will still be included.",
         "siteSelect":"Select sampling locations for which to return wildlife data. If you have also selected states, the search will also return data for all locations in those states.",
-        "timeRange":"Time range for which to return wildlife data. Returns data based on time of biological sampling, not the time of chemical measurements."
+        "timeRange":"Time range for which to return wildlife data.",
+        "coordRange":"Look for wildlife data within a specified coordinate range."
     }
 ]

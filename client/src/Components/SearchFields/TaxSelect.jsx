@@ -3,8 +3,8 @@ import Information from "../Information";
 
 function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, tempMulti, query }) {
     return (  
-        <fieldset style={{display:'flex', flexDirection:'column'}}>            
-            <legend style={{color:"white"}}>Taxonomic Parameters</legend>
+        <fieldset>            
+            <legend style={{color:"white"}}>Search by Taxonomy</legend>
 {/*             <div style={{display:"flex"}}>
                 <label htmlFor="taxLevel">Taxonomic Organization:</label>
                 <Information blurb="taxLevel"/>
@@ -101,25 +101,6 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 className="field"
                 isDisabled={isLoading}
             />
-            <div style={{display:"flex"}}>
-                <label htmlFor="kingdom">Kingdom:</label>
-                <Information blurb="kingdom"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.kingdomOptions}
-                value={tempMulti.kingdomTemp}
-                onChange={(selections) => {handleMultiChange(selections, "kingdomTemp")}}
-                name="kingdomTemp"
-                id="kingdom"
-                className="field"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label htmlFor="taxExlcude">Taxa-exclusive search?</label>
-                <Information blurb="taxExclude"/>
-                <input type="checkbox" id="taxExclude" name="taxExclude" checked={query.taxExclude} onChange={handleChange} disabled={isLoading}/>
-            </div>
         </fieldset>
     );
 };

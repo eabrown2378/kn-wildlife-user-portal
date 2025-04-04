@@ -28,11 +28,24 @@ function QueryFields() {
         fromDay: "",
         toDay: "",
         taxLevel: "genus",
-        taxa: ['all'],
+        species: ['all'],
+        genus: ['all'],
+        family: ['all'],
+        order: ['all'],
+        class: ['all'],
+        phylum: ['all'],
         sites: ['all'],
         states: ['all'],
-        counties: ['all']
+        counties: ['all'],
+        minLat: null,
+        maxLat: null,
+        minLon: null,
+        maxLan: null
     });
+
+    useEffect(() => {
+        console.log(query)
+    }, [query])
 
 
     const [graphics, setGraphics] = useState([<h2>Graphs/Maps/Summary stats will appear here</h2>]);
@@ -40,14 +53,24 @@ function QueryFields() {
 
     // temporary state to hold multi-select selections
     const [tempMulti, setTempMulti] = useState({
-        taxaTemp: [],
+        speciesTemp: [],
+        genusTemp: [],
+        familyTemp: [],
+        orderTemp: [],
+        classTemp: [],
+        phylumTemp: [],
         sitesTemp: [],
         statesTemp: [],
         countiesTemp: []
     });
 
     const [searchOptions, setSearchOptions] = useState({
-        taxaOptions: [],
+        speciesOptions: [],
+        genusOptions: [],
+        familyOptions: [],
+        orderOptions: [],
+        classOptions: [],
+        phylumOptions: [],
         siteOptions: [],
         stateOptions: [],
         countyOptions: []
@@ -78,14 +101,24 @@ function QueryFields() {
         });
 
         setTempMulti({
-            taxaTemp: [],
+            speciesTemp: [],
+            genusTemp: [],
+            familyTemp: [],
+            orderTemp: [],
+            classTemp: [],
+            phylumTemp: [],
             sitesTemp: []
         });
 
         setQuery((prev) => {
             return {
                 ...prev,
-                taxa: ['all'],
+                species: ['all'],
+                genus: ['all'],
+                family: ['all'],
+                order: ['all'],
+                class: ['all'],
+                phylum: ['all'],
                 sites: ['all']
             };
         });
@@ -101,7 +134,7 @@ function QueryFields() {
         setQuery((prev) => {
             return {
                 ...prev,
-                [name]: type === "checkbox" ? checked : value
+                [name]: type === "checkbox" ? checked : type === 'number' ? !isNaN(Number(value))? Number(value) : null : value
             };
         });
         

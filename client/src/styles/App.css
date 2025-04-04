@@ -35,6 +35,10 @@ html, body {
     flex-direction: column;
     gap: 2px;
   }
+
+  input {
+    width: 20%;
+  }
   
   .iContainer {
     border-radius: 50%;
