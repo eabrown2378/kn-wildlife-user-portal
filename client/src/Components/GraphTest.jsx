@@ -74,7 +74,7 @@ const GraphTest = () => {
 
         })
 
-        var layout = cy.layout({ name: 'fcose' });
+        var layout = cy.layout({ name: 'circle', nodeRepulsion: 10000000, nodeSeparation: 1000 });
 
         layout.run(); // apply fcose layout
     };
