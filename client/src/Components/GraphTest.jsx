@@ -1,5 +1,6 @@
 import {Fragment, useEffect, useRef, useState} from 'react';
 import { process_neo4j_data } from '../Functions/process_neo4j_data';
+import { query_to_cypher } from '../Functions/query_to_cypher';
 import cytoscape from 'cytoscape';
 import fcose from 'cytoscape-fcose';
 import axios from 'axios';
@@ -12,11 +13,12 @@ const GraphTest = ({query}) => {
      //send a query (Cypher code) to neo4j API 
     const apiCall = (query) => {
 
-        const queryString = `http://localhost:8080/test_api/neo4j_get/${query}`;
+        const cypher = query_to_cypher(query);
 
-        axios.get(queryString, { crossDomain: true }).then((data) => {
+        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
+
+        axios.get(call, { crossDomain: true }).then((data) => {
             if (data !== undefined) {
-                setQueryLatest(query);
                 console.log(process_neo4j_data(data.data.result))
                 setQueryResult(process_neo4j_data(data.data.result));
             }
@@ -30,7 +32,6 @@ const GraphTest = ({query}) => {
 
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
-    const [queryLatest, setQueryLatest] = useState('');
     
     // container to hold current cytoscape graph
     const graphRef = useRef(null);
@@ -81,7 +82,6 @@ const GraphTest = ({query}) => {
  return (
   <Fragment>
     <div style={{display:'flex', flexDirection: 'column', gap: '12px'}}>
-        <p>Latest Query: {queryLatest}</p>
         <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button>
     </div>
     <div ref={graphRef} style={{width: '100%', height: '80vh', border:'3px solid black'}}>
