@@ -6,7 +6,7 @@ import LocationParams from "./SearchFields/LocationParams";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
-//import {generateSearchRequest} from "../functions/generateSearchRequest";
+import { query_to_cypher } from "../functions/query_to_cypher";
 
 
 function QueryFields() {
@@ -14,6 +14,7 @@ function QueryFields() {
     function onlyUnique(value, index, array) {
         return array.indexOf(value) === index;
     };
+
 
     // hold query parameters to be used in API call
     // if you change structure of this object, make sure to modify the paramChain
@@ -27,13 +28,11 @@ function QueryFields() {
         toMonth: "",
         fromDay: "",
         toDay: "",
-        taxLevel: "genus",
-        species: ['all'],
-        genus: ['all'],
-        family: ['all'],
-        order: ['all'],
-        class: ['all'],
-        phylum: ['all'],
+        species: [],
+        genus: [],
+        family: [],
+        order: [],
+        class: [],
         sites: ['all'],
         states: ['all'],
         counties: ['all'],
@@ -48,7 +47,6 @@ function QueryFields() {
     }, [query])
 
 
-    const [graphics, setGraphics] = useState([<h2>Graphs/Maps/Summary stats will appear here</h2>]);
     const [results, setResults] = useState([]);
 
     // temporary state to hold multi-select selections
@@ -58,7 +56,6 @@ function QueryFields() {
         familyTemp: [],
         orderTemp: [],
         classTemp: [],
-        phylumTemp: [],
         sitesTemp: [],
         statesTemp: [],
         countiesTemp: []
@@ -70,18 +67,70 @@ function QueryFields() {
         familyOptions: [],
         orderOptions: [],
         classOptions: [],
-        phylumOptions: [],
         siteOptions: [],
         stateOptions: [],
         countyOptions: []
     });
+
+        
+
+    useEffect(() => {
+
+        axios.get("http://localhost:8080/test_api/neo4j_search_options/", { crossDomain: true }).then((data) => {
+
+
+            setSearchOptions((prev) => {
+                
+                const res = data.data.result;
+
+                return {
+                    ...prev,
+                    speciesOptions: res.speciesOptions.map((item) => {
+                        return {
+                            value: item, 
+                            label: item
+                        }
+                    }),
+                    genusOptions: res.genusOptions.map((item) => {
+                        return {
+                            value: item, 
+                            label: item
+                        }
+                    }),
+                    familyOptions: res.familyOptions.map((item) => {
+                        return {
+                            value: item, 
+                            label: item
+                        }
+                    }),
+                    orderOptions: res.orderOptions.map((item) => {
+                        return {
+                            value: item, 
+                            label: item
+                        }
+                    }),
+                    classOptions: res.classOptions.map((item) => {
+                        return {
+                            value: item, 
+                            label: item
+                        }
+                    }),
+                }
+            });
+        });
+    }, [])
+
+
+    useEffect(() => {
+        console.log(searchOptions)
+    }, [searchOptions])
 
     const [isLoading, setIsLoading] = useState(false);
 
     // call to change options on load or when risk checkbox is toggled
     useEffect(() => {
 
-         setSearchOptions({
+         setSearchOptions((prev) => {
 /*             taxaOptions: metaData.map((item) => {
                     return item.taxa.split('|');
             }).flat().filter(onlyUnique).map((item) => {
@@ -90,14 +139,17 @@ function QueryFields() {
             siteOptions: metaData.map((item) => {
                     return {value: item.SiteName, label: item.SiteName};
             }).filter(Boolean), */
-            stateOptions: states.map((item) => {
-                return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
-            }),
-            countyOptions: counties.map((item) => {
-                return {value: item.properties.NAME, label: item.properties.NAME}
-            }).sort((a, b) => {
-                return a.label.localeCompare(b.label);
-             })
+            return {
+                ...prev,
+                stateOptions: states.map((item) => {
+                    return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
+                }),
+                countyOptions: counties.map((item) => {
+                    return {value: item.properties.NAME, label: item.properties.NAME}
+                }).sort((a, b) => {
+                    return a.label.localeCompare(b.label);
+                })
+            }
         });
 
         setTempMulti({
@@ -106,19 +158,17 @@ function QueryFields() {
             familyTemp: [],
             orderTemp: [],
             classTemp: [],
-            phylumTemp: [],
             sitesTemp: []
         });
 
         setQuery((prev) => {
             return {
                 ...prev,
-                species: ['all'],
-                genus: ['all'],
-                family: ['all'],
-                order: ['all'],
-                class: ['all'],
-                phylum: ['all'],
+                species: [],
+                genus: [],
+                family: [],
+                order: [],
+                class: [],
                 sites: ['all']
             };
         });
@@ -157,30 +207,30 @@ function QueryFields() {
                     selections.map((s) => {
                         return s.value
                     }) :
-                    ['all']
+                    []
             };
         });
     };
 
     function handleSearch() {
 
-/*         setIsLoading(true);
+        setIsLoading(true);
 
-        const call = generateSearchRequest(query);
+        const call = query_to_cypher(query);
 
-        console.log(call);
+        console.log(call)
         
         axios
-        .get(String(call))
-        .then((res) => setResults(res.data.data[0] !== undefined ? JSON.parse(res.data.data) : []))
-        .then(() => {
-            console.log(results);
-            setIsLoading(false);
-        })
-        .catch((err) => {
-            console.log(err);
-            setIsLoading(false);
-        }) */
+            .get(String(call))
+            .then((res) => setResults(res.data.data[0] !== undefined ? JSON.parse(res.data.data) : []))
+            .then(() => {
+                console.log(results);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.log(err);
+                setIsLoading(false);
+            }) 
 
     };
 
@@ -213,7 +263,7 @@ function QueryFields() {
                 />
                 <button onClick={handleSearch}>Generate Results</button>
             </div>
-            <OutputWindow data={results} graphics={graphics}/>
+            <OutputWindow data={results} query={query}/>
         </div>
      );
 };

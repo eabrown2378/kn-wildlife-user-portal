@@ -7,7 +7,7 @@ import axios from 'axios';
 cytoscape.use( fcose ); // layout of nodes (fast Compound Spring Embedder)
 
 
-const GraphTest = () => {
+const GraphTest = ({query}) => {
 
      //send a query (Cypher code) to neo4j API 
     const apiCall = (query) => {
@@ -23,14 +23,6 @@ const GraphTest = () => {
         })
     }
 
-    // Cypher code to send to API as GET request from neo4j database
-    const [query, setQuery] = useState('');
-
-    //const query = 'MATCH (p:PLAYER) -[r:PLAYS_FOR]-> (t:TEAM) RETURN p, r, t'
-
-    const handleChange = (e) => {
-        setQuery(String(e.target.value));
-    }
     
     //MATCH (n) -[r]-> (m) RETURN n, r, m
     // MATCH (p:PLAYER) -[r:PLAYS_FOR]-> (t:TEAM) RETURN p, r, t
@@ -89,7 +81,6 @@ const GraphTest = () => {
  return (
   <Fragment>
     <div style={{display:'flex', flexDirection: 'column', gap: '12px'}}>
-        <input type="text" onChange={handleChange} name="query" id="query" value={query} style={{width: '720px'}}></input>
         <p>Latest Query: {queryLatest}</p>
         <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button>
     </div>

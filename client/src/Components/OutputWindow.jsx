@@ -1,7 +1,7 @@
 import CsvDownloader from 'react-csv-downloader';
 import GraphTest from './GraphTest';
 
-export default function OutputWindow(props) {
+export default function OutputWindow({query, data}) {
 
     const date = new Date();
     const day = date.getDate().length === 2 ? date.getDate() : "0" + String(date.getDate());
@@ -13,10 +13,10 @@ export default function OutputWindow(props) {
     return (
         <div className="outputwindow">
             <div className="output--container">
-                <GraphTest/>
+                <GraphTest query={query}/>
             </div>
-            <CsvDownloader datas={props.data} filename={fn} separator="|" extension=".tsv">
-                <button disabled={props.data.length === 0}>Download data as *.tsv file</button>
+            <CsvDownloader datas={data} filename={fn} separator="|" extension=".tsv">
+                <button disabled={data.length === 0}>Download data as *.tsv file</button>
             </CsvDownloader>
         </div>
     );

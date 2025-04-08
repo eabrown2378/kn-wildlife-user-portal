@@ -87,20 +87,6 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 className="field"
                 isDisabled={isLoading}
             />
-            <div style={{display:"flex"}}>
-                <label htmlFor="phylum">Phylum:</label>
-                <Information blurb="phylum"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.phylumOptions}
-                value={tempMulti.phylumTemp}
-                onChange={(selections) => {handleMultiChange(selections, "phylumTemp")}}
-                name="phylumTemp"
-                id="phylum"
-                className="field"
-                isDisabled={isLoading}
-            />
         </fieldset>
     );
 };
