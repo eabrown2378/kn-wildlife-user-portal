@@ -6,7 +6,6 @@ import LocationParams from "./SearchFields/LocationParams";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
-import { query_to_cypher } from "../functions/query_to_cypher";
 
 
 function QueryFields() {
@@ -214,9 +213,7 @@ function QueryFields() {
 
     function handleSearch() {
 
-        setIsLoading(true);
-
-        const call = query_to_cypher(query);
+/*         setIsLoading(true);
 
         console.log(call)
         
@@ -230,7 +227,7 @@ function QueryFields() {
             .catch((err) => {
                 console.log(err);
                 setIsLoading(false);
-            }) 
+            })  */
 
     };
 
