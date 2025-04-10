@@ -6,13 +6,35 @@ import LocationParams from "./SearchFields/LocationParams";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
-
+import stateCodes from "../data/stateCodeToFips.json";
+import { process_neo4j_data } from "../Functions/process_neo4j_data";
+import { query_to_cypher } from "../Functions/query_to_cypher";
 
 function QueryFields() {
 
     function onlyUnique(value, index, array) {
         return array.indexOf(value) === index;
     };
+
+    //send a query (Cypher code) to neo4j API 
+    const apiCall = (query) => {
+
+        setIsLoading(true);
+
+        const cypher = query_to_cypher(query);
+
+        console.log(cypher);
+
+        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
+
+        axios.get(call, { crossDomain: true }).then((data) => {
+            if (data !== undefined) {
+                console.log(process_neo4j_data(data.data.result));
+                setQueryResult(process_neo4j_data(data.data.result));
+                setIsLoading(false);
+            }
+        })
+    }
 
 
     // hold query parameters to be used in API call
@@ -31,7 +53,7 @@ function QueryFields() {
         genus: [],
         family: [],
         order: [],
-        class: [],
+        tax_class: [],
         sites: ['all'],
         states: ['all'],
         counties: ['all'],
@@ -40,11 +62,9 @@ function QueryFields() {
         minLon: null,
         maxLan: null
     });
-
-    useEffect(() => {
-        console.log(query)
-    }, [query])
-
+    
+    // state containing latest neo4j query results and the last query
+    const [queryResult, setQueryResult] = useState(null);
 
     const [results, setResults] = useState([]);
 
@@ -144,7 +164,10 @@ function QueryFields() {
                     return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
                 }),
                 countyOptions: counties.map((item) => {
-                    return {value: item.properties.NAME, label: item.properties.NAME}
+
+                    const stateCode = Object.keys(stateCodes).filter((key) => stateCodes[key] === item.properties.STATEFP)[0]
+
+                    return {value: `${item.properties.NAME}_${stateCode}`, label: `${item.properties.NAME} (${stateCode})`}
                 }).sort((a, b) => {
                     return a.label.localeCompare(b.label);
                 })
@@ -167,7 +190,7 @@ function QueryFields() {
                 genus: [],
                 family: [],
                 order: [],
-                class: [],
+                tax_class: [],
                 sites: ['all']
             };
         });
@@ -211,28 +234,6 @@ function QueryFields() {
         });
     };
 
-    function handleSearch() {
-
-/*         setIsLoading(true);
-
-        console.log(call)
-        
-        axios
-            .get(String(call))
-            .then((res) => setResults(res.data.data[0] !== undefined ? JSON.parse(res.data.data) : []))
-            .then(() => {
-                console.log(results);
-                setIsLoading(false);
-            })
-            .catch((err) => {
-                console.log(err);
-                setIsLoading(false);
-            })  */
-
-    };
-
-
-
 
     return ( 
         <div className="searchContainer">
@@ -258,9 +259,9 @@ function QueryFields() {
                     query={query}
                     isLoading={isLoading}
                 />
-                <button onClick={handleSearch}>Generate Results</button>
+                <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
-            <OutputWindow data={results} query={query}/>
+            <OutputWindow data={results} query={query} queryResult={queryResult}/>
         </div>
      );
 };

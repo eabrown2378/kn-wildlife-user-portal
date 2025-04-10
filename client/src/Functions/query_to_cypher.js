@@ -1,17 +1,18 @@
 
 // function to translate query object to cypher code
 
-const query_to_cypher = ({speciesOptions, genusOptions, familyOptions, orderOptions, classOptions}) => {
+const query_to_cypher = ({species, genus, family, order, tax_class}) => {
 
 
     const cypherString = 
         `
-            MATCH (n:Animal)-[r]->(m)
-            WHERE n.species IN ${speciesOptions} 
-            OR n.genus IN ${genusOptions}
-            OR n.family IN ${familyOptions}
-            OR n.order IN ${orderOptions}
-            OR n.tax_class IN ${classOptions}
+            MATCH (n:Animal)<-[r:OBSERVED_ANIMAL]-(s:Sample)-[o:OBSERVED_AT]->(l:Location)
+            WHERE n.species IN ['${species.join("','")}'] 
+            OR n.genus IN ['${genus.join("','")}']
+            OR n.family IN ['${family.join("','")}']
+            OR n.order IN ['${order.join("','")}']
+            OR n.tax_class IN ['${tax_class.join("','")}']
+            RETURN *
         `
 
 

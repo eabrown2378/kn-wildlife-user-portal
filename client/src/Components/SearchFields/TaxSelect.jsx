@@ -83,7 +83,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 value={tempMulti.classTemp}
                 onChange={(selections) => {handleMultiChange(selections, "classTemp")}}
                 name="classTemp"
-                id="class"
+                id="tax_class"
                 className="field"
                 isDisabled={isLoading}
             />
