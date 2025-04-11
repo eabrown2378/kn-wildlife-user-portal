@@ -59,23 +59,23 @@ exports.get_search_options = async function () {
 
         // retrieve search options (unique values of properties) and send to client
         const speciesOptions = await session.run(
-            `MATCH (n:Animal) RETURN DISTINCT n.name AS uniqueValues`
+            `MATCH (n:Species) RETURN DISTINCT n.name AS uniqueValues`
         );
 
         const genusOptions = await session.run(
-            `MATCH (n) RETURN DISTINCT n.genus AS uniqueValues`
+            `MATCH (n:Genus) RETURN DISTINCT n.name AS uniqueValues`
         );
 
         const familyOptions = await session.run(
-            `MATCH (n) RETURN DISTINCT n.family AS uniqueValues`
+            `MATCH (n:Family) RETURN DISTINCT n.name AS uniqueValues`
         );
 
         const orderOptions = await session.run(
-            `MATCH (n) RETURN DISTINCT n.order AS uniqueValues`
+            `MATCH (n:Order) RETURN DISTINCT n.name AS uniqueValues`
         );
 
         const classOptions = await session.run(
-            `MATCH (n) RETURN DISTINCT n.tax_class AS uniqueValues`
+            `MATCH (n:TaxClass) RETURN DISTINCT n.name AS uniqueValues`
         );
 
         session.close();

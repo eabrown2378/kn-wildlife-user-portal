@@ -6,12 +6,16 @@ const query_to_cypher = ({species, genus, family, order, tax_class}) => {
 
     const cypherString = 
         `
-            MATCH (n:Animal)<-[r:OBSERVED_ANIMAL]-(s:Sample)-[o:OBSERVED_AT]->(l:Location)
-            WHERE n.species IN ['${species.join("','")}'] 
-            OR n.genus IN ['${genus.join("','")}']
-            OR n.family IN ['${family.join("','")}']
-            OR n.order IN ['${order.join("','")}']
-            OR n.tax_class IN ['${tax_class.join("','")}']
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(s:Sample)
+            WHERE 
+            (
+            n.name IN ['${species.join("','")}'] 
+            OR g.name IN ['${genus.join("','")}']
+            OR f.name IN ['${family.join("','")}']
+            OR o.name IN ['${order.join("','")}']
+            OR c.name IN ['${tax_class.join("','")}']
+            )
+
             RETURN *
         `
 
