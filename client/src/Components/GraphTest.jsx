@@ -20,24 +20,62 @@ const GraphTest = ({query, queryResult}) => {
             elements: data,
             style: [ // the stylesheet for the graph
                 {
-                selector: 'node',
-                style: {
-                    'background-color': '#666',
-                    'label': 'data(properties.name)'
-                }
+                    selector: 'node',
+                    style: {
+                        'background-color': 'data(data.category)',
+                        'label': 'data(properties.name)'
+                    }
                 },
             
                 {
-                selector: 'edge',
-                style: {
-                    'width': 3,
-                    'line-color': '#ccc',
-                    'target-arrow-color': '#ccc',
-                    'target-arrow-shape': 'triangle',
-                    'curve-style': 'bezier',
-                    'label': 'data(type)'
-                }
-                }
+                    selector: 'edge',
+                    style: {
+                        'width': 3,
+                        'line-color': '#ccc',
+                        'target-arrow-color': '#ccc',
+                        'target-arrow-shape': 'triangle',
+                        'curve-style': 'bezier',
+                        'label': 'data(type)'
+                    }
+                },
+                {
+                    selector: "node[category = 'Species']",
+                    style: {
+                        'background-color': 'teal'
+                    }
+                },
+                {
+                    selector: "node[category = 'Genus']",
+                    style: {
+                        'background-color': 'blue'
+                    }
+                },
+                {
+                    selector: "node[category = 'Family']",
+                    style: {
+                        'background-color': 'purple'
+                    }
+                },
+                {
+                    selector: "node[category = 'Order']",
+                    style: {
+                        'background-color': 'orange'
+                    }
+                },
+                {
+                    selector: "node[category = 'TaxClass']",
+                    style: {
+                        'background-color': 'red'
+                    }
+                },
+                {
+                    selector: "node[category = 'Observation']",
+                    style: {
+                        'background-color': '#DEB887'
+                    }
+                },
+
+                // add colors for nodes of each category
             ]
 
         })
@@ -56,10 +94,10 @@ const GraphTest = ({query, queryResult}) => {
 
  return (
   <Fragment>
-    <div style={{display:'flex', flexDirection: 'column', gap: '12px'}}>
+    <div style={{display:'flex', flexDirection: 'column', gap: '12px', backgroundColor:'#FFF8DC'}}>
         {/* <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button> */}
     </div>
-    <div ref={graphRef} style={{width: '100%', height: '80vh', border:'3px solid black'}}>
+    <div ref={graphRef} style={{width: '90%', height: '80vh', border:'3px solid black', backgroundColor:'#DCDCDC'}}>
     </div>
   </Fragment>
  )

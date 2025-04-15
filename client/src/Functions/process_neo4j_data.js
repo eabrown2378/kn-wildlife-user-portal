@@ -28,6 +28,7 @@ const process_neo4j_data = (data) => {
                     id: x.elementId,
                     source: x.startNodeElementId,
                     target: x.endNodeElementId,
+                    category: x.type,
                     ...x
                 }
             }
@@ -36,9 +37,11 @@ const process_neo4j_data = (data) => {
         return {
             data: { 
                 id: x.elementId,
+                category: x.labels[0],
                 ...x
             }
         };
+
 
     });
 

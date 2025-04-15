@@ -29,8 +29,11 @@ function QueryFields() {
 
         axios.get(call, { crossDomain: true }).then((data) => {
             if (data !== undefined) {
-                console.log(process_neo4j_data(data.data.result));
-                setQueryResult(process_neo4j_data(data.data.result));
+
+                const res = process_neo4j_data(data.data.result);
+
+                console.log(res);
+                setQueryResult(res);
                 setIsLoading(false);
             }
         })
@@ -139,10 +142,6 @@ function QueryFields() {
         });
     }, [])
 
-
-    useEffect(() => {
-        console.log(searchOptions)
-    }, [searchOptions])
 
     const [isLoading, setIsLoading] = useState(false);
 
