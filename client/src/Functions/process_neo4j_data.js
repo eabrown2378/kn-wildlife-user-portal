@@ -20,30 +20,57 @@ const process_neo4j_data = (data) => {
 
 
     // format data for a cytoscape graph
-    const cytoscapeData = extendedData.map((x) => {
+    const cleanedData = extendedData.map((x) => {
 
         if (x.dataType === 'relationship') {
             return {
-                data: {
-                    id: x.elementId,
-                    source: x.startNodeElementId,
-                    target: x.endNodeElementId,
-                    category: x.type,
-                    ...x
-                }
-            }
+                id: x.elementId,
+                source: x.startNodeElementId,
+                target: x.endNodeElementId,
+                category: x.type,
+                ...x
+            };
         };
 
         return {
-            data: { 
-                id: x.elementId,
-                category: x.labels[0],
-                ...x
-            }
+            id: x.elementId,
+            category: x.labels[0],
+            ...x
         };
 
 
     });
+
+
+    const cytoscapeData = cleanedData.map((x) => {
+
+        if (x.category === "Site") {
+
+            // Regular expression to capture latitude and longitude.
+            const regex = /latitude=(-?\d+\.\d+)&longitude=(-?\d+\.\d+)/;
+
+            // Use the exec() method to find the matches in the URL.
+            const matches = regex.exec(x.properties.api_url);
+
+            const latitude = parseFloat(matches[1]);
+            const longitude = parseFloat(matches[2]);
+
+            return {
+                data: {
+                    longitude,
+                    latitude,
+                    ...x
+                }
+            }
+
+        }
+
+        return {
+            data: x
+        }
+
+
+    })
 
 
 
