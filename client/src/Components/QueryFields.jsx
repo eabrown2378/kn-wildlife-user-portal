@@ -16,30 +16,6 @@ function QueryFields() {
         return array.indexOf(value) === index;
     };
 
-    //send a query (Cypher code) to neo4j API 
-    const apiCall = (query) => {
-
-        setIsLoading(true);
-
-        const cypher = query_to_cypher(query);
-
-        console.log(cypher);
-
-        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
-
-        axios.get(call, { crossDomain: true }).then((data) => {
-            if (data !== undefined) {
-
-                const res = process_neo4j_data(data.data.result);
-
-                console.log(res);
-                setQueryResult(res);
-                setIsLoading(false);
-            }
-        })
-    }
-
-
     // hold query parameters to be used in API call
     // if you change structure of this object, make sure to modify the paramChain
     // in rAPI.js accordingly
@@ -68,8 +44,6 @@ function QueryFields() {
     
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
-
-    const [results, setResults] = useState([]);
 
     // temporary state to hold multi-select selections
     const [tempMulti, setTempMulti] = useState({
@@ -232,6 +206,29 @@ function QueryFields() {
             };
         });
     };
+    
+    //send a query (Cypher code) to neo4j API 
+    const apiCall = (query) => {
+
+        setIsLoading(true);
+
+        const cypher = query_to_cypher(query);
+
+        console.log(cypher);
+
+        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
+
+        axios.get(call, { crossDomain: true }).then((data) => {
+            if (data !== undefined) {
+
+                const res = process_neo4j_data(data.data.result);
+
+                console.log(res);
+                setQueryResult(res);
+                setIsLoading(false);
+            }
+        })
+    }
 
 
     return ( 
@@ -260,7 +257,7 @@ function QueryFields() {
                 />
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
-            <OutputWindow data={results} query={query} queryResult={queryResult}/>
+            <OutputWindow query={query} queryResult={queryResult}/>
         </div>
      );
 };

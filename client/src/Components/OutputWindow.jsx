@@ -1,7 +1,13 @@
 import CsvDownloader from 'react-csv-downloader';
-import GraphTest from './GraphTest';
+import CytoscapeGraph from './CytoscapeGraph';
+import { useState } from 'react';
 
-export default function OutputWindow({query, queryResult, data}) {
+
+export default function OutputWindow({query, queryResult}) {
+
+    // state to control what graphs users are seeing
+    // defaults to "cytoscape" (i.e. knowledge graph) view
+    const [viewport, setViewport] = useState("cytoscape");
 
     const date = new Date();
     const day = date.getDate().length === 2 ? date.getDate() : "0" + String(date.getDate());
@@ -12,11 +18,14 @@ export default function OutputWindow({query, queryResult, data}) {
 
     return (
         <div className="outputwindow">
-            <div className="output--container">
-                <GraphTest query={query} queryResult={queryResult}/>
+            <div className="viewportselect">
+
             </div>
-            <CsvDownloader datas={data} filename={fn} separator="|" extension=".tsv">
-                <button disabled={data.length === 0}>Download data as *.tsv file</button>
+            <div className="output--container">
+                {viewport === "cytoscape" && <CytoscapeGraph query={query} queryResult={queryResult}/>}
+            </div>
+            <CsvDownloader datas={[]} filename={fn} separator="|" extension=".tsv">
+                <button disabled={true}>Download data as *.tsv file</button>
             </CsvDownloader>
         </div>
     );

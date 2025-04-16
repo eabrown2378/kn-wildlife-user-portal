@@ -5,7 +5,7 @@ import fcose from 'cytoscape-fcose';
 cytoscape.use( fcose ); // layout of nodes (fast Compound Spring Embedder)
 
 
-const GraphTest = ({query, queryResult}) => {
+const CytoscapeGraph = ({query, queryResult}) => {
 
 
     // container to hold current cytoscape graph
@@ -103,4 +103,4 @@ const GraphTest = ({query, queryResult}) => {
  )
 }
 
-export default GraphTest
+export default CytoscapeGraph;
