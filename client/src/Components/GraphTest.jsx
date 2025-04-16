@@ -97,7 +97,7 @@ const GraphTest = ({query, queryResult}) => {
     <div style={{display:'flex', flexDirection: 'column', gap: '12px', backgroundColor:'#FFF8DC'}}>
         {/* <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button> */}
     </div>
-    <div ref={graphRef} style={{width: '90%', height: '80vh', border:'3px solid black', backgroundColor:'#DCDCDC'}}>
+    <div ref={graphRef} style={{width: '90%', height: '80vh', border:'3px solid black', backgroundColor:'white'}}>
     </div>
   </Fragment>
  )
