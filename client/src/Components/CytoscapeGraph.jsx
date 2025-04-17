@@ -5,7 +5,7 @@ import fcose from 'cytoscape-fcose';
 cytoscape.use( fcose ); // layout of nodes (fast Compound Spring Embedder)
 
 
-const CytoscapeGraph = ({query, queryResult}) => {
+const CytoscapeGraph = ({queryResult}) => {
 
 
     // container to hold current cytoscape graph
@@ -80,6 +80,12 @@ const CytoscapeGraph = ({query, queryResult}) => {
 
         })
 
+        console.log(data)
+        cy.on('tap', 'node', function(evt){
+            var node = evt.target;
+            console.log( data.filter(item => item.data.data.id === node.id()));
+        });
+
         var layout = cy.layout({ name: 'fcose', nodeRepulsion: 10000000, nodeSeparation: 1000 });
 
         layout.run(); // apply fcose layout
@@ -92,12 +98,14 @@ const CytoscapeGraph = ({query, queryResult}) => {
         }
     }, [queryResult]);
 
+
  return (
   <Fragment>
     <div style={{display:'flex', flexDirection: 'column', gap: '12px', backgroundColor:'#FFF8DC'}}>
         {/* <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button> */}
     </div>
-    <div ref={graphRef} style={{width: '90%', height: '80vh', border:'3px solid black', backgroundColor:'white'}}>
+    <div ref={graphRef} className='cytoscapeGraph'>
+        <p style={{position:'absolute'}}>hello</p>
     </div>
   </Fragment>
  )
