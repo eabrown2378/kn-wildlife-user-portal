@@ -4,7 +4,7 @@ import { useState } from 'react';
 import LeafletGraph from './LeafletGraph';
 
 
-export default function OutputWindow({queryResult}) {
+export default function OutputWindow() {
 
     // state to control what graphs users are seeing
     // defaults to "cytoscape" (i.e. knowledge graph) view
@@ -25,8 +25,8 @@ export default function OutputWindow({queryResult}) {
                 <button onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
             </div>
             <div className="output--container">
-                {viewport === "cytoscape" && <CytoscapeGraph queryResult={queryResult}/>}
-                {viewport === "leaflet" && <LeafletGraph queryResult={queryResult}/>}
+                {viewport === "cytoscape" && <CytoscapeGraph/>}
+                {viewport === "leaflet" && <LeafletGraph/>}
             </div>
             <CsvDownloader datas={[]} filename={fn} separator="|" extension=".tsv">
                 <button disabled={true}>Download data as *.tsv file</button>

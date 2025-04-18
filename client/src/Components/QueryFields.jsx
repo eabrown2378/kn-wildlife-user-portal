@@ -7,18 +7,20 @@ import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
 import stateCodes from "../data/stateCodeToFips.json";
+import { Marker } from "react-leaflet/Marker";
+import { Popup } from "react-leaflet/Popup";
 import { process_neo4j_data } from "../Functions/process_neo4j_data";
 import { query_to_cypher } from "../Functions/query_to_cypher";
+import { QueryResultContext } from "../Context/QueryResultContext";
+import { MarkerContext } from "../Context/MarkerContext";
+import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
+
 
 function QueryFields() {
 
-    function onlyUnique(value, index, array) {
-        return array.indexOf(value) === index;
-    };
-
     // hold query parameters to be used in API call
-    // if you change structure of this object, make sure to modify the paramChain
-    // in rAPI.js accordingly
+    // if you change structure of this object, make sure
+    // to update the query_to_cypher.js function accordingly
     const [query, setQuery] = useState({
         taxExclude: false,
         siteExclude: true,
@@ -44,6 +46,25 @@ function QueryFields() {
     
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
+
+    // state for map-view markers    
+    const position = [41.7, -86.23];
+    const [markers, setMarkers] = useState(
+        [
+            <Marker key = {"Marker0"} position={position}>
+                <Popup>
+                    Your search results will <br /> be mapped here.
+                </Popup>
+            </Marker>
+        ]
+    );
+
+    // state to hold information of last node/edge clicked on by user
+    const [selectionDetails, setSelectionDetails] = useState(
+        <div className='selectionDetails'>
+            <h5>{'CLICK ON AN EDGE OR NODE\nTO VIEW DETAILS'}</h5>
+        </div>
+    );
 
     // temporary state to hold multi-select selections
     const [tempMulti, setTempMulti] = useState({
@@ -73,7 +94,6 @@ function QueryFields() {
     useEffect(() => {
 
         axios.get("http://localhost:8080/test_api/neo4j_search_options/", { crossDomain: true }).then((data) => {
-
 
             setSearchOptions((prev) => {
                 
@@ -170,7 +190,7 @@ function QueryFields() {
         
         setIsLoading(false); 
 
-    }, [query.taxLevel]);
+    }, []);
 
 
     function handleChange(e) {
@@ -257,7 +277,13 @@ function QueryFields() {
                 />
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
-            <OutputWindow query={query} queryResult={queryResult}/>
+            <QueryResultContext.Provider value={queryResult}>
+                <MarkerContext.Provider value={[markers, setMarkers]}>     
+                    <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>              
+                        <OutputWindow query={query}/>
+                    </SelectionDetailsContext.Provider> 
+                </MarkerContext.Provider>
+            </QueryResultContext.Provider>
         </div>
      );
 };

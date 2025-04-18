@@ -12,7 +12,6 @@
   "dependencies": {
     "axios": "^1.7.9",
     "cytoscape": "^3.31.0",
-    "cytoscape-fcose": "^2.2.0",
     "leaflet": "^1.9.4",
     "react": "^19.0.0-rc.1",
     "react-csv-downloader": "^3.3.0",

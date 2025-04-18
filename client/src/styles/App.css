@@ -121,21 +121,37 @@ input {
   gap: 4px;
   align-items: center;
   &button {
-    height: 15px;
-    
+    height: 15px;    
   }
 }
 
 .cytoscapeGraph {
-  width: 90%;
+  position:absolute;
+  width: 84%;
   height: 80vh;
   border: 3px solid black;
   background-color: white;
 }
 
 .leafletMap {
-  width: 90%;
+  position:absolute;
+  width: 84%;
   height: 80vh;
   border: 3px solid black;
   background-color: white;
+}
+
+.selectionDetails {
+  position: absolute;
+  border: 3px solid black;
+  padding: 4px;
+  height: 20%;
+  width: 20%;
+  background-color: lightgray;
+  overflow: scroll;
+  z-index: 1;
+  &p {
+    text-wrap: wrap;
+    word-break: break-all;
+  }
 }
