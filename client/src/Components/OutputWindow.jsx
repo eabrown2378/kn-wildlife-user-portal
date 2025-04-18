@@ -1,22 +1,35 @@
 import CsvDownloader from 'react-csv-downloader';
-import GraphTest from './GraphTest';
+import CytoscapeGraph from './CytoscapeGraph';
+import { useState } from 'react';
+import LeafletGraph from './LeafletGraph';
 
-export default function OutputWindow(props) {
+
+export default function OutputWindow() {
+
+    // state to control what graphs users are seeing
+    // defaults to "cytoscape" (i.e. knowledge graph) view
+    const [viewport, setViewport] = useState("cytoscape");
 
     const date = new Date();
     const day = date.getDate().length === 2 ? date.getDate() : "0" + String(date.getDate());
     const mo = (date.getMonth() + 1).length === 2 ? date.getMonth() : "0" + String(date.getMonth() + 1);
     const yr = date.getFullYear();
 
-    const fn = "query_" + String(yr) + String(mo) + String(day)
+    const fn = "knw_query_" + String(yr) + String(mo) + String(day)
 
     return (
         <div className="outputwindow">
-            <div className="output--container">
-                <GraphTest/>
+            <div className="viewportSelect">
+                <p>Select View:</p>
+                <button onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                <button onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
             </div>
-            <CsvDownloader datas={props.data} filename={fn} separator="|" extension=".tsv">
-                <button disabled={props.data.length === 0}>Download data as *.tsv file</button>
+            <div className="output--container">
+                {viewport === "cytoscape" && <CytoscapeGraph/>}
+                {viewport === "leaflet" && <LeafletGraph/>}
+            </div>
+            <CsvDownloader datas={[]} filename={fn} separator="|" extension=".tsv">
+                <button disabled={true}>Download data as *.tsv file</button>
             </CsvDownloader>
         </div>
     );

@@ -2,112 +2,156 @@ html, body {
     margin: 0;
     padding: 0;   
     background-color: rgb(42, 42, 42) 
-  }
+}
   
-  * {  
-    font-family:Arial, Helvetica, sans-serif;
-  }
-  
-  .App {
-    display: flex;
-    width: 100%;
-  }
+* {  
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+.App {
+  display: flex;
+  width: 100%;
+}
 
 
-  .blurbContainer {
+.blurbContainer {
+  position: absolute;
+  width: 250px;
+  height: fit-content;
+  text-wrap: wrap;
+  background-color: lightgray;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 4px;
+  color: black;
+  z-index: 1;
+}
+
+.field {
+  margin-bottom: 8px;
+  color:black;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: white;
+}
+
+input {
+  width: 20%;
+}
+
+.iContainer {
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  bottom: 6px;
+  border: 1px solid #C2E5D3;
+  color: #C2E5D3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: small;
+  margin-right: 4px;
+}
+
+.iContainer:hover {
+  background-color: #C2E5D3;
+  color: rgb(42, 42, 42);
+  cursor: help;
+}
+
+.information {
+  &p {
     position: absolute;
-    width: 250px;
-    height: fit-content;
-    text-wrap: wrap;
-    background-color: lightgray;
-    border: 1px solid black;
-    border-radius: 5px;
-    padding: 4px;
-    color: black;
   }
+}
 
-  .field {
-    margin-bottom: 8px;
+.queryfields {
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 325px;
+  border-right: 2px solid black;
+  padding: 12px;
+  &label {
+    color: white;
+    font-weight: bold;
+    margin-right: 6px;
   }
-  
-  fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  &button {
+    margin-top: 18px;
+    width: 40%;
+    align-self: center;
   }
+}
 
-  input {
+.outputwindow {
+  position: fixed;
+  background-color: #C2E5D3;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+  width: 100%;
+  height: 100vh;
+  margin-left: 345px;
+  &img {
+    border: 4px solid black;
+    margin-bottom: 48px;
+  }
+  &button {
     width: 20%;
+    align-self: center;
   }
-  
-  .iContainer {
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    bottom: 6px;
-    border: 1px solid #C2E5D3;
-    color: #C2E5D3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: small;
-    margin-right: 4px;
+}
+
+.searchContainer {
+  width: 100%;
+  display: flex;
+}
+
+.viewportSelect {
+  display: flex;
+  height: 20px;
+  margin-bottom: 10px;
+  gap: 4px;
+  align-items: center;
+  &button {
+    height: 15px;    
   }
-  
-  .iContainer:hover {
-    background-color: #C2E5D3;
-    color: rgb(42, 42, 42);
-    cursor: help;
+}
+
+.cytoscapeGraph {
+  position:absolute;
+  width: 84%;
+  height: 80vh;
+  border: 3px solid black;
+  background-color: white;
+}
+
+.leafletMap {
+  position:absolute;
+  width: 84%;
+  height: 80vh;
+  border: 3px solid black;
+  background-color: white;
+}
+
+.selectionDetails {
+  position: absolute;
+  border: 3px solid black;
+  padding: 4px;
+  height: 20%;
+  width: 20%;
+  background-color: lightgray;
+  overflow: scroll;
+  z-index: 1;
+  &p {
+    text-wrap: wrap;
+    word-break: break-all;
   }
-  
-  .information {
-    p {
-      position: absolute;
-      z-index: 1;
-    }
-  }
-  
-  .queryfields {
-    overflow-y: scroll;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 325px;
-    border-right: 2px solid black;
-    padding: 12px;
-    label {
-      color: white;
-      font-weight: bold;
-      margin-right: 6px;
-    }
-    button {
-      margin-top: 18px;
-      width: 40%;
-      align-self: center;
-    }
-  }
-  
-  .outputwindow {
-    position: fixed;
-    background-color: #C2E5D3;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 12px;
-    width: 100%;
-    height: 100vh;
-    margin-left: 345px;
-    img {
-      border: 4px solid black;
-      margin-bottom: 48px;
-    }
-    button {
-      width: 20%;
-      align-self: center;
-    }
-  }
-  
-  .searchContainer {
-    width: 100%;
-    display: flex;
-  }
+}

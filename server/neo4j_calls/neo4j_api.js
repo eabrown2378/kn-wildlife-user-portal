@@ -26,3 +26,76 @@ exports.get_neo4j = async function (query) {
 
 };
 
+
+exports.get_search_options = async function () {  
+        
+    const session = driver.session();
+
+/*     [
+        'name',         'api_url',
+        'county',       'wikidata_id',
+        'family',       'genus',
+        'kingdom',      'order',
+        'IUCN_id',      'tax_class',
+        'climate_data', 'year',
+        'createdAt'
+      ] */
+
+    try {       
+
+        // get names of all properties in DB
+/*         const propertyNames = await session.run(
+            `
+                MATCH (n) 
+                UNWIND keys(n) AS key
+                WITH DISTINCT key
+                ORDER by key
+                RETURN collect(key) 
+                AS key
+            `
+        );
+
+        console.log(propertyNames.records.map((record) => record.get("key"))) */
+
+        // retrieve search options (unique values of properties) and send to client
+        const speciesOptions = await session.run(
+            `MATCH (n:Species) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const genusOptions = await session.run(
+            `MATCH (n:Genus) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const familyOptions = await session.run(
+            `MATCH (n:Family) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const orderOptions = await session.run(
+            `MATCH (n:Order) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const classOptions = await session.run(
+            `MATCH (n:TaxClass) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        session.close();
+
+        const search_options = {
+            speciesOptions: speciesOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            genusOptions: genusOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            familyOptions: familyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            orderOptions: orderOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            classOptions: classOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+        }
+
+        //console.log(search_options);
+
+        return search_options;
+
+    } catch(error) {
+
+        console.error('Error fetching search options from neo4j:', error)
+        
+    }
+  }
+
