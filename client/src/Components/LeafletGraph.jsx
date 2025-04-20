@@ -25,7 +25,12 @@ function LeafletGraph() {
                     return (
                         <Marker key = {`Marker${index}`} position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
-                                <a href={item.data.properties.api_url} target="_blank">Site Information</a>
+                                <p className="leafletP">Site Name: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
+                                <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
+                                <p className="leafletP">{`Latitude: ${item.data.properties.latitudes[0].toPrecision(5)}`}</p>
+                                <p className="leafletP">{`Sampling Dates: ${queryResult.filter((x) => {
+                                    return x.data.category === "Observation" && x.data.properties.site_name === item.data.properties.name
+                                }).map((x) => x.data.properties.date).join(', ')}`}</p>                                
                             </Popup>
                         </Marker>
                     )

@@ -19,9 +19,7 @@ router.get('/neo4j_search_options/', async function (req, res) {
     let result = await neo4j_calls.get_search_options();
     
     res.status(200).send({ result });  //Can't send just a Number; encapsulate with {} or convert to String.    
-    
-    console.log(result)
-    
+        
     return { result };
 })
 
