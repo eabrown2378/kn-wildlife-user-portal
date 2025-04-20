@@ -14,9 +14,14 @@ import { query_to_cypher } from "../Functions/query_to_cypher";
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
+import ChatbotWindow from './ChatbotWindow';
+
+// const [showChat, setShowChat] = useState(false);
 
 
 function QueryFields() {
+    const [showChat, setShowChat] = useState(false);
+
 
     // hold query parameters to be used in API call
     // if you change structure of this object, make sure
@@ -278,11 +283,35 @@ function QueryFields() {
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <QueryResultContext.Provider value={queryResult}>
-                <MarkerContext.Provider value={[markers, setMarkers]}>     
-                    <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>              
-                        <OutputWindow query={query}/>
-                    </SelectionDetailsContext.Provider> 
-                </MarkerContext.Provider>
+            <MarkerContext.Provider value={[markers, setMarkers]}>
+                <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
+                <OutputWindow query={query} />
+                {/* 💬 Chatbot toggle button */}
+                <div
+                    style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    backgroundColor: '#007bff',
+                    borderRadius: '50%',
+                    width: '60px',
+                    height: '60px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: 'white',
+                    fontSize: '30px',
+                    cursor: 'pointer',
+                    zIndex: 1000
+                    }}
+                    onClick={() => setShowChat(prev => !prev)}
+                >
+                    💬
+                </div>
+
+                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} />}
+                </SelectionDetailsContext.Provider>
+            </MarkerContext.Provider>
             </QueryResultContext.Provider>
         </div>
      );
