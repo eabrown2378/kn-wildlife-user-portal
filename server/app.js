@@ -4,7 +4,7 @@ const path = require('path');
 let cors = require('cors');
 let bodyParser = require('body-parser');    //Extract data from Express
 
-app.use(cors())
+app.use(cors());
 
 require('dotenv').config();
 
@@ -34,7 +34,7 @@ const chatbotRoute = require('./routes/chatbot');
 app.use('/chatbot', chatbotRoute);
 
 
-console.log("Server running on 8080")
+console.log("Server running on 8080");
 
 
 app.use(express.static('./public/index.html'));
