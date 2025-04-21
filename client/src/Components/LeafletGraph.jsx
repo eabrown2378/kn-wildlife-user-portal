@@ -49,7 +49,7 @@ function LeafletGraph() {
                     return (
                         <Marker key = {`Marker${index}`} position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
-                                <p className="leafletP">Site Name: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
+                                <p className="leafletP">Site Name/Code: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
                                 <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
                                 <p className="leafletP">{`Latitude: ${item.data.properties.latitudes[0].toPrecision(5)}`}</p>
                                 <p className="leafletP">{`Sampling Dates: ${queryResult.filter((x) => {
@@ -66,15 +66,15 @@ function LeafletGraph() {
         }        
     }, [queryResult]);
 
-    return ( 
-            <MapContainer className="leafletMap"  style={{ height: '80vh' }} center={position} zoom={3} scrollWheelZoom={true}>
-                <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {markers}
-                <MapViewComponent position={position}/>
-            </MapContainer>
+    return (
+        <MapContainer className="leafletMap"  style={{ height: '80vh' }} center={position} zoom={3} scrollWheelZoom={true}>
+            <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {markers}
+            <MapViewComponent position={position}/>
+        </MapContainer>
 
      );
 }

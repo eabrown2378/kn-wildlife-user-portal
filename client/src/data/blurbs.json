@@ -8,7 +8,8 @@
         "stateSelect":"Select states for which to return wildlife data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
         "countySelect":"Select counties for which to return wildlife data. If you have selected individual sampling locations that are not in the specified counties, those results will still be included.",
         "siteSelect":"Select sampling locations for which to return wildlife data. If you have also selected states, the search will also return data for all locations in those states.",
-        "timeRange":"Time range for which to return wildlife data.",
-        "coordRange":"Look for wildlife data within a specified coordinate range."
+        "timeRange":"Time range for which to return wildlife data. NOTE that you must select a month before you can select a day.",
+        "coordRange":"Look for wildlife data within a specified coordinate range.",
+        "datasetSelect": "Search for wildlife data within specific datasets."
     }
 ]

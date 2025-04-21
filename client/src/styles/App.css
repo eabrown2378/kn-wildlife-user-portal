@@ -157,6 +157,8 @@ input {
 }
 
 .leaflet-popup-content-wrapper {
+
+  overflow: scroll;
   
 }
 
@@ -177,4 +179,29 @@ input {
   margin-left: 90%;
   padding: 0;
   width: 8%;
+}
+
+.logo--container {
+  display: flex;
+  margin-top: 80vh;
+}
+
+.knwLogo {
+  width: 6%;
+  margin-top: 1vh;
+  margin-left: 1vh;
+  z-index: 2;
+  border: 1px solid black;
+  aspect-ratio: 1/1;
+}
+
+.nsfLogo {
+  width: 10%;
+  margin-top: 0.25vh;
+  z-index: 2;
+  aspect-ratio: 1.75/1;
+}
+
+.download--button {
+  margin-top: 1vh;
 }

@@ -3,6 +3,7 @@ import axios from "axios";
 import OutputWindow from "./OutputWindow";
 import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
+import DatasetSelect from "./SearchFields/DatasetSelect";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
@@ -46,7 +47,8 @@ function QueryFields() {
         minLat: null,
         maxLat: null,
         minLon: null,
-        maxLan: null
+        maxLan: null,
+        datasets: []
     });
     
     // state containing latest neo4j query results and the last query
@@ -80,7 +82,8 @@ function QueryFields() {
         classTemp: [],
         sitesTemp: [],
         statesTemp: [],
-        countiesTemp: []
+        countiesTemp: [],
+        datasetsTemp: []
     });
 
     const [searchOptions, setSearchOptions] = useState({
@@ -91,7 +94,8 @@ function QueryFields() {
         classOptions: [],
         siteOptions: [],
         stateOptions: [],
-        countyOptions: []
+        countyOptions: [],
+        datasetOptions:[],
     });
 
         
@@ -104,42 +108,52 @@ function QueryFields() {
                 
                 const res = data.data.result;
 
-                return {
-                    ...prev,
-                    speciesOptions: res.speciesOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    genusOptions: res.genusOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    familyOptions: res.familyOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    orderOptions: res.orderOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    classOptions: res.classOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
+                if (res !== undefined) {
+
+                    return {
+                        ...prev,
+                        speciesOptions: res.speciesOptions.map((item) => {
+                            return {
+                                value: item, 
+                                label: item
+                            }
+                        }),
+                        genusOptions: res.genusOptions.map((item) => {
+                            return {
+                                value: item, 
+                                label: item
+                            }
+                        }),
+                        familyOptions: res.familyOptions.map((item) => {
+                            return {
+                                value: item, 
+                                label: item
+                            }
+                        }),
+                        orderOptions: res.orderOptions.map((item) => {
+                            return {
+                                value: item, 
+                                label: item
+                            }
+                        }),
+                        classOptions: res.classOptions.map((item) => {
+                            return {
+                                value: item, 
+                                label: item
+                            }
+                        }),
+                    }
+
                 }
+
+                console.log("Issue retrieving search options.");
+
+                return {...prev}
             });
-        });
-    }, [])
+
+        }).catch((err) => {console.log(err); setSearchOptions((prev) => prev)});
+
+    }, []);
 
 
     const [isLoading, setIsLoading] = useState(false);
@@ -169,7 +183,7 @@ function QueryFields() {
                 }).sort((a, b) => {
                     return a.label.localeCompare(b.label);
                 })
-            }
+            };
         });
 
         setTempMulti({
@@ -178,7 +192,8 @@ function QueryFields() {
             familyTemp: [],
             orderTemp: [],
             classTemp: [],
-            sitesTemp: []
+            sitesTemp: [],
+            datasetsTemp: []
         });
 
         setQuery((prev) => {
@@ -189,7 +204,8 @@ function QueryFields() {
                 family: [],
                 order: [],
                 tax_class: [],
-                sites: ['all']
+                sites: ['all'],
+                datasets: [],
             };
         });
         
@@ -279,6 +295,14 @@ function QueryFields() {
                     handleChange={handleChange}
                     query={query}
                     isLoading={isLoading}
+                />
+                <DatasetSelect
+                    handleMultiChange={handleMultiChange} 
+                    searchOptions={searchOptions} 
+                    isLoading={isLoading} 
+                    tempMulti={tempMulti}
+                    query={query}
+                    handleChange={handleChange}
                 />
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
