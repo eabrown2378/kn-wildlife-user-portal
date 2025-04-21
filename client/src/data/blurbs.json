@@ -1,10 +1,10 @@
 [
     {
-        "species":"Search wildlife data by species.",
-        "genus":"Search wildlife data by genus.",
-        "family":"Search wildlife data by taxonomic family. Note that, depending on the family, it may take a while to retrieve all data.",
-        "order":"Search wildlife data by taxonomic order. Note that, depending on the order, it may take a while to retrieve all data.",
-        "class":"Search wildlife data by taxonomic class. Note that, depending on the class, it may take a while to retrieve all data.",
+        "species":"Search wildlife data by species. Note that, depending on the species, it may take a while to retrieve and display all data.",
+        "genus":"Search wildlife data by genus. Note that, depending on the genus, it may take a while to retrieve and display all data.",
+        "family":"Search wildlife data by taxonomic family. Note that, depending on the family, it may take a while to retrieve and display all data.",
+        "order":"Search wildlife data by taxonomic order. Note that, depending on the order, it may take a while to retrieve and display all data.",
+        "class":"Search wildlife data by taxonomic class. Note that, depending on the class, it may take a while to retrieve and display all data.",
         "stateSelect":"Select states for which to return wildlife data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
         "countySelect":"Select counties for which to return wildlife data. If you have selected individual sampling locations that are not in the specified counties, those results will still be included.",
         "siteSelect":"Select sampling locations for which to return wildlife data. If you have also selected states, the search will also return data for all locations in those states.",

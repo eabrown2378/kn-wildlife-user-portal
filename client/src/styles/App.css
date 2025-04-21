@@ -64,7 +64,7 @@ input {
 }
 
 .information {
-  :is(&p) {
+  :is(p) {
     position: absolute;
   }
 }
@@ -77,16 +77,16 @@ input {
   width: 325px;
   border-right: 2px solid black;
   padding: 12px;
-  :is(&label) {
-    color: white;
-    font-weight: bold;
-    margin-right: 6px;
-  }
   :is(button) {
     margin-top: 18px;
     width: 40%;
     align-self: center;
   }
+}
+
+.query--label {
+    color: white;
+    margin-right: 6px;
 }
 
 .outputwindow {
@@ -99,10 +99,6 @@ input {
   width: 100%;
   height: 100vh;
   margin-left: 345px;
-  :is(&img) {
-    border: 4px solid black;
-    margin-bottom: 48px;
-  }
 }
 
 .searchContainer {
@@ -120,7 +116,6 @@ input {
 
 .viewport--button{
   height: 2vh;
-  width: fit-content;  
 }
 
 .cytoscapeGraph {
@@ -148,7 +143,7 @@ input {
   background-color: lightgray;
   overflow: scroll;
   z-index: 1;
-  :is(&p) {
+  :is(p) {
     text-wrap: wrap;
     word-break: break-all;
   }

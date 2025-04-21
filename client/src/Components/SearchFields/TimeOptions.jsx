@@ -37,7 +37,7 @@ function TimeOptions({ handleChange, query, isLoading }) {
     return (  
         <fieldset>
             <legend style={{color:"white", display:"flex", gap:"6px"}}>Time Range<Information blurb="timeRange"/></legend>
-            <label htmlFor="fromTime">From:</label>
+            <label className="query--label" htmlFor="fromTime">From:</label>
             <div id="fromTime">
                 <select name="fromYear" id="fromYear" value={query.fromYear} onChange={handleChange} disabled={isLoading}>
                     <option value="">yyyy</option>
@@ -64,7 +64,7 @@ function TimeOptions({ handleChange, query, isLoading }) {
                     {query.fromMonth === '12' && dayOptions.dec}
                 </select>
             </div>
-            <label htmlFor="toTime">To:</label>
+            <label className="query--label" htmlFor="toTime">To:</label>
             <div id="toTime">
                 <select name="toYear" id="toYear" value={query.toYear} onChange={handleChange} disabled={isLoading}>
                     <option value="">yyyy</option>
