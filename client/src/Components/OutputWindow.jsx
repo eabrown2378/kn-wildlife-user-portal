@@ -23,8 +23,8 @@ export default function OutputWindow() {
         <div className="outputwindow">
             <div className="viewportSelect">
                 <p>Select View:</p>
-                <button onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
-                <button onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
             </div>
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}

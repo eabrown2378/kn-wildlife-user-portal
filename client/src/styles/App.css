@@ -64,7 +64,7 @@ input {
 }
 
 .information {
-  &p {
+  :is(&p) {
     position: absolute;
   }
 }
@@ -77,12 +77,12 @@ input {
   width: 325px;
   border-right: 2px solid black;
   padding: 12px;
-  &label {
+  :is(&label) {
     color: white;
     font-weight: bold;
     margin-right: 6px;
   }
-  &button {
+  :is(button) {
     margin-top: 18px;
     width: 40%;
     align-self: center;
@@ -99,13 +99,9 @@ input {
   width: 100%;
   height: 100vh;
   margin-left: 345px;
-  &img {
+  :is(&img) {
     border: 4px solid black;
     margin-bottom: 48px;
-  }
-  &button {
-    width: 20%;
-    align-self: center;
   }
 }
 
@@ -120,9 +116,11 @@ input {
   margin-bottom: 10px;
   gap: 4px;
   align-items: center;
-  &button {
-    height: 15px;    
-  }
+}
+
+.viewport--button{
+  height: 2vh;
+  width: fit-content;  
 }
 
 .cytoscapeGraph {
@@ -150,7 +148,7 @@ input {
   background-color: lightgray;
   overflow: scroll;
   z-index: 1;
-  &p {
+  :is(&p) {
     text-wrap: wrap;
     word-break: break-all;
   }
@@ -204,4 +202,5 @@ input {
 
 .download--button {
   margin-top: 1vh;
+  width: 35%;
 }
