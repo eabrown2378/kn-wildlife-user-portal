@@ -161,10 +161,20 @@ input {
 }
 
 .leaflet-popup-content{
-  
+
 }
 
 .leafletP {
   margin: 0px;
   padding: 0px;
+}
+
+.chatbox {
+  width: 90%;
+}
+
+.chatclose {
+  margin-left: 90%;
+  padding: 0;
+  width: 8%;
 }

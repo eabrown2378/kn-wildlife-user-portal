@@ -46,7 +46,7 @@ export default function ChatbotWindow({ onClose }) {
       padding: '10px',
       zIndex: 1000
     }}>
-      <button onClick={onClose}>❌</button>
+      <button className='chatclose' onClick={onClose}>❌</button>
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {chatLog.map((msg, i) => (
           <div key={i} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left' }}>
@@ -60,6 +60,7 @@ export default function ChatbotWindow({ onClose }) {
         onChange={e => setInput(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && sendMessage()}
         placeholder="Ask the chatbot..."
+        className='chatbox'
       />
     </div>
   );

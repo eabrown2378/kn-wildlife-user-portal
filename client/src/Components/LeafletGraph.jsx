@@ -1,16 +1,33 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useState } from "react";
 import { MapContainer } from "react-leaflet/MapContainer";
 import { TileLayer } from "react-leaflet/TileLayer";
 import { Marker } from "react-leaflet/Marker";
 import { Popup } from "react-leaflet/Popup";
-import 'leaflet/dist/leaflet.css';
+import { useMapEvent } from 'react-leaflet/hooks';
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
+import 'leaflet/dist/leaflet.css';
+
+
+// component so set map center when query result changes
+function MapViewComponent({position}) {
+    const map = useMapEvent('click', () => {
+      map.setView(position, map.getZoom())
+    });
+    return null;
+};
 
 function LeafletGraph() {    
 
+    function getAverage(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) {
+          return 0;
+        }
+        const sum = arr.reduce((acc, num) => acc + num, 0);
+        return sum / arr.length;
+    }
     
-    const position = [41.7, -86.23];
+    const [position, setPosition] = useState([41.7, -86.23]);
 
     const queryResult = useContext(QueryResultContext);
 
@@ -19,6 +36,13 @@ function LeafletGraph() {
     // generate map every time query results change
     useEffect(() => {
         if (queryResult) {
+            
+            // first, get average lat/long of query results to determine map center position
+            const avgLat = getAverage(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.latitudes[0])); 
+            const avgLon = getAverage(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.longitudes[0])); 
+
+            setPosition([avgLat,avgLon]);
+
             setMarkers(queryResult.map((item, index) => {
 
                 if (item.data.category === 'Site') {
@@ -43,12 +67,13 @@ function LeafletGraph() {
     }, [queryResult]);
 
     return ( 
-            <MapContainer className="leafletMap"  style={{ height: '80vh' }} center={position} zoom={13} scrollWheelZoom={false}>
+            <MapContainer className="leafletMap"  style={{ height: '80vh' }} center={position} zoom={3} scrollWheelZoom={true}>
                 <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {markers}
+                <MapViewComponent position={position}/>
             </MapContainer>
 
      );
