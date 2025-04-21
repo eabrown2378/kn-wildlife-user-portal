@@ -18,12 +18,14 @@ export default function ChatbotWindow({ onClose }) {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:8080/chatbot', {
+
+      throw Error();
+      /* const res = await axios.post('http://localhost:8080/chatbot', {
         message: userMessage,
         graphResult: queryResult   
       });
 
-      setChatLog(prev => [...prev, { sender: 'bot', text: res.data.response }]);
+      setChatLog(prev => [...prev, { sender: 'bot', text: res.data.response }]); */
     } catch (err) {
       setChatLog(prev => [...prev, { sender: 'bot', text: '⚠️ Error contacting chatbot.' }]);
     } finally {

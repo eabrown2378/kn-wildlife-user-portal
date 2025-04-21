@@ -333,7 +333,7 @@ function QueryFields() {
                     💬
                 </div>
 
-                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} />}
+                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
                 </SelectionDetailsContext.Provider>
             </MarkerContext.Provider>
             </QueryResultContext.Provider>
