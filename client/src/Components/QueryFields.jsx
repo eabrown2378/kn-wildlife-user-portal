@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import OutputWindow from "./OutputWindow";
 import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
@@ -21,6 +20,7 @@ import ChatbotWindow from './ChatbotWindow';
 
 
 function QueryFields() {
+
     const [showChat, setShowChat] = useState(false);
 
 
@@ -102,56 +102,57 @@ function QueryFields() {
 
     useEffect(() => {
 
-        axios.get("http://localhost:8080/test_api/neo4j_search_options/", { crossDomain: true }).then((data) => {
-
-            setSearchOptions((prev) => {
-                
-                const res = data.data.result;
-
+        fetch("http://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
+            method: 'GET', 
+            headers: {
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+              }
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              setSearchOptions((prev) => {
+                const res = data.result;
+      
                 if (res !== undefined) {
-
-                    return {
-                        ...prev,
-                        speciesOptions: res.speciesOptions.map((item) => {
-                            return {
-                                value: item, 
-                                label: item
-                            }
-                        }),
-                        genusOptions: res.genusOptions.map((item) => {
-                            return {
-                                value: item, 
-                                label: item
-                            }
-                        }),
-                        familyOptions: res.familyOptions.map((item) => {
-                            return {
-                                value: item, 
-                                label: item
-                            }
-                        }),
-                        orderOptions: res.orderOptions.map((item) => {
-                            return {
-                                value: item, 
-                                label: item
-                            }
-                        }),
-                        classOptions: res.classOptions.map((item) => {
-                            return {
-                                value: item, 
-                                label: item
-                            }
-                        }),
-                    }
-
+                  return {
+                    ...prev,
+                    speciesOptions: res.speciesOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    genusOptions: res.genusOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    familyOptions: res.familyOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    orderOptions: res.orderOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    classOptions: res.classOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    }))
+                  };
                 }
-
+      
                 console.log("Issue retrieving search options.");
-
-                return {...prev}
+                return { ...prev };
+              });
+            })
+            .catch((err) => {
+              console.error("Fetch error:", err);
+              setSearchOptions((prev) => prev);
             });
-
-        }).catch((err) => {console.log(err); setSearchOptions((prev) => prev)});
 
     }, []);
 
@@ -257,18 +258,33 @@ function QueryFields() {
 
         console.log(cypher);
 
-        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
+        const call = `http://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
 
-        axios.get(call, { crossDomain: true }).then((data) => {
-            if (data !== undefined) {
-
-                const res = process_neo4j_data(data.data.result);
-
+        fetch(call, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+              }
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (data !== undefined) {
+                const res = process_neo4j_data(data.result);
                 console.log(res);
                 setQueryResult(res);
                 setIsLoading(false);
-            }
-        })
+              }
+            })
+            .catch((error) => {
+              console.error('Fetch error:', error);
+              setIsLoading(false); // Optional: stop loading on error too
+            });
     }
 
 
