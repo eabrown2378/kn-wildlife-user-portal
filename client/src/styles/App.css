@@ -64,7 +64,7 @@ input {
 }
 
 .information {
-  &p {
+  :is(p) {
     position: absolute;
   }
 }
@@ -77,16 +77,16 @@ input {
   width: 325px;
   border-right: 2px solid black;
   padding: 12px;
-  &label {
-    color: white;
-    font-weight: bold;
-    margin-right: 6px;
-  }
-  &button {
+  :is(button) {
     margin-top: 18px;
     width: 40%;
     align-self: center;
   }
+}
+
+.query--label {
+    color: white;
+    margin-right: 6px;
 }
 
 .outputwindow {
@@ -99,14 +99,6 @@ input {
   width: 100%;
   height: 100vh;
   margin-left: 345px;
-  &img {
-    border: 4px solid black;
-    margin-bottom: 48px;
-  }
-  &button {
-    width: 20%;
-    align-self: center;
-  }
 }
 
 .searchContainer {
@@ -120,9 +112,10 @@ input {
   margin-bottom: 10px;
   gap: 4px;
   align-items: center;
-  &button {
-    height: 15px;    
-  }
+}
+
+.viewport--button{
+  height: 2vh;
 }
 
 .cytoscapeGraph {
@@ -150,8 +143,59 @@ input {
   background-color: lightgray;
   overflow: scroll;
   z-index: 1;
-  &p {
+  :is(p) {
     text-wrap: wrap;
     word-break: break-all;
   }
+}
+
+.leaflet-popup-content-wrapper {
+
+  overflow: scroll;
+  
+}
+
+.leaflet-popup-content{
+
+}
+
+.leafletP {
+  margin: 0px;
+  padding: 0px;
+}
+
+.chatbox {
+  width: 90%;
+}
+
+.chatclose {
+  margin-left: 90%;
+  padding: 0;
+  width: 8%;
+}
+
+.logo--container {
+  display: flex;
+  margin-top: 80vh;
+}
+
+.knwLogo {
+  width: 6%;
+  margin-top: 1vh;
+  margin-left: 1vh;
+  z-index: 2;
+  border: 1px solid black;
+  aspect-ratio: 1/1;
+}
+
+.nsfLogo {
+  width: 10%;
+  margin-top: 0.25vh;
+  z-index: 2;
+  aspect-ratio: 1.75/1;
+}
+
+.download--button {
+  margin-top: 1vh;
+  width: 35%;
 }

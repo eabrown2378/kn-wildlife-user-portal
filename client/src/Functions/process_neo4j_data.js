@@ -46,14 +46,14 @@ const process_neo4j_data = (data) => {
 
         if (x.category === "Site") {
 
-            // Regular expression to capture latitude and longitude.
+/*             // Regular expression to capture latitude and longitude.
             const regex = /latitude=(-?\d+\.\d+)&longitude=(-?\d+\.\d+)/;
 
             // Use the exec() method to find the matches in the URL.
-            const matches = regex.exec(x.properties.api_url);
+            const matches = regex.exec(x.properties.api_url); */
 
-            const latitude = parseFloat(matches[1]);
-            const longitude = parseFloat(matches[2]);
+            const latitude = x.properties.latitudes[0];
+            const longitude = x.properties.longitudes[0];
 
             return {
                 data: {

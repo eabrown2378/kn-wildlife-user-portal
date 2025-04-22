@@ -18,7 +18,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 <option value="phylum">Phylum</option>
             </select> */}
             <div style={{display:"flex"}}>
-                <label htmlFor="species">Species:</label>
+                <label className="query--label" htmlFor="species">Species:</label>
                 <Information blurb="species"/>
             </div>
             <Select
@@ -32,7 +32,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 isDisabled={isLoading}
             />
             <div style={{display:"flex"}}>
-                <label htmlFor="genus">Genus:</label>
+                <label className="query--label" htmlFor="genus">Genus:</label>
                 <Information blurb="genus"/>
             </div>
             <Select
@@ -46,7 +46,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 isDisabled={isLoading}
             />
             <div style={{display:"flex"}}>
-                <label htmlFor="family">Family:</label>
+                <label className="query--label" htmlFor="family">Family:</label>
                 <Information blurb="family"/>
             </div>
             <Select
@@ -60,7 +60,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 isDisabled={isLoading}
             />
             <div style={{display:"flex"}}>
-                <label htmlFor="order">Order:</label>
+                <label className="query--label" htmlFor="order">Order:</label>
                 <Information blurb="order"/>
             </div>
             <Select
@@ -74,7 +74,7 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 isDisabled={isLoading}
             />
             <div style={{display:"flex"}}>
-                <label htmlFor="class">Class:</label>
+                <label className="query--label" htmlFor="class">Class:</label>
                 <Information blurb="class"/>
             </div>
             <Select

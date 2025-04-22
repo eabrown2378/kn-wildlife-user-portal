@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import OutputWindow from "./OutputWindow";
 import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
+import DatasetSelect from "./SearchFields/DatasetSelect";
 import TimeOptions from "./SearchFields/TimeOptions";
 import states from "../data/states.json";
 import counties from "../data/counties.json";
@@ -14,9 +14,15 @@ import { query_to_cypher } from "../Functions/query_to_cypher";
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
+import ChatbotWindow from './ChatbotWindow';
+
+// const [showChat, setShowChat] = useState(false);
 
 
 function QueryFields() {
+
+    const [showChat, setShowChat] = useState(false);
+
 
     // hold query parameters to be used in API call
     // if you change structure of this object, make sure
@@ -41,7 +47,8 @@ function QueryFields() {
         minLat: null,
         maxLat: null,
         minLon: null,
-        maxLan: null
+        maxLan: null,
+        datasets: []
     });
     
     // state containing latest neo4j query results and the last query
@@ -75,7 +82,8 @@ function QueryFields() {
         classTemp: [],
         sitesTemp: [],
         statesTemp: [],
-        countiesTemp: []
+        countiesTemp: [],
+        datasetsTemp: []
     });
 
     const [searchOptions, setSearchOptions] = useState({
@@ -86,55 +94,67 @@ function QueryFields() {
         classOptions: [],
         siteOptions: [],
         stateOptions: [],
-        countyOptions: []
+        countyOptions: [],
+        datasetOptions:[],
     });
 
         
 
     useEffect(() => {
 
-        axios.get("http://localhost:8080/test_api/neo4j_search_options/", { crossDomain: true }).then((data) => {
-
-            setSearchOptions((prev) => {
-                
-                const res = data.data.result;
-
-                return {
+        fetch("http://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
+            method: 'GET', 
+            headers: {
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+              }
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              setSearchOptions((prev) => {
+                const res = data.result;
+      
+                if (res !== undefined) {
+                  return {
                     ...prev,
-                    speciesOptions: res.speciesOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    genusOptions: res.genusOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    familyOptions: res.familyOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    orderOptions: res.orderOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
-                    classOptions: res.classOptions.map((item) => {
-                        return {
-                            value: item, 
-                            label: item
-                        }
-                    }),
+                    speciesOptions: res.speciesOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    genusOptions: res.genusOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    familyOptions: res.familyOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    orderOptions: res.orderOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    classOptions: res.classOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    }))
+                  };
                 }
+      
+                console.log("Issue retrieving search options.");
+                return { ...prev };
+              });
+            })
+            .catch((err) => {
+              console.error("Fetch error:", err);
+              setSearchOptions((prev) => prev);
             });
-        });
-    }, [])
+
+    }, []);
 
 
     const [isLoading, setIsLoading] = useState(false);
@@ -164,7 +184,7 @@ function QueryFields() {
                 }).sort((a, b) => {
                     return a.label.localeCompare(b.label);
                 })
-            }
+            };
         });
 
         setTempMulti({
@@ -173,7 +193,8 @@ function QueryFields() {
             familyTemp: [],
             orderTemp: [],
             classTemp: [],
-            sitesTemp: []
+            sitesTemp: [],
+            datasetsTemp: []
         });
 
         setQuery((prev) => {
@@ -184,7 +205,8 @@ function QueryFields() {
                 family: [],
                 order: [],
                 tax_class: [],
-                sites: ['all']
+                sites: ['all'],
+                datasets: [],
             };
         });
         
@@ -236,18 +258,33 @@ function QueryFields() {
 
         console.log(cypher);
 
-        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
+        const call = `http://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
 
-        axios.get(call, { crossDomain: true }).then((data) => {
-            if (data !== undefined) {
-
-                const res = process_neo4j_data(data.data.result);
-
+        fetch(call, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
+              }
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (data !== undefined) {
+                const res = process_neo4j_data(data.result);
                 console.log(res);
                 setQueryResult(res);
                 setIsLoading(false);
-            }
-        })
+              }
+            })
+            .catch((error) => {
+              console.error('Fetch error:', error);
+              setIsLoading(false); // Optional: stop loading on error too
+            });
     }
 
 
@@ -275,14 +312,46 @@ function QueryFields() {
                     query={query}
                     isLoading={isLoading}
                 />
+                <DatasetSelect
+                    handleMultiChange={handleMultiChange} 
+                    searchOptions={searchOptions} 
+                    isLoading={isLoading} 
+                    tempMulti={tempMulti}
+                    query={query}
+                    handleChange={handleChange}
+                />
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <QueryResultContext.Provider value={queryResult}>
-                <MarkerContext.Provider value={[markers, setMarkers]}>     
-                    <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>              
-                        <OutputWindow query={query}/>
-                    </SelectionDetailsContext.Provider> 
-                </MarkerContext.Provider>
+            <MarkerContext.Provider value={[markers, setMarkers]}>
+                <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
+                <OutputWindow query={query} />
+                {/* 💬 Chatbot toggle button */}
+                <div
+                    style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    backgroundColor: '#007bff',
+                    borderRadius: '50%',
+                    width: '60px',
+                    height: '60px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: 'white',
+                    fontSize: '30px',
+                    cursor: 'pointer',
+                    zIndex: 1000
+                    }}
+                    onClick={() => setShowChat(prev => !prev)}
+                >
+                    💬
+                </div>
+
+                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
+                </SelectionDetailsContext.Provider>
+            </MarkerContext.Provider>
             </QueryResultContext.Provider>
         </div>
      );
