@@ -6,6 +6,7 @@ import { Popup } from "react-leaflet/Popup";
 import { useMapEvent } from 'react-leaflet/hooks';
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
+import get_average from "../Functions/get_average";
 import 'leaflet/dist/leaflet.css';
 
 
@@ -19,13 +20,7 @@ function MapViewComponent({position}) {
 
 function LeafletGraph() {    
 
-    function getAverage(arr) {
-        if (!Array.isArray(arr) || arr.length === 0) {
-          return 0;
-        }
-        const sum = arr.reduce((acc, num) => acc + num, 0);
-        return sum / arr.length;
-    }
+
     
     const [position, setPosition] = useState([41.7, -86.23]);
 
@@ -38,8 +33,8 @@ function LeafletGraph() {
         if (queryResult) {
             
             // first, get average lat/long of query results to determine map center position
-            const avgLat = getAverage(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.latitudes[0])); 
-            const avgLon = getAverage(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.longitudes[0])); 
+            const avgLat = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.latitudes[0])); 
+            const avgLon = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.longitudes[0])); 
 
             setPosition([avgLat,avgLon]);
 
