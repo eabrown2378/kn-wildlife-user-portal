@@ -28,8 +28,6 @@ function QueryFields() {
     // if you change structure of this object, make sure
     // to update the query_to_cypher.js function accordingly
     const [query, setQuery] = useState({
-        taxExclude: false,
-        siteExclude: true,
         fromYear: "",
         toYear: "",
         fromMonth: "",
@@ -102,7 +100,8 @@ function QueryFields() {
 
     useEffect(() => {
 
-        fetch("http://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
+        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
+        fetch("http://localhost:8080/test_api/neo4j_search_options/", {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -258,7 +257,8 @@ function QueryFields() {
 
         console.log(cypher);
 
-        const call = `http://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
+        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
+        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
 
         fetch(call, {
             method: 'GET',
