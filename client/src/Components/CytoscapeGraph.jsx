@@ -103,7 +103,7 @@ const CytoscapeGraph = () => {
                 {
                     selector: "node[category = 'State']",
                     style: {
-                        'background-color': 'DarkGreen'
+                        'background-color': '#E4D00A'
                     }
                 },
 

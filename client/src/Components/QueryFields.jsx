@@ -140,7 +140,19 @@ function QueryFields() {
                     classOptions: res.classOptions.map((item) => ({
                       value: item,
                       label: item
-                    }))
+                    })),
+                    stateOptions: res.stateOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    countyOptions: res.countyOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    siteOptions: res.siteOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
                   };
                 }
       
