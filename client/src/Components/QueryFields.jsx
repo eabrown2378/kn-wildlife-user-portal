@@ -39,9 +39,9 @@ function QueryFields() {
         family: [],
         order: [],
         tax_class: [],
-        sites: ['all'],
-        states: ['all'],
-        counties: ['all'],
+        sites: [],
+        states: [],
+        counties: [],
         minLat: null,
         maxLat: null,
         minLon: null,
@@ -216,7 +216,7 @@ function QueryFields() {
                 family: [],
                 order: [],
                 tax_class: [],
-                sites: ['all'],
+                sites: [],
                 datasets: [],
             };
         });

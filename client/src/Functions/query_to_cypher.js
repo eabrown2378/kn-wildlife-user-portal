@@ -19,7 +19,7 @@ const query_to_cypher = ({
 
     let locationString = ''
 
-    if (sites[0] !== 'all' || counties[0] !== 'all' || states[0] !== 'all') {
+    if (sites.length !== 0 || counties.length !== 0 || states.length !== 0) {
         locationString = 
         `
             (
