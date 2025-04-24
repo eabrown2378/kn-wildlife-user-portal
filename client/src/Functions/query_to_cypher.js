@@ -52,7 +52,7 @@ const query_to_cypher = ({
 
     }
 
-    const cypherString = matchString + taxString + locationString + " RETURN * "
+    const cypherString =  taxString !== '' && locationString !== '' ?   matchString + taxString + ' AND ' +  locationString + " RETURN * " : matchString + taxString +  locationString + " RETURN * "
    
 
 
