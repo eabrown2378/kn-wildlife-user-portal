@@ -42,10 +42,10 @@ function QueryFields() {
         sites: [],
         states: [],
         counties: [],
-        minLat: null,
-        maxLat: null,
-        minLon: null,
-        maxLan: null,
+        minLat: '',
+        maxLat: '',
+        minLon: '',
+        maxLan: '',
         datasets: []
     });
     
@@ -170,69 +170,23 @@ function QueryFields() {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    // call to change options on load or when risk checkbox is toggled
-    useEffect(() => {
-
-         setSearchOptions((prev) => {
-/*             taxaOptions: metaData.map((item) => {
-                    return item.taxa.split('|');
-            }).flat().filter(onlyUnique).map((item) => {
-                return {value: item, label: item};
-            }),
-            siteOptions: metaData.map((item) => {
-                    return {value: item.SiteName, label: item.SiteName};
-            }).filter(Boolean), */
-            return {
-                ...prev,
-                stateOptions: states.map((item) => {
-                    return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
-                }),
-                countyOptions: counties.map((item) => {
-
-                    const stateCode = Object.keys(stateCodes).filter((key) => stateCodes[key] === item.properties.STATEFP)[0]
-
-                    return {value: `${item.properties.NAME}_${stateCode}`, label: `${item.properties.NAME} (${stateCode})`}
-                }).sort((a, b) => {
-                    return a.label.localeCompare(b.label);
-                })
-            };
-        });
-
-        setTempMulti({
-            speciesTemp: [],
-            genusTemp: [],
-            familyTemp: [],
-            orderTemp: [],
-            classTemp: [],
-            sitesTemp: [],
-            datasetsTemp: []
-        });
-
-        setQuery((prev) => {
-            return {
-                ...prev,
-                species: [],
-                genus: [],
-                family: [],
-                order: [],
-                tax_class: [],
-                sites: [],
-                datasets: [],
-            };
-        });
-        
-        setIsLoading(false); 
-
-    }, []);
-
-
     function handleChange(e) {
         const {name, checked, type, value} = e.target;
 
+        // handle special cases for numerical input
+        const numerical = ['minLat', 'maxLat', "minLon", 'maxLon'];
+
+        let numValue = undefined;
+        
+        if (numerical.includes(name) && value === "-" || value === "." || !isNaN(Number(value))) {
+            numValue = value;
+        }
+
+
         setQuery((prev) => {
             return {
                 ...prev,
-                [name]: type === "checkbox" ? checked : type === 'number' ? !isNaN(Number(value))? Number(value) : null : value
+                [name]: type === "checkbox" ? checked : numerical.includes(name) ? numValue !== undefined ? numValue : '' : value
             };
         });
         
