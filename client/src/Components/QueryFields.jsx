@@ -5,6 +5,8 @@ import LocationParams from "./SearchFields/LocationParams";
 import DatasetSelect from "./SearchFields/DatasetSelect";
 import TimeOptions from "./SearchFields/TimeOptions";
 import { Marker } from "react-leaflet/Marker";
+import L from "leaflet";
+import marker from "../assets/map-marker.svg";
 import { Popup } from "react-leaflet/Popup";
 import { process_neo4j_data } from "../Functions/process_neo4j_data";
 import { query_to_cypher } from "../Functions/query_to_cypher";
@@ -17,6 +19,15 @@ import ChatbotWindow from './ChatbotWindow';
 
 
 function QueryFields() {
+
+
+    // default leaflet map marker
+    const myIcon = new L.Icon({
+        iconUrl: marker,
+        iconRetinaUrl: marker,
+        popupAnchor:  [-0, -0],
+        iconSize: [26, 40],     
+    });
 
     const [showChat, setShowChat] = useState(false);
 
@@ -53,7 +64,7 @@ function QueryFields() {
     const position = [41.7, -86.23];
     const [markers, setMarkers] = useState(
         [
-            <Marker key = {"Marker0"} position={position}>
+            <Marker key = {"Marker0"} position={position} icon={myIcon}>
                 <Popup>
                     Your search results will <br /> be mapped here.
                 </Popup>
