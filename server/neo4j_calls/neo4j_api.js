@@ -78,6 +78,18 @@ exports.get_search_options = async function () {
             `MATCH (n:TaxClass) RETURN DISTINCT n.name AS uniqueValues`
         );
 
+        const stateOptions = await session.run(
+            `MATCH (n:State) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const countyOptions = await session.run(
+            `MATCH (n:County) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
+        const siteOptions = await session.run(
+            `MATCH (n:Site) RETURN DISTINCT n.name AS uniqueValues`
+        );
+
         session.close();
 
         const search_options = {
@@ -86,6 +98,9 @@ exports.get_search_options = async function () {
             familyOptions: familyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             orderOptions: orderOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             classOptions: classOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            stateOptions: stateOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            countyOptions: countyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
         }
 
         //console.log(search_options);

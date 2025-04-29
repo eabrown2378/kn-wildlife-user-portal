@@ -28,8 +28,6 @@ function QueryFields() {
     // if you change structure of this object, make sure
     // to update the query_to_cypher.js function accordingly
     const [query, setQuery] = useState({
-        taxExclude: false,
-        siteExclude: true,
         fromYear: "",
         toYear: "",
         fromMonth: "",
@@ -41,13 +39,13 @@ function QueryFields() {
         family: [],
         order: [],
         tax_class: [],
-        sites: ['all'],
-        states: ['all'],
-        counties: ['all'],
-        minLat: null,
-        maxLat: null,
-        minLon: null,
-        maxLan: null,
+        sites: [],
+        states: [],
+        counties: [],
+        minLat: '',
+        maxLat: '',
+        minLon: '',
+        maxLan: '',
         datasets: []
     });
     
@@ -102,7 +100,8 @@ function QueryFields() {
 
     useEffect(() => {
 
-        fetch("http://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
+        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
+        fetch("http://localhost:8080/test_api/neo4j_search_options/", {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -141,7 +140,19 @@ function QueryFields() {
                     classOptions: res.classOptions.map((item) => ({
                       value: item,
                       label: item
-                    }))
+                    })),
+                    stateOptions: res.stateOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    countyOptions: res.countyOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
+                    siteOptions: res.siteOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
                   };
                 }
       
@@ -159,69 +170,23 @@ function QueryFields() {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    // call to change options on load or when risk checkbox is toggled
-    useEffect(() => {
-
-         setSearchOptions((prev) => {
-/*             taxaOptions: metaData.map((item) => {
-                    return item.taxa.split('|');
-            }).flat().filter(onlyUnique).map((item) => {
-                return {value: item, label: item};
-            }),
-            siteOptions: metaData.map((item) => {
-                    return {value: item.SiteName, label: item.SiteName};
-            }).filter(Boolean), */
-            return {
-                ...prev,
-                stateOptions: states.map((item) => {
-                    return {value: item.abbreviation, label: `${item.name} (${item.abbreviation})`};
-                }),
-                countyOptions: counties.map((item) => {
-
-                    const stateCode = Object.keys(stateCodes).filter((key) => stateCodes[key] === item.properties.STATEFP)[0]
-
-                    return {value: `${item.properties.NAME}_${stateCode}`, label: `${item.properties.NAME} (${stateCode})`}
-                }).sort((a, b) => {
-                    return a.label.localeCompare(b.label);
-                })
-            };
-        });
-
-        setTempMulti({
-            speciesTemp: [],
-            genusTemp: [],
-            familyTemp: [],
-            orderTemp: [],
-            classTemp: [],
-            sitesTemp: [],
-            datasetsTemp: []
-        });
-
-        setQuery((prev) => {
-            return {
-                ...prev,
-                species: [],
-                genus: [],
-                family: [],
-                order: [],
-                tax_class: [],
-                sites: ['all'],
-                datasets: [],
-            };
-        });
-        
-        setIsLoading(false); 
-
-    }, []);
-
-
     function handleChange(e) {
         const {name, checked, type, value} = e.target;
 
+        // handle special cases for numerical input
+        const numerical = ['minLat', 'maxLat', "minLon", 'maxLon'];
+
+        let numValue = undefined;
+        
+        if (numerical.includes(name) && value === "-" || value === "." || !isNaN(Number(value))) {
+            numValue = value;
+        }
+
+
         setQuery((prev) => {
             return {
                 ...prev,
-                [name]: type === "checkbox" ? checked : type === 'number' ? !isNaN(Number(value))? Number(value) : null : value
+                [name]: type === "checkbox" ? checked : numerical.includes(name) ? numValue !== undefined ? numValue : '' : value
             };
         });
         
@@ -258,7 +223,8 @@ function QueryFields() {
 
         console.log(cypher);
 
-        const call = `http://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
+        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
+        const call = `http://localhost:8080/test_api/neo4j_get/${cypher}`;
 
         fetch(call, {
             method: 'GET',
