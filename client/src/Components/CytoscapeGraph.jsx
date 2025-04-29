@@ -28,7 +28,15 @@ const CytoscapeGraph = () => {
                     selector: 'node',
                     style: {
                         'background-color': 'data(data.category)',
-                        'label': 'data(properties.name)'
+                        'label': 'data(properties.name)',
+                        'font-size': '20px'
+                    }
+                },
+                {
+                    selector: 'node[category = "Observation"]',
+                    style: {
+                        'label': 'data(properties.date)',
+                        'font-size': '20px'
                     }
                 },
             
@@ -40,7 +48,8 @@ const CytoscapeGraph = () => {
                         'target-arrow-color': '#ccc',
                         'target-arrow-shape': 'triangle',
                         'curve-style': 'bezier',
-                        'label': 'data(type)'
+                        'label': 'data(type)',
+                        'font-size': '16px'
                     }
                 },
                 {
@@ -77,6 +86,24 @@ const CytoscapeGraph = () => {
                     selector: "node[category = 'Observation']",
                     style: {
                         'background-color': '#DEB887'
+                    }
+                },
+                {
+                    selector: "node[category = 'Site']",
+                    style: {
+                        'background-color': 'DarkSalmon'
+                    }
+                },
+                {
+                    selector: "node[category = 'County']",
+                    style: {
+                        'background-color': 'DarkSlateGray'
+                    }
+                },
+                {
+                    selector: "node[category = 'State']",
+                    style: {
+                        'background-color': '#E4D00A'
                     }
                 },
 

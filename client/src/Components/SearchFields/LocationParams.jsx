@@ -55,19 +55,19 @@ function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti
                 <Information blurb="coordRange"/>
             </div>
             <div>
-                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0N)'}:</label>
+                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0)'}:</label>
                 <div id = "latitudeDiv" style={{display:"flex"}}>
                     <label className="query--label" htmlFor="minLat">Min</label>
-                    <input id = "minLat" name = "minLat" value={query.minLat} onChange={(e) => handleChange(e)} type="number" />
+                    <input id = "minLat" name = "minLat" value={query.minLat} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLat">Max</label>
-                    <input id = "maxLat" name = "maxLat" value={query.maxLat} onChange={(e) => handleChange(e)} type="number" />
+                    <input id = "maxLat" name = "maxLat" value={query.maxLat} onChange={(e) => handleChange(e)}/>
                 </div>
-                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0E)'}</label>
+                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0)'}</label>
                 <div id = "longitudeDiv"  style={{display:"flex"}}>
                     <label className="query--label" htmlFor="minLon">Min</label>
-                    <input id = "minLon" name = "minLon" value={query.minLon} onChange={(e) => handleChange(e)}  type="number" />
+                    <input id = "minLon" name = "minLon" value={query.minLon} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLon">Max</label>
-                    <input id = "maxLon" name = "maxLon" value={query.maxLon} onChange={(e) => handleChange(e)} type="number" />
+                    <input id = "maxLon" name = "maxLon" value={query.maxLon} onChange={(e) => handleChange(e)}/>
                 </div>
             </div>
         </fieldset>
