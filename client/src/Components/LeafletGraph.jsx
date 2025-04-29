@@ -55,7 +55,7 @@ function LeafletGraph() {
                                 <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
                                 <p className="leafletP">{`Latitude: ${item.data.properties.latitudes[0].toPrecision(5)}`}</p>
                                 <p className="leafletP">{`Sampling Dates: ${queryResult.filter((x) => {
-                                    return x.data.category === "Observation" && x.data.properties.name === item.data.properties.name
+                                    return x.data.category === "Observation" && x.data.properties.site_name === item.data.properties.name
                                 }).map((x) => x.data.properties.date).sort((a, b) => {
                                     const dateA = new Date(a);
                                     const dateB = new Date(b);
