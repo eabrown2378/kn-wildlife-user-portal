@@ -11,7 +11,7 @@ const fs = require('fs');
 }; */
 
 
-// only need CORS in local development, in prod handle with Apache
+/* // only need CORS in local development, in prod handle with Apache
 app.use(cors());
 
 app.use(function (req, res, next) {
@@ -21,7 +21,7 @@ app.use(function (req, res, next) {
       'Origin, X-Requested-With, Content-Type, Accept'
   );
   next();
-});
+}); */
 
 require('dotenv').config();
 
