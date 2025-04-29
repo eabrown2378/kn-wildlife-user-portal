@@ -7,6 +7,8 @@ import { useMapEvent } from 'react-leaflet/hooks';
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import get_average from "../Functions/get_average";
+import L from "leaflet";
+import marker from "../assets/map-marker.svg";
 import 'leaflet/dist/leaflet.css';
 
 
@@ -19,7 +21,12 @@ function MapViewComponent({position}) {
 };
 
 function LeafletGraph() {    
-
+    const myIcon = new L.Icon({
+        iconUrl: marker,
+        iconRetinaUrl: marker,
+        popupAnchor:  [-0, -0],
+        iconSize: [26,40],     
+    });
 
     
     const [position, setPosition] = useState([41.7, -86.23]);
@@ -42,7 +49,7 @@ function LeafletGraph() {
 
                 if (item.data.category === 'Site') {
                     return (
-                        <Marker key = {`Marker${index}`} position={[item.data.latitude, item.data.longitude]}>
+                        <Marker key = {`Marker${index}`} icon={myIcon} position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
                                 <p className="leafletP">Site Name/Code: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
                                 <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
