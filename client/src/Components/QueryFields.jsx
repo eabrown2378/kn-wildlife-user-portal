@@ -232,13 +232,14 @@ function QueryFields() {
         console.log(cypher);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
+
 
         fetch(call, {
             method: 'GET',
             headers: {
-                'Content-Type': 'text/plain', 
-                'Accept': 'text/plain', 
+                'Content-Type': 'application/json', 
+                'Accept': 'application/json', 
               }
           })
             .then((response) => {
