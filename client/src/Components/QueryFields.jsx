@@ -109,7 +109,7 @@ function QueryFields() {
     useEffect(() => {
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch("http://localhost:8080/test_api/neo4j_search_options/", {
+        fetch("https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -233,6 +233,7 @@ function QueryFields() {
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
         const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
+
 
         fetch(call, {
             method: 'GET',
