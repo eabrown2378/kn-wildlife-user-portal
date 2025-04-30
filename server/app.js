@@ -6,8 +6,8 @@ const https = require('https');
 const fs = require('fs');
 
 /* const options = {
-  key: fs.readFileSync('./kn-wildlife.crc.nd.edu.key'),
-  cert: fs.readFileSync('./kn-wildlife.crc.nd.edu.cer'),
+  key: fs.readFileSync('../kn-wildlife.crc.nd.edu.key'),
+  cert: fs.readFileSync('../kn-wildlife_crc_nd_edu.cer'),
 }; */
 
 
