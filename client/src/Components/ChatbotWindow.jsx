@@ -1,5 +1,4 @@
 import { useState, useContext } from 'react';
-import axios from 'axios';
 import { QueryResultContext } from '../Context/QueryResultContext';
 
 export default function ChatbotWindow({ onClose }) {
