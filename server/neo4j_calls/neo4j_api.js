@@ -1,6 +1,6 @@
 let neo4j = require('neo4j-driver');
 let { creds } = require("../config/credentials");
-let driver = neo4j.driver("neo4j+s://bb6a9180.databases.neo4j.io", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
+let driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
 
 exports.get_neo4j = async function (query) {
     
@@ -14,15 +14,15 @@ exports.get_neo4j = async function (query) {
         // end session
         session.close();
 
-        console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
+        // console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
     
         return (!neo4j_data ? null : neo4j_data.records);
 
     } catch(error) {
 
-        console.error('Error fetching neo4j data:', error)
+        console.error('Error fetching neo4j data:', error);
         
-    }
+    };
 
 };
 
@@ -101,7 +101,7 @@ exports.get_search_options = async function () {
             stateOptions: stateOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             countyOptions: countyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-        }
+        };
 
         //console.log(search_options);
 
@@ -109,8 +109,8 @@ exports.get_search_options = async function () {
 
     } catch(error) {
 
-        console.error('Error fetching search options from neo4j:', error)
+        console.error('Error fetching search options from neo4j:', error);
         
-    }
+    };
   }
 

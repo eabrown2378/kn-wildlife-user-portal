@@ -9,15 +9,19 @@ const query_to_cypher = ({
         }) => {
 
     // concatenate dates
+    let fromDate = undefined;
+    let toDate = undefined;
+
     if (fromMonth !== "" && fromDay !== "" && fromYear !== "") {
-        const fromDate = [fromMonth, fromDay, fromYear].join("-");
+        fromDate = [fromMonth, fromDay, fromYear].join("-");
     }
 
     if (toMonth !== "" && toDay !== "" && toYear !== "") {
-        const toDate = [toMonth, toDay, toYear].join("-");
+        toDate = [toMonth, toDay, toYear].join("-");
     }
 
-    let locationString = ''
+    // handle location search
+    let locationString = '';
 
     if (sites.length !== 0 || counties.length !== 0 || states.length !== 0) {
         locationString = 
@@ -30,10 +34,51 @@ const query_to_cypher = ({
         `;
     }
 
+
+    // handle coordinate range
+    let coordString = '';
+
+    if ((minLat !== '' && maxLat !== '') || (minLon !== '' && maxLon !== '')) {
+
+        // if latitude range is defined and longitude isn't
+        if ((minLat !== '' && maxLat !== '') && (minLon === '' || maxLon === '')) {
+            coordString = 
+            `
+                (
+                s.latitudes[0] >= ${minLat} 
+                AND s.latitudes[0] <= ${maxLat}
+                )
+            `;
+        }
+        // if longitude range is defined and latitude isn't
+        if ((minLon !== '' && maxLon !== '') && (minLat === '' || maxLat === '')) {
+            coordString = 
+            `
+                (
+                s.longitudes[0] >= ${minLon} 
+                AND s.longitudes[0] <= ${maxLon}
+                )
+            `;
+        }
+        // if both latitude and longitude ranges are defined
+        if (minLat !== '' && maxLat !== '' && minLon !== '' && maxLon !== '') {
+            coordString = 
+            `
+                (
+                s.longitudes[0] >= ${minLon} 
+                AND s.longitudes[0] <= ${maxLon} 
+                AND s.latitudes[0] >= ${minLat} 
+                AND s.latitudes[0] <= ${maxLat}
+                )
+            `;
+        }
+
+    }
+
     // initial match statement to return complete chain of nodes and edges from neo4j
     const matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State) WHERE";
 
-
+    // handle taxonomic search
     let taxString = 
     `
         (
@@ -52,10 +97,17 @@ const query_to_cypher = ({
 
     }
 
-    const cypherString =  taxString !== '' && locationString !== '' ?   matchString + taxString + ' AND ' +  locationString + " RETURN * " : matchString + taxString +  locationString + " RETURN * "
-   
+    let cypherString = '';
+    
+    cypherString = taxString !== '' || locationString !== '' || coordString !== '' ? matchString : '';
 
+    cypherString = cypherString !== '' ? taxString !== '' ? cypherString + taxString : cypherString : '';
 
+    cypherString = cypherString !== '' ? locationString !== '' ? taxString !== '' ? cypherString + " AND " + locationString : cypherString + locationString : cypherString : '';
+
+    cypherString = cypherString !== '' ? coordString !== '' ? taxString !== '' || locationString !== '' ? cypherString + " AND " + coordString : cypherString + coordString : cypherString : '';
+
+    cypherString = cypherString !== '' ? cypherString + " RETURN * " : '';
 
 
     return cypherString;
