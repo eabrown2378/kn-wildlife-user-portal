@@ -8,16 +8,41 @@ const query_to_cypher = ({
             fromMonth, toMonth, fromDay, toDay, fromYear, toYear
         }) => {
 
+    // initial match statement to return complete chain of nodes and edges from neo4j
+    const matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State) WHERE";
+
     // concatenate dates
     let fromDate = undefined;
     let toDate = undefined;
 
     if (fromMonth !== "" && fromDay !== "" && fromYear !== "") {
-        fromDate = [fromMonth, fromDay, fromYear].join("-");
+        fromDate = [fromYear, fromMonth, fromDay].join("/");
     }
 
     if (toMonth !== "" && toDay !== "" && toYear !== "") {
-        toDate = [toMonth, toDay, toYear].join("-");
+        toDate = [toYear, toMonth, toDay].join("/");
+    }
+
+    // query by date
+    let dateString = '';
+
+    if (fromDate !== undefined || toDate !== undefined) {
+        
+        // all data after fromDate
+        if (fromDate !== undefined && toDate === undefined) {
+            dateString = ``;
+        }
+
+        // all data before toDate
+        if (toDate !== undefined && fromDate === undefined) {
+            dateString = ``;
+        }
+
+        // all data between fromDate and toDate
+        if (fromDate !== undefined && toDate !== undefined) {
+            dateString = ``;
+        }
+
     }
 
     // handle location search
@@ -75,8 +100,6 @@ const query_to_cypher = ({
 
     }
 
-    // initial match statement to return complete chain of nodes and edges from neo4j
-    const matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State) WHERE";
 
     // handle taxonomic search
     let taxString = 
@@ -106,6 +129,8 @@ const query_to_cypher = ({
     cypherString = cypherString !== '' ? locationString !== '' ? taxString !== '' ? cypherString + " AND " + locationString : cypherString + locationString : cypherString : '';
 
     cypherString = cypherString !== '' ? coordString !== '' ? taxString !== '' || locationString !== '' ? cypherString + " AND " + coordString : cypherString + coordString : cypherString : '';
+
+    cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
     cypherString = cypherString !== '' ? cypherString + " RETURN * " : '';
 
