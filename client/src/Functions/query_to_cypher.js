@@ -9,18 +9,18 @@ const query_to_cypher = ({
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
-    const matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State) WHERE";
+    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)";
 
     // concatenate dates
     let fromDate = undefined;
     let toDate = undefined;
 
     if (fromMonth !== "" && fromDay !== "" && fromYear !== "") {
-        fromDate = [fromYear, fromMonth, fromDay].join("/");
+        fromDate = [fromYear, fromMonth, fromDay].join("-");
     }
 
     if (toMonth !== "" && toDay !== "" && toYear !== "") {
-        toDate = [toYear, toMonth, toDay].join("/");
+        toDate = [toYear, toMonth, toDay].join("-");
     }
 
     // query by date
@@ -30,19 +30,47 @@ const query_to_cypher = ({
         
         // all data after fromDate
         if (fromDate !== undefined && toDate === undefined) {
-            dateString = ``;
+            dateString = 
+            `
+                (
+                datesFormatted >= date("${fromDate}")
+                )
+            `;
         }
 
         // all data before toDate
         if (toDate !== undefined && fromDate === undefined) {
-            dateString = ``;
+            dateString = 
+            `
+                (
+                datesFormatted <= date("${toDate}")
+                )
+            `;
         }
 
         // all data between fromDate and toDate
         if (fromDate !== undefined && toDate !== undefined) {
-            dateString = ``;
+            dateString = 
+            `
+                (
+                datesFormatted >= date("${fromDate}")
+                AND datesFormatted <= date("${toDate}")
+                )
+            `;
         }
 
+    }
+
+    if (dateString !== '') {
+        matchString = matchString + 
+            `            
+                UNWIND p.date AS dates 
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, [item in split(dates, "-") | toInteger(item)] AS dateComponents
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
+                WHERE
+            `;        
+    } else {
+        matchString = matchString + ' WHERE ';
     }
 
     // handle location search
@@ -122,7 +150,7 @@ const query_to_cypher = ({
 
     let cypherString = '';
     
-    cypherString = taxString !== '' || locationString !== '' || coordString !== '' ? matchString : '';
+    cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? matchString : '';
 
     cypherString = cypherString !== '' ? taxString !== '' ? cypherString + taxString : cypherString : '';
 
@@ -132,7 +160,7 @@ const query_to_cypher = ({
 
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
-    cypherString = cypherString !== '' ? cypherString + " RETURN * " : '';
+    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
 
 
     return cypherString;
