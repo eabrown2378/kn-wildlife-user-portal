@@ -2,6 +2,9 @@ import {Fragment, useEffect, useRef, useContext} from 'react';
 import cytoscape from 'cytoscape';
 import { QueryResultContext } from '../Context/QueryResultContext';
 import { SelectionDetailsContext } from '../Context/SelectionDetailsContext';
+import fcose from 'cytoscape-fcose';
+
+cytoscape.use( fcose );
 
 
 
@@ -129,7 +132,7 @@ const CytoscapeGraph = () => {
             )
         });
 
-        var layout = cy.layout({ name: 'cose', nodeRepulsion: 10000000, nodeSeparation: 1000 });
+        var layout = cy.layout({ name: 'fcose', nodeRepulsion: 10000000, nodeSeparation: 1500, idealEdgeLength: 250 });
 
         layout.run(); // apply fcose layout
     };
