@@ -91,40 +91,16 @@ const query_to_cypher = ({
     // handle coordinate range
     let coordString = '';
 
-    if ((minLat !== '' && maxLat !== '') || (minLon !== '' && maxLon !== '')) {
-
-        // if latitude range is defined and longitude isn't
-        if ((minLat !== '' && maxLat !== '') && (minLon === '' || maxLon === '')) {
+    if (minLat !== '' || maxLat !== '' || minLon !== '' || maxLon !== '') {
             coordString = 
             `
                 (
-                s.latitudes[0] >= ${minLat} 
-                AND s.latitudes[0] <= ${maxLat}
+                s.longitudes[0] >= ${minLon === '' ? -180 : minLon} 
+                AND s.longitudes[0] <= ${maxLon === '' ? 180 : maxLon} 
+                AND s.latitudes[0] >= ${minLat === '' ? -90 : minLat} 
+                AND s.latitudes[0] <= ${maxLat === '' ? 90 : maxLat}
                 )
             `;
-        }
-        // if longitude range is defined and latitude isn't
-        if ((minLon !== '' && maxLon !== '') && (minLat === '' || maxLat === '')) {
-            coordString = 
-            `
-                (
-                s.longitudes[0] >= ${minLon} 
-                AND s.longitudes[0] <= ${maxLon}
-                )
-            `;
-        }
-        // if both latitude and longitude ranges are defined
-        if (minLat !== '' && maxLat !== '' && minLon !== '' && maxLon !== '') {
-            coordString = 
-            `
-                (
-                s.longitudes[0] >= ${minLon} 
-                AND s.longitudes[0] <= ${maxLon} 
-                AND s.latitudes[0] >= ${minLat} 
-                AND s.latitudes[0] <= ${maxLat}
-                )
-            `;
-        }
 
     }
 

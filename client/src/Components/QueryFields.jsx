@@ -56,7 +56,7 @@ function QueryFields() {
         minLat: '',
         maxLat: '',
         minLon: '',
-        maxLan: '',
+        maxLon: '',
         datasets: []
     });
     
@@ -112,7 +112,7 @@ function QueryFields() {
     useEffect(() => {
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch("https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
+        fetch("http://localhost:8080/test_api/neo4j_search_options/", {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -258,9 +258,10 @@ function QueryFields() {
         const cypher = query_to_cypher(query);
 
         console.log(cypher);
+        console.log(query);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
 
 
         fetch(call, {
