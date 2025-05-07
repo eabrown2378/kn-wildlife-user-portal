@@ -8,16 +8,73 @@ const query_to_cypher = ({
             fromMonth, toMonth, fromDay, toDay, fromYear, toYear
         }) => {
 
+    // initial match statement to return complete chain of nodes and edges from neo4j
+    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)";
+
     // concatenate dates
+    let fromDate = undefined;
+    let toDate = undefined;
+
     if (fromMonth !== "" && fromDay !== "" && fromYear !== "") {
-        const fromDate = [fromMonth, fromDay, fromYear].join("-");
+        fromDate = [fromYear, fromMonth, fromDay].join("-");
     }
 
     if (toMonth !== "" && toDay !== "" && toYear !== "") {
-        const toDate = [toMonth, toDay, toYear].join("-");
+        toDate = [toYear, toMonth, toDay].join("-");
     }
 
-    let locationString = ''
+    // query by date
+    let dateString = '';
+
+    if (fromDate !== undefined || toDate !== undefined) {
+        
+        // all data after fromDate
+        if (fromDate !== undefined && toDate === undefined) {
+            dateString = 
+            `
+                (
+                datesFormatted >= date("${fromDate}")
+                )
+            `;
+        }
+
+        // all data before toDate
+        if (toDate !== undefined && fromDate === undefined) {
+            dateString = 
+            `
+                (
+                datesFormatted <= date("${toDate}")
+                )
+            `;
+        }
+
+        // all data between fromDate and toDate
+        if (fromDate !== undefined && toDate !== undefined) {
+            dateString = 
+            `
+                (
+                datesFormatted >= date("${fromDate}")
+                AND datesFormatted <= date("${toDate}")
+                )
+            `;
+        }
+
+    }
+
+    if (dateString !== '') {
+        matchString = matchString + 
+            `            
+                UNWIND p.date AS dates 
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, [item in split(dates, "-") | toInteger(item)] AS dateComponents
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
+                WHERE
+            `;        
+    } else {
+        matchString = matchString + ' WHERE ';
+    }
+
+    // handle location search
+    let locationString = '';
 
     if (sites.length !== 0 || counties.length !== 0 || states.length !== 0) {
         locationString = 
@@ -30,10 +87,49 @@ const query_to_cypher = ({
         `;
     }
 
-    // initial match statement to return complete chain of nodes and edges from neo4j
-    const matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State) WHERE";
+
+    // handle coordinate range
+    let coordString = '';
+
+    if ((minLat !== '' && maxLat !== '') || (minLon !== '' && maxLon !== '')) {
+
+        // if latitude range is defined and longitude isn't
+        if ((minLat !== '' && maxLat !== '') && (minLon === '' || maxLon === '')) {
+            coordString = 
+            `
+                (
+                s.latitudes[0] >= ${minLat} 
+                AND s.latitudes[0] <= ${maxLat}
+                )
+            `;
+        }
+        // if longitude range is defined and latitude isn't
+        if ((minLon !== '' && maxLon !== '') && (minLat === '' || maxLat === '')) {
+            coordString = 
+            `
+                (
+                s.longitudes[0] >= ${minLon} 
+                AND s.longitudes[0] <= ${maxLon}
+                )
+            `;
+        }
+        // if both latitude and longitude ranges are defined
+        if (minLat !== '' && maxLat !== '' && minLon !== '' && maxLon !== '') {
+            coordString = 
+            `
+                (
+                s.longitudes[0] >= ${minLon} 
+                AND s.longitudes[0] <= ${maxLon} 
+                AND s.latitudes[0] >= ${minLat} 
+                AND s.latitudes[0] <= ${maxLat}
+                )
+            `;
+        }
+
+    }
 
 
+    // handle taxonomic search
     let taxString = 
     `
         (
@@ -52,10 +148,19 @@ const query_to_cypher = ({
 
     }
 
-    const cypherString =  taxString !== '' && locationString !== '' ?   matchString + taxString + ' AND ' +  locationString + " RETURN * " : matchString + taxString +  locationString + " RETURN * "
-   
+    let cypherString = '';
+    
+    cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? matchString : '';
 
+    cypherString = cypherString !== '' ? taxString !== '' ? cypherString + taxString : cypherString : '';
 
+    cypherString = cypherString !== '' ? locationString !== '' ? taxString !== '' ? cypherString + " AND " + locationString : cypherString + locationString : cypherString : '';
+
+    cypherString = cypherString !== '' ? coordString !== '' ? taxString !== '' || locationString !== '' ? cypherString + " AND " + coordString : cypherString + coordString : cypherString : '';
+
+    cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
+
+    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
 
 
     return cypherString;

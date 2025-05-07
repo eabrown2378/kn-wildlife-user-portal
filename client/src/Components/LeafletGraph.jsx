@@ -15,20 +15,27 @@ import 'leaflet/dist/leaflet.css';
 // component so set map center when query result changes
 function MapViewComponent({position}) {
     const map = useMapEvent('click', () => {
-      map.setView(position, map.getZoom())
+      map.setView(position, map.getZoom());
     });
     return null;
 };
 
-function LeafletGraph() {    
-    const myIcon = new L.Icon({
+ function LeafletGraph() {   
+    
+
+
+    
+/*     const myIcon = new L.Icon({
         iconUrl: marker,
         iconRetinaUrl: marker,
         popupAnchor:  [-0, -0],
         iconSize: [26,40],     
-    });
+    }); 
+ */
+    
 
     
+
     const [position, setPosition] = useState([41.7, -86.23]);
 
     const queryResult = useContext(QueryResultContext);
@@ -49,7 +56,7 @@ function LeafletGraph() {
 
                 if (item.data.category === 'Site') {
                     return (
-                        <Marker key = {`Marker${index}`} icon={myIcon} position={[item.data.latitude, item.data.longitude]}>
+                        <Marker key = {`Marker${index}`} /* icon={myIcon} */ position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
                                 <p className="leafletP">Site Name/Code: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
                                 <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
