@@ -21,13 +21,13 @@ import ChatbotWindow from './ChatbotWindow';
 function QueryFields() {
 
 
-/*     // default leaflet map marker
+    // default leaflet map marker
     const myIcon = new L.Icon({
         iconUrl: marker,
         iconRetinaUrl: marker,
         popupAnchor:  [-0, -0],
         iconSize: [26, 40],     
-    }); */
+    });
 
     const [showChat, setShowChat] = useState(false);
 
@@ -66,7 +66,7 @@ function QueryFields() {
     const position = [41.7, -86.23];
     const [markers, setMarkers] = useState(
         [
-            <Marker key = {"Marker0"} position={position} /* icon={myIcon} */>
+            <Marker key = {"Marker0"} position={position} icon={myIcon}>
                 <Popup>
                     Your search results will <br /> be mapped here.
                 </Popup>
@@ -111,7 +111,7 @@ function QueryFields() {
     useEffect(() => {
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch("http://localhost:8080/test_api/neo4j_search_options/", {
+        fetch("https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/", {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 

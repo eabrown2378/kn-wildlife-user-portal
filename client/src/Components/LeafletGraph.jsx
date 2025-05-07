@@ -25,13 +25,13 @@ function MapViewComponent({position}) {
 
 
     
-/*     const myIcon = new L.Icon({
+    const myIcon = new L.Icon({
         iconUrl: marker,
         iconRetinaUrl: marker,
         popupAnchor:  [-0, -0],
         iconSize: [26,40],     
     }); 
- */
+
     
 
     
@@ -56,7 +56,7 @@ function MapViewComponent({position}) {
 
                 if (item.data.category === 'Site') {
                     return (
-                        <Marker key = {`Marker${index}`} /* icon={myIcon} */ position={[item.data.latitude, item.data.longitude]}>
+                        <Marker key = {`Marker${index}`} icon={myIcon} position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
                                 <p className="leafletP">Site Name/Code: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
                                 <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
