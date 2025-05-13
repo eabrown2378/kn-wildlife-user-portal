@@ -89,6 +89,10 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 ### Built With
 
 * [![React][React.js]][React-url]
+* [![Express][Express.js]][Express-url]
+* [![Neo4j][Neo4j]][Neo4j-url]
+* [![Leaflet][Leaflet]][Leaflet-url]
+* [![Cytoscape.js][Cytoscape.js]][Cytoscape.js-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -189,3 +193,11 @@ Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://g
 [product-screenshot]: images/screenshot.png
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
+[Express.js]: https://img.shields.io/badge/Express.js-%23404d59.svg?logo=express&logoColor=%2361DAFB
+[Express-url]: https://expressjs.com/
+[Neo4J]: https://img.shields.io/badge/Neo4j-008CC1?logo=neo4j&logoColor=white
+[Neo4J-url]: https://neo4j.com/
+[Leaflet]: https://img.shields.io/badge/Leaflet-white?style=flat&logo=leaflet&logoColor=%23199900&logoSize=auto
+[Leaflet-url]: https://leafletjs.com/
+[Cytoscape.js]: https://img.shields.io/badge/Cytoscape.js-gold?style=flat&logo=cytoscapedotjs&logoColor=black&logoSize=auto
+[Cytoscape.js-url]: https://js.cytoscape.org/
