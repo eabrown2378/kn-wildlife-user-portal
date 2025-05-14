@@ -203,3 +203,33 @@ input {
 .errorMessage {
   color: red;
 }
+
+.checkbox--class {
+  display: flex;
+  flex-direction: row;
+  :is(input) {
+    margin: 0;
+  }
+  :is(label) {
+    margin: 0;
+  }
+}
+
+
+#coordrange--div {
+  margin-bottom: 6px;
+  gap: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+#latitudeDiv {
+  :is(input) {
+    margin-right: 4px;
+  }
+}
+#longitudeDiv {
+  :is(input) {
+    margin-right: 4px;
+  }
+}

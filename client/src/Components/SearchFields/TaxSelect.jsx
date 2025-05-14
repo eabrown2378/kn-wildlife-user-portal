@@ -87,6 +87,21 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
                 className="field"
                 isDisabled={isLoading}
             />
+            <div className="checkbox--class">
+                <div style={{display:"flex"}}>
+                    <label className="query--label" htmlFor="taxHier">Hierarchical Search:</label>
+                </div>
+                <input
+                    type="checkbox"
+                    value={query.taxHier}
+                    onChange={(e) => handleChange(e)}
+                    name="taxHier"
+                    id="taxHier"
+                    className="field"
+                    isDisabled={isLoading}
+                />
+                <Information blurb="taxHier"/>
+            </div>
         </fieldset>
     );
 };

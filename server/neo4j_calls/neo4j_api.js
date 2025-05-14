@@ -27,19 +27,9 @@ exports.get_neo4j = async function (query) {
 };
 
 
-exports.get_search_options = async function () {  
+exports.get_search_options = async function (query) {  
         
     const session = driver.session();
-
-/*     [
-        'name',         'api_url',
-        'county',       'wikidata_id',
-        'family',       'genus',
-        'kingdom',      'order',
-        'IUCN_id',      'tax_class',
-        'climate_data', 'year',
-        'createdAt'
-      ] */
 
     try {       
 
@@ -59,35 +49,60 @@ exports.get_search_options = async function () {
 
         // retrieve search options (unique values of properties) and send to client
         const speciesOptions = await session.run(
-            `MATCH (n:Species) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            RETURN DISTINCT n.name AS uniqueValues
+            `
         );
 
         const genusOptions = await session.run(
-            `MATCH (n:Genus) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            RETURN DISTINCT g.name AS uniqueValues
+            `
         );
 
         const familyOptions = await session.run(
-            `MATCH (n:Family) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            RETURN DISTINCT f.name AS uniqueValues
+            `
         );
 
         const orderOptions = await session.run(
-            `MATCH (n:Order) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            ${query.taxHier ? `WHERE c.name IN ['${query.tax_class.join("','")}']` : ''}
+            RETURN DISTINCT o.name AS uniqueValues
+            `
         );
 
         const classOptions = await session.run(
-            `MATCH (n:TaxClass) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            RETURN DISTINCT c.name AS uniqueValues
+            `
         );
 
         const stateOptions = await session.run(
-            `MATCH (n:State) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (n:State) 
+            RETURN DISTINCT n.name AS uniqueValues
+            `
         );
 
         const countyOptions = await session.run(
-            `MATCH (n:County) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (n:County) 
+            RETURN DISTINCT n.name AS uniqueValues
+            `
         );
 
         const siteOptions = await session.run(
-            `MATCH (n:Site) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (n:Site) 
+            RETURN DISTINCT n.name AS uniqueValues
+            `
         );
 
         session.close();

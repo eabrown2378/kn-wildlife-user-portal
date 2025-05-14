@@ -15,7 +15,7 @@ Order:
 Class:
 
 ## Corrected taxonomy
-The corrected classification information
+The corrected taxonomic information
 
 Species: 
 Genus:
