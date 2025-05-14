@@ -23,7 +23,6 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![project_license][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
 
 
 
@@ -188,8 +187,6 @@ Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://g
 [issues-url]: https://github.com/eabrown2378/kn-wildlife-user-portal/issues
 [license-shield]: https://img.shields.io/github/license/eabrown2378/kn-wildlife-user-portal.svg?style=for-the-badge
 [license-url]: https://github.com/eabrown2378/kn-wildlife-user-portal/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/linkedin_username
 [product-screenshot]: images/screenshot.png
 [React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
 [React-url]: https://reactjs.org/
