@@ -82,7 +82,7 @@ const query_to_cypher = ({
             (
             p2.name IN ['${states.join("','")}']
             OR p1.name IN ['${counties.join("','")}']
-            OR s.name IN ['${sites.join("','")}']            
+            OR s.name IN ['${sites.map((site) => Array.isArray(site) ? site.join("") : site).join("','")}']            
             )
         `;
     }

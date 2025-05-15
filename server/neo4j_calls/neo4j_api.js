@@ -161,7 +161,12 @@ exports.get_search_options = async function (query) {
             classOptions: classOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             stateOptions: stateOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             countyOptions: countyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).map((record) => {
+                                                                                            if (Array.isArray(record)) {
+                                                                                                return record.join("")
+                                                                                            } else {
+                                                                                                return record
+                                                                                            }}).filter((value) => value !== null).sort(),
         };
 
         //console.log(search_options);
