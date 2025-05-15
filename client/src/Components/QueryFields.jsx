@@ -61,6 +61,7 @@ function QueryFields() {
         taxHier: false,
         locHier: false
     });
+
     
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
@@ -90,7 +91,7 @@ function QueryFields() {
         genusTemp: [],
         familyTemp: [],
         orderTemp: [],
-        classTemp: [],
+        tax_classTemp: [],
         sitesTemp: [],
         statesTemp: [],
         countiesTemp: [],
@@ -113,8 +114,12 @@ function QueryFields() {
 
     useEffect(() => {
 
+      const params = new URLSearchParams({
+        query: JSON.stringify(query)
+      }).toString();
+
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch(`http://localhost:8080/test_api/neo4j_search_options/${query}`, {
+        fetch(`http://localhost:8080/test_api/neo4j_search_options/${params}`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -178,7 +183,7 @@ function QueryFields() {
               setSearchOptions((prev) => prev);
             });
 
-    }, [query.taxHier, query.locHier]);
+    }, [query]);
 
 
     const [isLoading, setIsLoading] = useState(false);

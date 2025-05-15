@@ -80,9 +80,9 @@ function TaxSelect({ handleChange, handleMultiChange, searchOptions, isLoading, 
             <Select
                 isMulti={true}
                 options={searchOptions.classOptions}
-                value={tempMulti.classTemp}
-                onChange={(selections) => {handleMultiChange(selections, "classTemp")}}
-                name="classTemp"
+                value={tempMulti.tax_classTemp}
+                onChange={(selections) => {handleMultiChange(selections, "tax_classTemp")}}
+                name="tax_classTemp"
                 id="tax_class"
                 className="field"
                 isDisabled={isLoading}

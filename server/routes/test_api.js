@@ -23,8 +23,10 @@ router.get('/neo4j_get/:query', async function (req, res) {
 router.get('/neo4j_search_options/:query', async function (req, res) {
     try {
         // Get search options from Neo4j API
-        let result = await neo4j_calls.get_search_options(req.params.query);
-
+        const parsedQuery = JSON.parse(Object.fromEntries(new URLSearchParams(req.params.query)).query);
+        let result = await neo4j_calls.get_search_options(parsedQuery);
+        
+        
         // Send back the result in a JSON response
         res.status(200).send({ result });
     } catch (error) {

@@ -46,33 +46,69 @@ exports.get_search_options = async function (query) {
         );
 
         console.log(propertyNames.records.map((record) => record.get("key"))) */
-
+        
+        // if taxonomic hierarchical search is enabled, include a WHERE statement in the cypher query
+        let hierInit = '';
+        if (query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0)) {
+            hierInit = " WHERE ";
+        }
         // retrieve search options (unique values of properties) and send to client
         const speciesOptions = await session.run(
             `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                 
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? hierInit : ''}  
+            ${query.taxHier ? 
+                `                
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''} 
+                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                  
+                ${query.order.length > 0 && (query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
+                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''}                                   
+                ${query.family.length > 0 && query.genus.length > 0 ? ' AND ' : ''}
+                ${query.genus.length > 0 ? `g.name IN ['${query.genus.join("','")}']` : ''} 
+                ` : ''}
             RETURN DISTINCT n.name AS uniqueValues
             `
         );
 
         const genusOptions = await session.run(
             `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? hierInit : ''}  
+            ${query.taxHier ? 
+                `              
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}  
+                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0) ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                   
+                ${query.order.length > 0 && query.family.length > 0 ? ' AND ' : ''}
+                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''} 
+                ` : ''}
             RETURN DISTINCT g.name AS uniqueValues
             `
         );
 
         const familyOptions = await session.run(
             `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)               
+            ${query.tax_class.length > 0 || query.order.length > 0 ? hierInit : ''}  
+            ${query.taxHier ? 
+                `               
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}   
+                ${query.tax_class.length > 0 && query.order.length > 0 ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''} 
+                ` : ''}
             RETURN DISTINCT f.name AS uniqueValues
             `
         );
 
         const orderOptions = await session.run(
             `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
-            ${query.taxHier ? `WHERE c.name IN ['${query.tax_class.join("','")}']` : ''}
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)  
+            ${query.tax_class.length > 0 ? hierInit : ''}  
+            ${query.taxHier ? 
+                `               
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}
+                ` : ''}
             RETURN DISTINCT o.name AS uniqueValues
             `
         );
