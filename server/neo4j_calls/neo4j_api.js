@@ -33,30 +33,19 @@ exports.get_search_options = async function (query) {
 
     try {       
 
-        // get names of all properties in DB
-/*         const propertyNames = await session.run(
-            `
-                MATCH (n) 
-                UNWIND keys(n) AS key
-                WITH DISTINCT key
-                ORDER by key
-                RETURN collect(key) 
-                AS key
-            `
-        );
+       
+        // TAXONOMIC SEARCH OPTIONS
 
-        console.log(propertyNames.records.map((record) => record.get("key"))) */
-        
         // if taxonomic hierarchical search is enabled, include a WHERE statement in the cypher query
-        let hierInit = '';
+        let taxHierInit = '';
         if (query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0)) {
-            hierInit = " WHERE ";
+            taxHierInit = " WHERE ";
         }
         // retrieve search options (unique values of properties) and send to client
         const speciesOptions = await session.run(
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                 
-            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? hierInit : ''}  
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? taxHierInit : ''}  
             ${query.taxHier ? 
                 `                
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''} 
@@ -74,7 +63,7 @@ exports.get_search_options = async function (query) {
         const genusOptions = await session.run(
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                
-            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? hierInit : ''}  
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? taxHierInit : ''}  
             ${query.taxHier ? 
                 `              
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}  
@@ -90,7 +79,7 @@ exports.get_search_options = async function (query) {
         const familyOptions = await session.run(
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)               
-            ${query.tax_class.length > 0 || query.order.length > 0 ? hierInit : ''}  
+            ${query.tax_class.length > 0 || query.order.length > 0 ? taxHierInit : ''}  
             ${query.taxHier ? 
                 `               
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}   
@@ -104,7 +93,7 @@ exports.get_search_options = async function (query) {
         const orderOptions = await session.run(
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)  
-            ${query.tax_class.length > 0 ? hierInit : ''}  
+            ${query.tax_class.length > 0 ? taxHierInit : ''}  
             ${query.taxHier ? 
                 `               
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}
@@ -115,29 +104,50 @@ exports.get_search_options = async function (query) {
 
         const classOptions = await session.run(
             `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species) 
+            MATCH (c:TaxClass) 
             RETURN DISTINCT c.name AS uniqueValues
             `
         );
 
+       
+        // LOCATION SEARCH OPTIONS
+
+        // if taxonomic hierarchical search is enabled, include a WHERE statement in the cypher query
+        let locHierInit = '';
+        if (query.locHier && (query.states.length > 0 || query.counties.length > 0)) {
+            locHierInit = " WHERE ";
+        }
+
         const stateOptions = await session.run(
             `
-            MATCH (n:State) 
-            RETURN DISTINCT n.name AS uniqueValues
+            MATCH (p2:State) 
+            RETURN DISTINCT p2.name AS uniqueValues
             `
         );
 
         const countyOptions = await session.run(
             `
-            MATCH (n:County) 
-            RETURN DISTINCT n.name AS uniqueValues
+            MATCH (s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)  
+            ${query.states.length > 0 ? locHierInit : ''}  
+            ${query.locHier ? 
+                `               
+                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}
+                ` : ''}
+            RETURN DISTINCT p1.name AS uniqueValues
             `
         );
 
         const siteOptions = await session.run(
             `
-            MATCH (n:Site) 
-            RETURN DISTINCT n.name AS uniqueValues
+            MATCH (s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)               
+            ${query.states.length > 0 || query.counties.length > 0 ? locHierInit : ''}  
+            ${query.locHier ? 
+                `               
+                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}   
+                ${query.states.length > 0 && query.counties.length > 0 ? ' AND ' : ''}
+                ${query.counties.length > 0 ? `p1.name IN ['${query.counties.join("','")}']` : ''} 
+                ` : ''}
+            RETURN DISTINCT s.name AS uniqueValues
             `
         );
 
