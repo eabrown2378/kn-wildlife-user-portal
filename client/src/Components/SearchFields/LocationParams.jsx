@@ -5,6 +5,21 @@ function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti
     return (  
         <fieldset>
             <legend style={{color:"white"}}>Search by Location</legend>
+            <div className="checkbox--class">
+                <div style={{display:"flex"}}>
+                    <label className="query--label" htmlFor="class">Hierarchical Search:</label>
+                </div>
+                <input
+                    type="checkbox"
+                    value={query.locHier}
+                    onChange={(e) => handleChange(e)}
+                    name="locHier"
+                    id="locHier"
+                    className="field"
+                    isDisabled={isLoading}
+                />
+                <Information blurb="locHier"/>
+            </div>
             <div style={{display:"flex"}}>
                 <label className="query--label" htmlFor="stateSelect">States:</label>
                 <Information blurb="stateSelect"/>
@@ -69,21 +84,6 @@ function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti
                     <label className="query--label" htmlFor="maxLon">Max:</label>
                     <input id = "maxLon" name = "maxLon" value={query.maxLon} onChange={(e) => handleChange(e)}/>
                 </div>
-            </div>
-            <div className="checkbox--class">
-                <div style={{display:"flex"}}>
-                    <label className="query--label" htmlFor="class">Hierarchical Search:</label>
-                </div>
-                <input
-                    type="checkbox"
-                    value={query.locHier}
-                    onChange={(e) => handleChange(e)}
-                    name="locHier"
-                    id="locHier"
-                    className="field"
-                    isDisabled={isLoading}
-                />
-                <Information blurb="locHier"/>
             </div>
         </fieldset>
     );

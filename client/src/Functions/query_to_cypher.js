@@ -5,7 +5,8 @@ const query_to_cypher = ({
             species, genus, family, order, tax_class, 
             maxLat, minLat, maxLon, minLon, 
             sites, states, counties, datasets, 
-            fromMonth, toMonth, fromDay, toDay, fromYear, toYear
+            fromMonth, toMonth, fromDay, toDay, fromYear, toYear,
+            locHier, taxHier
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
@@ -80,9 +81,9 @@ const query_to_cypher = ({
         locationString = 
         `
             (
-            p2.name IN ['${states.join("','")}']
-            OR p1.name IN ['${counties.join("','")}']
-            OR s.name IN ['${sites.map((site) => Array.isArray(site) ? site.join("") : site).join("','")}']            
+            p2.name IN ${locHier ? sites.length > 0 || counties.length > 0 ? '[]' : `['${states.join("','")}']` : `['${states.join("','")}']`}
+            OR p1.name IN ${locHier ? sites.length > 0 ? '[]' : `['${counties.join("','")}']` : `['${counties.join("','")}']`}     
+            OR s.name IN ['${sites.map((site) => Array.isArray(site) ? site.join("") : site).join("','")}']   
             )
         `;
     }
@@ -110,10 +111,10 @@ const query_to_cypher = ({
     `
         (
         n.name IN ['${species.join("','")}'] 
-        OR g.name IN ['${genus.join("','")}']
-        OR f.name IN ['${family.join("','")}']
-        OR o.name IN ['${order.join("','")}']
-        OR c.name IN ['${tax_class.join("','")}']
+        OR g.name IN ${taxHier ? species.length > 0 ? '[]' : `['${genus.join("','")}']` : `['${genus.join("','")}']`}
+        OR f.name IN ${taxHier ? species.length > 0 || genus.length > 0 ? '[]' : `['${family.join("','")}']` : `['${family.join("','")}']`}
+        OR o.name IN ${taxHier ? species.length > 0 || genus.length > 0 || family.length > 0 ? '[]' : `['${order.join("','")}']` : `['${order.join("','")}']`}
+        OR c.name IN ${taxHier ? species.length > 0 || genus.length > 0 || family.length > 0 || order.length > 0 ? '[]' : `['${tax_class.join("','")}']` : `['${tax_class.join("','")}']`}
         )
     `;
 

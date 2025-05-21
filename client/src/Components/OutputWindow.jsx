@@ -4,6 +4,7 @@ import { useState } from 'react';
 import LeafletGraph from './LeafletGraph';
 import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
+import TableView from './TableView';
 
 
 export default function OutputWindow() {
@@ -25,10 +26,12 @@ export default function OutputWindow() {
                 <p>Select View:</p>
                 <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
                 <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
             </div>
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
+                {viewport === "table" && <TableView/>}
             </div>       
             
             <div className='logo--container'>

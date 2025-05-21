@@ -207,6 +207,7 @@ input {
 .checkbox--class {
   display: flex;
   flex-direction: row;
+  margin-bottom: 6px;
   :is(input) {
     margin: 0;
   }
@@ -217,7 +218,6 @@ input {
 
 
 #coordrange--div {
-  margin-bottom: 6px;
   gap: 6px;
   display: flex;
   flex-direction: column;

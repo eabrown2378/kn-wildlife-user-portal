@@ -26,7 +26,7 @@ function QueryFields() {
         iconUrl: marker,
         iconRetinaUrl: marker,
         iconAnchor: [10, 35],
-        popupAnchor:  [-0, -0],
+        popupAnchor:  [-0, -35],
         iconSize: [20, 35],     
     });
 
