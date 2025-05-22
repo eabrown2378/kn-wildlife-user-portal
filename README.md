@@ -41,6 +41,8 @@
     <a href="https://kn-wildlife.crc.nd.edu/"><strong>Visit Portal »</strong></a>
     <br />
     <br />
+    <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>
+    &middot;
     <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report Taxonomic Error</a>
     &middot;
     <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -107,10 +109,14 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- [ ] Automatically join data with ecological covariates
+    - [ ] Bioclimatic data
+    - [ ] Land use/cover
+    - [ ] Species native/invasive status
+- [ ] Incorporate LLM chatbot
+    - [ ] Natural language queries
+    - [ ] Guidance on data usage and statistical analysis
+- [ ] Scale wildlife database (<a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>)
 
 See the [open issues](https://github.com/eabrown2378/kn-wildlife-user-portal/issues) for a full list of proposed features (and known issues).
 
