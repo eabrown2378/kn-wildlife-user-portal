@@ -5,7 +5,8 @@ const query_to_cypher = ({
             species, genus, family, order, tax_class, 
             maxLat, minLat, maxLon, minLon, 
             sites, states, counties, datasets, 
-            fromMonth, toMonth, fromDay, toDay, fromYear, toYear
+            fromMonth, toMonth, fromDay, toDay, fromYear, toYear,
+            locHier, taxHier
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
@@ -80,9 +81,9 @@ const query_to_cypher = ({
         locationString = 
         `
             (
-            p2.name IN ['${states.join("','")}']
-            OR p1.name IN ['${counties.join("','")}']
-            OR p.name IN ['${sites.join("','")}']            
+            p2.name IN ${locHier ? sites.length > 0 || counties.length > 0 ? '[]' : `['${states.join("','")}']` : `['${states.join("','")}']`}
+            OR p1.name IN ${locHier ? sites.length > 0 ? '[]' : `['${counties.join("','")}']` : `['${counties.join("','")}']`}     
+            OR s.name IN ['${sites.map((site) => Array.isArray(site) ? site.join("") : site).join("','")}']   
             )
         `;
     }
@@ -110,10 +111,10 @@ const query_to_cypher = ({
     `
         (
         n.name IN ['${species.join("','")}'] 
-        OR g.name IN ['${genus.join("','")}']
-        OR f.name IN ['${family.join("','")}']
-        OR o.name IN ['${order.join("','")}']
-        OR c.name IN ['${tax_class.join("','")}']
+        OR g.name IN ${taxHier ? species.length > 0 ? '[]' : `['${genus.join("','")}']` : `['${genus.join("','")}']`}
+        OR f.name IN ${taxHier ? species.length > 0 || genus.length > 0 ? '[]' : `['${family.join("','")}']` : `['${family.join("','")}']`}
+        OR o.name IN ${taxHier ? species.length > 0 || genus.length > 0 || family.length > 0 ? '[]' : `['${order.join("','")}']` : `['${order.join("','")}']`}
+        OR c.name IN ${taxHier ? species.length > 0 || genus.length > 0 || family.length > 0 || order.length > 0 ? '[]' : `['${tax_class.join("','")}']` : `['${tax_class.join("','")}']`}
         )
     `;
 
@@ -136,10 +137,13 @@ const query_to_cypher = ({
 
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
+    // string to return data in csv format
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date" : '';
+
     cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
 
 
-    return cypherString;
+    return {cypherString, csvString};
 
 
 };
