@@ -124,6 +124,7 @@ input {
   height: 80vh;
   border: 3px solid black;
   background-color: white;
+  border-radius: 5px;
 }
 
 .leafletMap {
@@ -132,6 +133,7 @@ input {
   height: 80vh;
   border: 3px solid black;
   background-color: white;
+  border-radius: 5px;
 }
 
 .selectionDetails {

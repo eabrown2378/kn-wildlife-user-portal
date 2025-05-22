@@ -14,7 +14,6 @@ import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
-import Papa from "papaparse";
 
 // const [showChat, setShowChat] = useState(false);
 

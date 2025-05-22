@@ -1,4 +1,3 @@
-import CsvDownloader from 'react-csv-downloader';
 import CytoscapeGraph from './CytoscapeGraph';
 import { useState } from 'react';
 import LeafletGraph from './LeafletGraph';
@@ -43,7 +42,7 @@ export default function OutputWindow({data}) {
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
-                {viewport === "table" && <TableView/>}
+                {viewport === "table" && <TableView data={data}/>}
             </div>       
             
             <div className='logo--container'>

@@ -82,14 +82,14 @@
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Automatically join data with ecological covariates
+- [ ] Automatically join data with relevant ecological covariates
     - [ ] Bioclimatic data
     - [ ] Land use/cover
     - [ ] Species native/invasive status
-- [ ] Incorporate LLM chatbot
+- [ ] Incorporate LLM support via chatbot
     - [ ] Natural language queries
     - [ ] Guidance on data usage and statistical analysis
-- [ ] Scale wildlife database (<a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>)
+- [ ] Continue to scale wildlife database (<a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>)
 
 See the [open issues](https://github.com/eabrown2378/kn-wildlife-user-portal/issues) for a full list of proposed features (and known issues).
 
