@@ -25,11 +25,14 @@ function QueryFields() {
     const myIcon = new L.Icon({
         iconUrl: marker,
         iconRetinaUrl: marker,
+        iconAnchor: [10, 35],
         popupAnchor:  [-0, -0],
-        iconSize: [26, 40],     
+        iconSize: [20, 35],     
     });
 
     const [showChat, setShowChat] = useState(false);
+
+    const [errorMessage, setErrorMessage] = useState(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
 
 
     // hold query parameters to be used in API call
@@ -53,7 +56,7 @@ function QueryFields() {
         minLat: '',
         maxLat: '',
         minLon: '',
-        maxLan: '',
+        maxLon: '',
         datasets: []
     });
     
@@ -182,19 +185,36 @@ function QueryFields() {
         const {name, checked, type, value} = e.target;
 
         // handle special cases for numerical input
-        const numerical = ['minLat', 'maxLat', "minLon", 'maxLon'];
+        const latVals = ['minLat', 'maxLat'];
+        const lonVals = ['minLon', 'maxLon'];
 
-        let numValue = undefined;
+        let coordValue = undefined;
         
-        if (numerical.includes(name) && value === "-" || value === "." || !isNaN(Number(value))) {
-            numValue = value;
+        if ((latVals.includes(name) || lonVals.includes(name)) && value === "-" || value === "." || !isNaN(Number(value))) {
+            coordValue = value;
+
+            if(value !== "-" && value !== ".") {
+
+                coordValue = Number(value);
+
+                // handle latitude values
+                if(latVals.includes(name)) {
+                  coordValue = coordValue > 90 ? 90 : coordValue < -90 ? -90 : coordValue;
+                }
+
+                // handle longitude values
+                if(lonVals.includes(name)) {
+                  coordValue = coordValue > 180 ? 180 : coordValue < -180 ? -180 : coordValue;
+                }
+
+            }
         }
 
 
         setQuery((prev) => {
             return {
                 ...prev,
-                [name]: type === "checkbox" ? checked : numerical.includes(name) ? numValue !== undefined ? numValue : '' : value
+                [name]: type === "checkbox" ? checked : (latVals.includes(name) || lonVals.includes(name)) ? coordValue !== undefined ? coordValue : '' : value
             };
         });
         
@@ -225,14 +245,24 @@ function QueryFields() {
     //send a query (Cypher code) to neo4j API 
     const apiCall = (query) => {
 
+        // check for issues with coordinate range
+        if ((query.minLat !== '' && query.maxLat !== '' && query.minLat > query.maxLat) ||
+              (query.minLon !== '' && query.maxLon !== '' && query.minLon > query.maxLon)) {
+          setErrorMessage(<p className="errorMessage">ERROR: Minimum latitude/longitude cannot be greater than maximum latitude/longitude.</p>);
+          return;
+        }
+
+
         setIsLoading(true);
 
         const cypher = query_to_cypher(query);
 
         console.log(cypher);
+        console.log(query);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${cypher}`;
+        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
+
 
         fetch(call, {
             method: 'GET',
@@ -253,13 +283,20 @@ function QueryFields() {
                 console.log(res);
                 setQueryResult(res);
                 setIsLoading(false);
+                
+                if (res.length !== 0) {                  
+                  setErrorMessage(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
+                } else {
+                  setErrorMessage(<p className="errorMessage">WARNING: Search retrived zero results. Try adjusting search criteria.</p>)
+                }
               }
             })
             .catch((error) => {
               console.error('Fetch error:', error);
               setIsLoading(false); // Optional: stop loading on error too
+              setErrorMessage(<p className="errorMessage">ERROR: Issue retrieving data.</p>);
             });
-    }
+    };
 
 
     return ( 
@@ -294,6 +331,7 @@ function QueryFields() {
                     query={query}
                     handleChange={handleChange}
                 />
+                {errorMessage && errorMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <QueryResultContext.Provider value={queryResult}>

@@ -15,20 +15,24 @@ import 'leaflet/dist/leaflet.css';
 // component so set map center when query result changes
 function MapViewComponent({position}) {
     const map = useMapEvent('click', () => {
-      map.setView(position, map.getZoom())
+      map.setView(position, map.getZoom());
     });
     return null;
 };
 
-function LeafletGraph() {    
+ function LeafletGraph() {   
+
+        
+    // define custom leaflet map marker
     const myIcon = new L.Icon({
         iconUrl: marker,
         iconRetinaUrl: marker,
+        iconAnchor: [10, 35],
         popupAnchor:  [-0, -0],
-        iconSize: [26,40],     
-    });
+        iconSize: [20, 35],     
+    });    
 
-    
+
     const [position, setPosition] = useState([41.7, -86.23]);
 
     const queryResult = useContext(QueryResultContext);

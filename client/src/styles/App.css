@@ -199,3 +199,7 @@ input {
   margin-top: 1vh;
   width: 35%;
 }
+
+.errorMessage {
+  color: red;
+}
