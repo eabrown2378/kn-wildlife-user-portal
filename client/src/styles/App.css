@@ -186,6 +186,7 @@ input {
   z-index: 2;
   border: 1px solid black;
   aspect-ratio: 1/1;
+  border-radius: 5px;
 }
 
 .nsfLogo {
@@ -238,4 +239,29 @@ input {
   margin: 1%;
   padding: 4px;
   height: fit-content;
+}
+
+#gitLogo {
+  height: 4vh;
+}
+
+.github--div {
+  display: flex;
+  margin: 1%;
+  padding: 6px;
+  border: 2px solid gray;
+  background-color: darkgray;
+  color: white;
+  border-radius: 5px;
+  font-size: smaller;
+  align-items: center;
+  height: fit-content;
+}
+
+.github-links--div {
+  display: flex;
+  flex-direction: column;
+  margin-left: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
