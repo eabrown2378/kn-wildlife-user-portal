@@ -14,6 +14,7 @@ import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
+import Papa from "papaparse";
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -65,6 +66,7 @@ function QueryFields() {
     
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
+    const [data, setData] = useState(null);
 
     // state for map-view markers    
     const position = [41.7, -86.23];
@@ -262,14 +264,13 @@ function QueryFields() {
 
         setIsLoading(true);
 
-        const cypher = query_to_cypher(query);
+        const {cypherString, csvString} = query_to_cypher(query);
 
-        console.log(cypher);
-        console.log(query);
+        console.log(cypherString);
+        console.log(csvString);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypher)}`;
-
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}`;
 
         fetch(call, {
             method: 'GET',
@@ -286,9 +287,11 @@ function QueryFields() {
             })
             .then((data) => {
               if (data !== undefined) {
-                const res = process_neo4j_data(data.result);
-                console.log(res);
+                const res = process_neo4j_data(data.result.vis);
+                const dat = data.result.csv.records[0]._fields[4];
+                console.log(dat)
                 setQueryResult(res);
+                setData(dat);
                 setIsLoading(false);
                 
                 if (res.length !== 0) {                  
@@ -344,7 +347,7 @@ function QueryFields() {
             <QueryResultContext.Provider value={queryResult}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow query={query} />
+                <OutputWindow data={data}/>
                 {/* 💬 Chatbot toggle button */}
                 <div
                     style={{

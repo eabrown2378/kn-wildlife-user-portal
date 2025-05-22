@@ -233,3 +233,9 @@ input {
     margin-right: 4px;
   }
 }
+
+.csv--button {
+  margin: 1%;
+  padding: 4px;
+  height: fit-content;
+}

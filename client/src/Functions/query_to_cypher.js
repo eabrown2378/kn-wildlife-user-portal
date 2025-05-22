@@ -137,10 +137,13 @@ const query_to_cypher = ({
 
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
+    // string to return data in csv format
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date" : '';
+
     cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
 
 
-    return cypherString;
+    return {cypherString, csvString};
 
 
 };

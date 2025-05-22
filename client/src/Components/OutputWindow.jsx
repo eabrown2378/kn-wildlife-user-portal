@@ -6,8 +6,19 @@ import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
 import TableView from './TableView';
 
+export default function OutputWindow({data}) {
 
-export default function OutputWindow() {
+    const handleDownload = (csvString, filename) => {
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename || 'data.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     // state to control what graphs users are seeing
     // defaults to "cytoscape" (i.e. knowledge graph) view
@@ -36,12 +47,13 @@ export default function OutputWindow() {
             
             <div className='logo--container'>
                 <img src={KNW_Logo} className='knwLogo' alt="" />
-                <img src={NSF_Logo} className='nsfLogo' alt="" />
-                
-            <CsvDownloader className='download--button' datas={[]} filename={fn} separator="|" extension=".tsv">
-                <button disabled={true}>Download data as *.tsv file</button>
-            </CsvDownloader>
-
+                <img src={NSF_Logo} className='nsfLogo' alt="" />                
+                <button onClick={() => handleDownload(data, `${fn}.csv`)} 
+                        disabled={!data}
+                        className='csv--button'
+                >
+                    Download data as *.csv
+                </button>
             </div>
         </div>
     );
