@@ -5,6 +5,7 @@ import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
 import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
+import ReactGA from 'react-ga4';
 
 export default function OutputWindow({data}) {
 
@@ -18,6 +19,12 @@ export default function OutputWindow({data}) {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        // log that a user has successfully downloaded data
+        ReactGA.event({
+            category: "user data download",
+            action: "successful data download",
+            label: "download"
+        });
     };
 
     // state to control what graphs users are seeing

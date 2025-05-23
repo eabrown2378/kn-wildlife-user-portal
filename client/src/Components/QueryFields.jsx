@@ -14,6 +14,7 @@ import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
+import ReactGA from 'react-ga4';
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -260,7 +261,6 @@ function QueryFields() {
           return;
         }
 
-
         setIsLoading(true);
 
         const {cypherString, csvString} = query_to_cypher(query);
@@ -286,6 +286,12 @@ function QueryFields() {
             })
             .then((data) => {
               if (data !== undefined) {
+                // log that a user has successfully queried data
+                ReactGA.event({
+                  category: "user data search",
+                  action: "successful query",
+                  label: "query"
+                });
                 const res = process_neo4j_data(data.result.vis);
                 const dat = data.result.csv.records[0]._fields[4];
                 console.log(dat)
