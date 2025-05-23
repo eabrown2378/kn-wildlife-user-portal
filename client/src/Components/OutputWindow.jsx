@@ -1,9 +1,9 @@
-import CsvDownloader from 'react-csv-downloader';
 import CytoscapeGraph from './CytoscapeGraph';
 import { useState } from 'react';
 import LeafletGraph from './LeafletGraph';
 import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
+import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
 
 export default function OutputWindow({data}) {
@@ -42,12 +42,24 @@ export default function OutputWindow({data}) {
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
-                {viewport === "table" && <TableView/>}
+                {viewport === "table" && <TableView data={data}/>}
             </div>       
             
             <div className='logo--container'>
                 <img src={KNW_Logo} className='knwLogo' alt="" />
-                <img src={NSF_Logo} className='nsfLogo' alt="" />                
+                <img src={NSF_Logo} className='nsfLogo' alt="" />
+                <div className='github--div'>
+                    <div>
+                        <img src={GitHub_Logo} id='gitLogo' alt="" />
+                    </div>
+                    <div className='github-links--div'>
+                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
+                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
+                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
+                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
+                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
+                    </div>
+                </div>                
                 <button onClick={() => handleDownload(data, `${fn}.csv`)} 
                         disabled={!data}
                         className='csv--button'

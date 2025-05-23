@@ -14,7 +14,6 @@ import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
-import Papa from "papaparse";
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -121,7 +120,7 @@ function QueryFields() {
       }).toString();
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch(`https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/${params}`, {
+        fetch(`http://localhost:8080/test_api/neo4j_search_options/${params}`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -270,7 +269,7 @@ function QueryFields() {
         console.log(csvString);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}`;
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}`;
 
         fetch(call, {
             method: 'GET',

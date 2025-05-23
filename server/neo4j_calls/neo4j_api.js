@@ -1,6 +1,6 @@
 let neo4j = require('neo4j-driver');
 let { creds } = require("../config/credentials");
-let driver = neo4j.driver("neo4j+s://bb6a9180.databases.neo4j.io", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
+let driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
 
 exports.get_neo4j = async function (query, csv) {
     
