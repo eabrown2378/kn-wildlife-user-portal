@@ -65,10 +65,6 @@
   </ol>
 </details>
 
-
-
-## Built With
-
 * [![React][React.js]][React-url]
 * [![Express][Express.js]][Express-url]
 * [![Neo4j][Neo4j]][Neo4j-url]
@@ -76,7 +72,6 @@
 * [![Cytoscape.js][Cytoscape.js]][Cytoscape.js-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- ROADMAP -->
@@ -123,7 +118,6 @@ Don't forget to give the project a star! Thanks again!
 
 <!-- LICENSE -->
 ## License
-
 Distributed under the GNU AGPLv3. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -138,8 +132,6 @@ Ethan Brown - ebrown23@nd.edu
 Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://github.com/eabrown2378/kn-wildlife-user-portal)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
@@ -164,3 +156,4 @@ Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://g
 [Leaflet-url]: https://leafletjs.com/
 [Cytoscape.js]: https://img.shields.io/badge/Cytoscape.js-gold?style=flat&logo=cytoscapedotjs&logoColor=black&logoSize=auto
 [Cytoscape.js-url]: https://js.cytoscape.org/
+
