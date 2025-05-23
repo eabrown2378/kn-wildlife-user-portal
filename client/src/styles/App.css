@@ -124,6 +124,7 @@ input {
   height: 80vh;
   border: 3px solid black;
   background-color: white;
+  border-radius: 5px;
 }
 
 .leafletMap {
@@ -132,6 +133,7 @@ input {
   height: 80vh;
   border: 3px solid black;
   background-color: white;
+  border-radius: 5px;
 }
 
 .selectionDetails {
@@ -186,6 +188,7 @@ input {
   z-index: 2;
   border: 1px solid black;
   aspect-ratio: 1/1;
+  border-radius: 5px;
 }
 
 .nsfLogo {
@@ -202,4 +205,65 @@ input {
 
 .errorMessage {
   color: red;
+}
+
+.checkbox--class {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 6px;
+  :is(input) {
+    margin: 0;
+  }
+  :is(label) {
+    margin: 0;
+  }
+}
+
+
+#coordrange--div {
+  gap: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+#latitudeDiv {
+  :is(input) {
+    margin-right: 4px;
+  }
+}
+#longitudeDiv {
+  :is(input) {
+    margin-right: 4px;
+  }
+}
+
+.csv--button {
+  margin: 1%;
+  padding: 4px;
+  height: fit-content;
+}
+
+#gitLogo {
+  height: 4vh;
+}
+
+.github--div {
+  display: flex;
+  margin: 1%;
+  padding: 6px;
+  border: 2px solid gray;
+  background-color: darkgray;
+  color: white;
+  border-radius: 5px;
+  font-size: smaller;
+  align-items: center;
+  height: fit-content;
+}
+
+.github-links--div {
+  display: flex;
+  flex-direction: column;
+  margin-left: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
 }

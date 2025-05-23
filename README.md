@@ -22,7 +22,7 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![project_license][license-shield]][license-url]
+[![GNU AGPLv3][license-shield]][license-url]
 
 
 
@@ -36,12 +36,12 @@
 <h3 align="center">KN-Wildlife User Portal</h3>
 
   <p align="center">
-    KN-Wildlife is an NSF-funded project to provide a centralized hub for ecological occurrence, abundance, and density data. Our system is built upon a graphical database of ecological wildlife data. Users can access these data via AI natural language queries (chatbot) or through manual search 
+    KN-Wildlife is an NSF-funded project (part of the <a href = "https://www.proto-okn.net/">Proto-OKN program</a>) to provide a centralized hub for ecological occurrence, abundance, and density data. Our system is built upon a Neo4j-powered graphical database of ecological wildlife data. Users can access these data via AI natural language queries (chatbot **IN DEVELOPMENT**) or through manual search options. We also provide options to join data with relevant ecological covariates (bioclimatic, land use/cover, etc... **IN DEVELOPMENT**).
     <br />
-    <a href="https://github.com/eabrown2378/kn-wildlife-user-portal"><strong>Explore the docs »</strong></a>
+    <a href="https://kn-wildlife.crc.nd.edu/"><strong>Visit Portal »</strong></a>
     <br />
     <br />
-    <a href="https://kn-wildlife.crc.nd.edu/">Visit Portal</a>
+    <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>
     &middot;
     <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report Taxonomic Error</a>
     &middot;
@@ -57,35 +57,13 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
+    <li><a href="#built-with">Built With</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
-
-
-
-<!-- ABOUT THE PROJECT -->
-## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-Here's a blank template to get started. To avoid retyping too much info, do a search and replace with your text editor for the following: `eabrown2378`, `kn-wildlife-user-portal`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`, `project_license`
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-### Built With
 
 * [![React][React.js]][React-url]
 * [![Express][Express.js]][Express-url]
@@ -95,24 +73,18 @@ Here's a blank template to get started. To avoid retyping too much info, do a se
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- [ ] Automatically join data with relevant ecological covariates
+    - [ ] Bioclimatic data
+    - [ ] Land use/cover
+    - [ ] Species native/invasive status
+- [ ] Incorporate LLM support via chatbot
+    - [ ] Natural language queries
+    - [ ] Guidance on data usage and statistical analysis
+- [ ] Continue to scale wildlife database (<a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest Dataset</a>)
 
 See the [open issues](https://github.com/eabrown2378/kn-wildlife-user-portal/issues) for a full list of proposed features (and known issues).
 
@@ -146,8 +118,7 @@ Don't forget to give the project a star! Thanks again!
 
 <!-- LICENSE -->
 ## License
-
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distributed under the GNU AGPLv3. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -156,24 +127,11 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
+Ethan Brown - ebrown23@nd.edu
 
 Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://github.com/eabrown2378/kn-wildlife-user-portal)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* []()
-* []()
-* []()
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
@@ -198,3 +156,4 @@ Project Link: [https://github.com/eabrown2378/kn-wildlife-user-portal](https://g
 [Leaflet-url]: https://leafletjs.com/
 [Cytoscape.js]: https://img.shields.io/badge/Cytoscape.js-gold?style=flat&logo=cytoscapedotjs&logoColor=black&logoSize=auto
 [Cytoscape.js-url]: https://js.cytoscape.org/
+

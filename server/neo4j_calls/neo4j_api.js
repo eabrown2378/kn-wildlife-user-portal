@@ -2,7 +2,7 @@ let neo4j = require('neo4j-driver');
 let { creds } = require("../config/credentials");
 let driver = neo4j.driver("neo4j+s://bb6a9180.databases.neo4j.io", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
 
-exports.get_neo4j = async function (query) {
+exports.get_neo4j = async function (query, csv) {
     
     try {
         // initiate neo4j session in 'read-only' mode
@@ -11,12 +11,19 @@ exports.get_neo4j = async function (query) {
         // make query
         const neo4j_data = await session.run(query, {});
 
+        // get data as csv
+        const csvQuery = `WITH \"${csv}\" AS query
+                            CALL apoc.export.csv.query(query, null, {stream: true})
+                            YIELD file, nodes, relationships, properties, data
+                            RETURN file, nodes, relationships, properties, data`
+                            
+        const csv_data = await session.run(csvQuery, {})
         // end session
         session.close();
 
         // console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
     
-        return (!neo4j_data ? null : neo4j_data.records);
+        return (!neo4j_data || !csv_data ? null : {vis: neo4j_data.records, csv: csv_data});
 
     } catch(error) {
 
@@ -27,67 +34,128 @@ exports.get_neo4j = async function (query) {
 };
 
 
-exports.get_search_options = async function () {  
+exports.get_search_options = async function (query) {  
         
     const session = driver.session();
 
-/*     [
-        'name',         'api_url',
-        'county',       'wikidata_id',
-        'family',       'genus',
-        'kingdom',      'order',
-        'IUCN_id',      'tax_class',
-        'climate_data', 'year',
-        'createdAt'
-      ] */
-
     try {       
 
-        // get names of all properties in DB
-/*         const propertyNames = await session.run(
-            `
-                MATCH (n) 
-                UNWIND keys(n) AS key
-                WITH DISTINCT key
-                ORDER by key
-                RETURN collect(key) 
-                AS key
-            `
-        );
+       
+        // TAXONOMIC SEARCH OPTIONS
 
-        console.log(propertyNames.records.map((record) => record.get("key"))) */
-
+        // if taxonomic hierarchical search is enabled, include a WHERE statement in the cypher query
+        let taxHierInit = '';
+        if (query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0)) {
+            taxHierInit = " WHERE ";
+        }
         // retrieve search options (unique values of properties) and send to client
         const speciesOptions = await session.run(
-            `MATCH (n:Species) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                 
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? taxHierInit : ''}  
+            ${query.taxHier ? 
+                `                
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''} 
+                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                  
+                ${query.order.length > 0 && (query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
+                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''}                                   
+                ${query.family.length > 0 && query.genus.length > 0 ? ' AND ' : ''}
+                ${query.genus.length > 0 ? `g.name IN ['${query.genus.join("','")}']` : ''} 
+                ` : ''}
+            RETURN DISTINCT n.name AS uniqueValues
+            `
         );
 
         const genusOptions = await session.run(
-            `MATCH (n:Genus) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)                
+            ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? taxHierInit : ''}  
+            ${query.taxHier ? 
+                `              
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}  
+                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0) ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                   
+                ${query.order.length > 0 && query.family.length > 0 ? ' AND ' : ''}
+                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''} 
+                ` : ''}
+            RETURN DISTINCT g.name AS uniqueValues
+            `
         );
 
         const familyOptions = await session.run(
-            `MATCH (n:Family) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)               
+            ${query.tax_class.length > 0 || query.order.length > 0 ? taxHierInit : ''}  
+            ${query.taxHier ? 
+                `               
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}   
+                ${query.tax_class.length > 0 && query.order.length > 0 ? ' AND ' : ''}
+                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''} 
+                ` : ''}
+            RETURN DISTINCT f.name AS uniqueValues
+            `
         );
 
         const orderOptions = await session.run(
-            `MATCH (n:Order) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)  
+            ${query.tax_class.length > 0 ? taxHierInit : ''}  
+            ${query.taxHier ? 
+                `               
+                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}
+                ` : ''}
+            RETURN DISTINCT o.name AS uniqueValues
+            `
         );
 
         const classOptions = await session.run(
-            `MATCH (n:TaxClass) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (c:TaxClass) 
+            RETURN DISTINCT c.name AS uniqueValues
+            `
         );
 
+       
+        // LOCATION SEARCH OPTIONS
+
+        // if taxonomic hierarchical search is enabled, include a WHERE statement in the cypher query
+        let locHierInit = '';
+        if (query.locHier && (query.states.length > 0 || query.counties.length > 0)) {
+            locHierInit = " WHERE ";
+        }
+
         const stateOptions = await session.run(
-            `MATCH (n:State) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (p2:State) 
+            RETURN DISTINCT p2.name AS uniqueValues
+            `
         );
 
         const countyOptions = await session.run(
-            `MATCH (n:County) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)  
+            ${query.states.length > 0 ? locHierInit : ''}  
+            ${query.locHier ? 
+                `               
+                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}
+                ` : ''}
+            RETURN DISTINCT p1.name AS uniqueValues
+            `
         );
 
         const siteOptions = await session.run(
-            `MATCH (n:Site) RETURN DISTINCT n.name AS uniqueValues`
+            `
+            MATCH (s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)               
+            ${query.states.length > 0 || query.counties.length > 0 ? locHierInit : ''}  
+            ${query.locHier ? 
+                `               
+                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}   
+                ${query.states.length > 0 && query.counties.length > 0 ? ' AND ' : ''}
+                ${query.counties.length > 0 ? `p1.name IN ['${query.counties.join("','")}']` : ''} 
+                ` : ''}
+            RETURN DISTINCT s.name AS uniqueValues
+            `
         );
 
         session.close();
@@ -100,7 +168,13 @@ exports.get_search_options = async function () {
             classOptions: classOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             stateOptions: stateOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
             countyOptions: countyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            // for some reason, neo4j is returning some site names as lists, so we need to resolve that:
+            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).map((record) => {
+                                                                                            if (Array.isArray(record)) {
+                                                                                                return record.join("")
+                                                                                            } else {
+                                                                                                return record
+                                                                                            }}).filter((value) => value !== null).sort(),
         };
 
         //console.log(search_options);
