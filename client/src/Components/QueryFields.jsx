@@ -346,7 +346,7 @@ function QueryFields() {
             <QueryResultContext.Provider value={queryResult}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow data={data}/>
+                <OutputWindow data={data} isLoading={isLoading}/>
                 {/* 💬 Chatbot toggle button */}
                 <div
                     style={{

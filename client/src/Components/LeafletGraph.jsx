@@ -77,7 +77,7 @@ function MapViewComponent({position}) {
     }, [queryResult]);
 
     return (
-        <MapContainer className="leafletMap"  style={{ height: '80vh' }} center={position} zoom={3} scrollWheelZoom={true}>
+        <MapContainer className="leafletMap"  style={{ height: '75vh' }} center={position} zoom={3} scrollWheelZoom={true}>
             <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

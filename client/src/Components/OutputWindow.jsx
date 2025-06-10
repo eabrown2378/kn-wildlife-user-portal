@@ -5,8 +5,9 @@ import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
 import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
+import CircularProgress from '@mui/material/CircularProgress';
 
-export default function OutputWindow({data}) {
+export default function OutputWindow({data, isLoading}) {
 
     const handleDownload = (csvString, filename) => {
         const blob = new Blob([csvString], { type: 'text/csv' });
@@ -61,11 +62,12 @@ export default function OutputWindow({data}) {
                     </div>
                 </div>                
                 <button onClick={() => handleDownload(data, `${fn}.csv`)} 
-                        disabled={!data}
+                        disabled={!data || isLoading}
                         className='csv--button'
                 >
                     Download data as *.csv
                 </button>
+                {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}
             </div>
         </div>
     );
