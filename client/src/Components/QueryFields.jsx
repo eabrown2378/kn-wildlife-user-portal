@@ -172,6 +172,10 @@ function QueryFields() {
                       value: item,
                       label: item
                     })),
+                    datasetOptions: res.datasetOptions.map((item) => ({
+                      value: item,
+                      label: item
+                    })),
                   };
                 }
       

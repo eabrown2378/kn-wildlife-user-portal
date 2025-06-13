@@ -10,7 +10,7 @@ const query_to_cypher = ({
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
-    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)";
+    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), (p)-[z:FROM_DATASET]->(d:Dataset)";
 
     // concatenate dates
     let fromDate = undefined;
@@ -66,8 +66,8 @@ const query_to_cypher = ({
         matchString = matchString + 
             `            
                 UNWIND p.date AS dates 
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, [item in split(dates, "-") | toInteger(item)] AS dateComponents
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, [item in split(dates, "-") | toInteger(item)] AS dateComponents
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
                 WHERE
             `;        
     } else {
@@ -125,6 +125,18 @@ const query_to_cypher = ({
 
     }
 
+    // handle dataset search
+    let datasetString = '';
+
+    if (datasets.length !== 0) {
+        datasetString =
+        `
+            (
+                d.name IN ['${datasets.join("','")}'] 
+            )
+        `;
+    }
+
     let cypherString = '';
     
     cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? matchString : '';
@@ -137,13 +149,19 @@ const query_to_cypher = ({
 
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
+    cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
+
     // string to return data in csv format
-    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date" : '';
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date, d.name AS dataset" : '';
 
-    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
+    // string to return data for leaflet mapping
+    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, n.name AS species, d.name AS dataset" : '';
+
+    // return all nodes and relationships for cytoscape graph
+    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d " : '';
 
 
-    return {cypherString, csvString};
+    return {cypherString, csvString, mapString};
 
 
 };

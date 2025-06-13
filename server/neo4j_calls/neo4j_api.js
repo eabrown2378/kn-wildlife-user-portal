@@ -158,6 +158,12 @@ exports.get_search_options = async function (query) {
             `
         );
 
+        const datasetOptions = await session.run(
+            `
+            MATCH (d:Dataset) RETURN DISTINCT d.name AS uniqueValues
+            `
+        );
+
         session.close();
 
         const search_options = {
@@ -175,6 +181,7 @@ exports.get_search_options = async function (query) {
                                                                                             } else {
                                                                                                 return record
                                                                                             }}).filter((value) => value !== null).sort(),
+            datasetOptions: datasetOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort()
         };
 
         //console.log(search_options);
