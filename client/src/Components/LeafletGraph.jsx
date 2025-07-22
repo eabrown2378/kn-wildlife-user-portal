@@ -44,8 +44,8 @@ function MapViewComponent({position}) {
         if (queryResult) {
             
             // first, get average lat/long of query results to determine map center position
-            const avgLat = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.latitudes[0])); 
-            const avgLon = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.longitudes[0])); 
+            const avgLat = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.latitude_dd)); 
+            const avgLon = get_average(queryResult.filter((item) => item.data.category === "Site").map((item) => item.data.properties.longitude_dd)); 
 
             setPosition([avgLat,avgLon]);
 
@@ -56,8 +56,8 @@ function MapViewComponent({position}) {
                         <Marker key = {`Marker${index}`} icon={myIcon} position={[item.data.latitude, item.data.longitude]}>
                             <Popup>
                                 <p className="leafletP">Site Name/Code: <a href={item.data.properties.api_url} target="_blank">{item.data.properties.name}</a></p>
-                                <p className="leafletP">{`Longitude: ${item.data.properties.longitudes[0].toPrecision(5)}`}</p>
-                                <p className="leafletP">{`Latitude: ${item.data.properties.latitudes[0].toPrecision(5)}`}</p>
+                                <p className="leafletP">{`Longitude: ${item.data.properties.longitude_dd}`}</p>
+                                <p className="leafletP">{`Latitude: ${item.data.properties.latitude_dd}`}</p>
                                 <p className="leafletP">{`Sampling Dates: ${queryResult.filter((x) => {
                                     return x.data.category === "Observation" && x.data.properties.site_name === item.data.properties.name
                                 }).map((x) => x.data.properties.date).sort((a, b) => {

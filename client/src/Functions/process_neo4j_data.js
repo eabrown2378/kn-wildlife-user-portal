@@ -52,8 +52,8 @@ const process_neo4j_data = (data) => {
             // Use the exec() method to find the matches in the URL.
             const matches = regex.exec(x.properties.api_url); */
 
-            const latitude = x.properties.latitudes[0];
-            const longitude = x.properties.longitudes[0];
+            const latitude = x.properties.latitude_dd;
+            const longitude = x.properties.longitude_dd; 
 
             return {
                 data: {

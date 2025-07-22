@@ -67,7 +67,7 @@ const query_to_cypher = ({
             `            
                 UNWIND p.date AS dates 
                 WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, [item in split(dates, "-") | toInteger(item)] AS dateComponents
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[2], month: dateComponents[1], year: dateComponents[0]}) AS datesFormatted
                 WHERE
             `;        
     } else {
@@ -96,10 +96,10 @@ const query_to_cypher = ({
             coordString = 
             `
                 (
-                s.longitudes[0] >= ${minLon === '' ? -180 : minLon} 
-                AND s.longitudes[0] <= ${maxLon === '' ? 180 : maxLon} 
-                AND s.latitudes[0] >= ${minLat === '' ? -90 : minLat} 
-                AND s.latitudes[0] <= ${maxLat === '' ? 90 : maxLat}
+                s.longitude_dd >= ${minLon === '' ? -180 : minLon} 
+                AND s.longitude_dd <= ${maxLon === '' ? 180 : maxLon} 
+                AND s.latitude_dd >= ${minLat === '' ? -90 : minLat} 
+                AND s.latitude_dd <= ${maxLat === '' ? 90 : maxLat}
                 )
             `;
 
@@ -152,10 +152,10 @@ const query_to_cypher = ({
     cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
 
     // string to return data in csv format
-    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date, d.name AS dataset" : '';
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date, d.name AS dataset" : '';
 
     // string to return data for leaflet mapping
-    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, n.name AS species, d.name AS dataset" : '';
+    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, n.name AS species, d.name AS dataset" : '';
 
     // return all nodes and relationships for cytoscape graph
     cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d " : '';
