@@ -269,9 +269,6 @@ function QueryFields() {
 
         const {cypherString, csvString} = query_to_cypher(query);
 
-        console.log(cypherString);
-        console.log(csvString);
-
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
         const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}`;
 
@@ -292,9 +289,10 @@ function QueryFields() {
               if (data !== undefined) {
                 const res = process_neo4j_data(data.result.vis);
                 const dat = data.result.csv.records[0]._fields[4];
-                console.log(dat)
+
                 setQueryResult(res);
                 setData(dat);
+
                 setIsLoading(false);
                 
                 if (res.length !== 0) {                  
@@ -350,7 +348,7 @@ function QueryFields() {
             <QueryResultContext.Provider value={queryResult}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow data={data} isLoading={isLoading}/>
+                <OutputWindow data={data} isLoading={isLoading} result={queryResult}/>
                 {/* 💬 Chatbot toggle button */}
                 <div
                     style={{
