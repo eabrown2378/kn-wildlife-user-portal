@@ -1,3 +1,3 @@
 import { createContext } from "react";
 
-export const MarkerContext = createContext(null)
+export const MarkerContext = createContext(null);

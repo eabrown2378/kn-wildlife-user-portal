@@ -2,7 +2,7 @@
 import Information from "../Information";
 import Select from "react-select";
 
-function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti, query, handleChange }) {
+function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti }) {
 
 
 

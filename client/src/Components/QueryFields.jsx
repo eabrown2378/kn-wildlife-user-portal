@@ -13,6 +13,7 @@ import { query_to_cypher } from "../Functions/query_to_cypher";
 import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
+import { CovariateContext } from "../Context/CovariateContext";
 import ChatbotWindow from './ChatbotWindow';
 
 // const [showChat, setShowChat] = useState(false);
@@ -66,6 +67,9 @@ function QueryFields() {
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
     const [data, setData] = useState(null);
+
+    // state for covariates to be returned when data is downloaded
+    const [covariates, setCovariates] = useState(null);
 
     // state for map-view markers    
     const position = [41.7, -86.23];
@@ -345,6 +349,7 @@ function QueryFields() {
                 {errorMessage && errorMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
+            <CovariateContext.Provider value={[covariates, setCovariates]}>
             <QueryResultContext.Provider value={queryResult}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
@@ -376,6 +381,7 @@ function QueryFields() {
                 </SelectionDetailsContext.Provider>
             </MarkerContext.Provider>
             </QueryResultContext.Provider>
+            </CovariateContext.Provider>
         </div>
      );
 };

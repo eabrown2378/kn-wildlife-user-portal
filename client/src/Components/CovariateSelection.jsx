@@ -1,10 +1,11 @@
 
+import { useContext } from "react";
+import { CovariateContext } from "../Context/CovariateContext";
 
-
-function CovariateSelection({}) {
+function CovariateSelection() {
     
     
-    
+    const [covariates, setCovariates] = useContext(CovariateContext);
     
     return ( 
         <div className="covariateSelect">
