@@ -40,7 +40,7 @@ function TableView({data}) {
     }
 
   return (
-    <TableContainer component={Paper} style={{overflow:"auto", width: "74.5%", maxHeight:"77vh", position:"absolute", border: "0.4vh solid black", borderRadius:"5px"}}>
+    <TableContainer component={Paper} style={{overflow:"auto", width: "74.5%", maxHeight:"76.25vh", position:"absolute", border: "0.4vh solid black", borderRadius:"5px"}}>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>

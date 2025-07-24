@@ -119,6 +119,8 @@ function QueryFields() {
 
     useEffect(() => {
 
+      setIsLoading(true);
+
       const params = new URLSearchParams({
         query: JSON.stringify(query)
       }).toString();
@@ -185,11 +187,13 @@ function QueryFields() {
       
                 console.log("Issue retrieving search options.");
                 return { ...prev };
-              });
+              });              
+              setIsLoading(false);
             })
             .catch((err) => {
               console.error("Fetch error:", err);
               setSearchOptions((prev) => prev);
+              setIsLoading(false);
             });
 
     }, [query]);
