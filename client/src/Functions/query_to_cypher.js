@@ -6,7 +6,7 @@ const query_to_cypher = ({
             maxLat, minLat, maxLon, minLon, 
             sites, states, counties, datasets, 
             fromMonth, toMonth, fromDay, toDay, fromYear, toYear,
-            locHier, taxHier
+            locHier, taxHier, covars
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
@@ -152,13 +152,14 @@ const query_to_cypher = ({
     cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
 
     // string to return data in csv format
-    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" : '';
-
+    const covarCypherString = covars.map((item) => `, o.${item} AS ${item}`).join("");
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p2.name AS state, p1.name AS county, p2.state_fips AS state_fips, p1.county_fips AS county_fips, p.date AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" + covarCypherString : '';
+    console.log(csvString)
     // string to return data for leaflet mapping
     const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, n.name AS species, d.name AS dataset" : '';
 
     // return all nodes and relationships for cytoscape graph
-    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d " : '';
+    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, {s_elementId: elementId(s), name: s.name, longitude_dd: s.longitude_dd, latitude_dd: s.latitude_dd} AS s, s1, {p1_elementId: elementId(p1), county_fips: p1.county_fips, name: p1.name} AS p1, s2, {p2_elementId: elementId(p2), state_fips: p2.state_fips, state_abbrev: p2.state_abbrev, name: p2.name} AS p2, z, d " : '';
 
 
     return {cypherString, csvString, mapString};

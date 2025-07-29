@@ -53,7 +53,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                  
             ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? whereStatementTax : ''}     
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? ' AND ' : ''}` : ''}  
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}` : ''}  
             ${query.taxHier ? 
                 `                
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''} 
@@ -72,7 +72,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                
             ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? whereStatementTax : ''}   
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}']  ${query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? ' AND ' : ''}` : ''}  
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}']  ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0) ? ' AND ' : ''}` : ''}  
             ${query.taxHier ? 
                 `           
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}  
@@ -89,7 +89,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                
             ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 ? whereStatementTax : ''}   
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.tax_class.length > 0 || query.order.length > 0 ? ' AND ' : ''}` : ''}  
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0) ? ' AND ' : ''}` : ''}  
             ${query.taxHier ? 
                 `               
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}   
@@ -104,7 +104,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)   
             ${query.datasets.length > 0 || query.tax_class.length > 0 ? whereStatementTax : ''}    
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.tax_class.length > 0 ? ' AND ' : ''}` : ''} 
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && query.tax_class.length > 0 ? ' AND ' : ''}` : ''} 
             ${query.taxHier ? 
                 `               
                 ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}
@@ -144,7 +144,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (d:Dataset)<-[:FROM_DATASET]-(:Observation)-[:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)  
             ${query.datasets.length > 0 || query.states.length > 0 ? whereStatementLoc : ''}  
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.states.length > 0 ? ' AND ' : ''}` : ''}  
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.locHier && query.states.length > 0 ? ' AND ' : ''}` : ''}  
             ${query.locHier ? 
                 `               
                 ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}
@@ -157,7 +157,7 @@ exports.get_search_options = async function (query) {
             `
             MATCH (d:Dataset)<-[:FROM_DATASET]-(:Observation)-[:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)                
             ${query.datasets.length > 0 || query.states.length > 0 || query.counties.length > 0 ? whereStatementLoc : ''}  
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.states.length > 0 || query.counties.length > 0 ? ' AND ' : ''}` : ''}
+            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.locHier && (query.states.length > 0 || query.counties.length > 0) ? ' AND ' : ''}` : ''}
             ${query.locHier ? 
                 `               
                 ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}   
@@ -171,6 +171,12 @@ exports.get_search_options = async function (query) {
         const datasetOptions = await session.run(
             `
             MATCH (d:Dataset) RETURN DISTINCT d.name AS uniqueValues
+            `
+        );
+
+        const covarOptions = await session.run(
+            `
+            MATCH (o:Observation) RETURN keys(o) AS uniqueValues LIMIT 1
             `
         );
 
@@ -191,7 +197,8 @@ exports.get_search_options = async function (query) {
                                                                                             } else {
                                                                                                 return record
                                                                                             }}).filter((value) => value !== null).sort(),
-            datasetOptions: datasetOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort()
+            datasetOptions: datasetOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
+            covarOptions: covarOptions.records[0].get("uniqueValues").filter((item) => item !== "date").sort()
         };
 
         //console.log(search_options);

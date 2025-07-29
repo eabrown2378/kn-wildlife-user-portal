@@ -7,7 +7,6 @@ import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
 import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
-import CovariateSelection from './CovariateSelection';
 import disclaimers from '../data/disclaimers.json'
 
 export default function OutputWindow({data, isLoading, result}) {
@@ -115,7 +114,6 @@ export default function OutputWindow({data, isLoading, result}) {
                     Download data as *.csv
                 </button>
                 {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}
-                <CovariateSelection/>
             </div>
         </div>
     );
