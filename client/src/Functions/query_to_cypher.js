@@ -152,7 +152,7 @@ const query_to_cypher = ({
     cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
 
     // string to return data in csv format
-    const covarCypherString = covars.map((item) => `, o.${item} AS ${item}`).join("");
+    const covarCypherString = covars.map((item) => `, p.${item} AS ${item}`).join("");
     const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p2.name AS state, p1.name AS county, p2.state_fips AS state_fips, p1.county_fips AS county_fips, p.date AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" + covarCypherString : '';
     console.log(csvString)
     // string to return data for leaflet mapping
