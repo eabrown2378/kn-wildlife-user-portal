@@ -119,7 +119,7 @@ function QueryFields() {
 
     useEffect(() => {
 
-      //setIsLoading(true);
+      setIsLoading(true);
 
       const params = new URLSearchParams({
         query: JSON.stringify(query)
@@ -192,12 +192,12 @@ function QueryFields() {
                 console.log("Issue retrieving search options.");
                 return { ...prev };
               });              
-              //setIsLoading(false);
+              setIsLoading(false);
             })
             .catch((err) => {
               console.error("Fetch error:", err);
               setSearchOptions((prev) => prev);
-              //setIsLoading(false);
+              setIsLoading(false);
             });
 
     }, [query]);
