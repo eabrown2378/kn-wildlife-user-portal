@@ -2,7 +2,7 @@ let neo4j = require('neo4j-driver');
 let { creds } = require("../config/credentials");
 let driver = neo4j.driver("bolt://localhost:7687", neo4j.auth.basic(creds.neo4jusername, creds.neo4jpw));
 
-exports.get_neo4j = async function (query, csv) {
+exports.get_neo4j = async function (query, csv, map) {
     
     try {
         // initiate neo4j session in 'read-only' mode
@@ -17,13 +17,17 @@ exports.get_neo4j = async function (query, csv) {
                             YIELD file, nodes, relationships, properties, data
                             RETURN file, nodes, relationships, properties, data`
                             
-        const csv_data = await session.run(csvQuery, {})
+        const csv_data = await session.run(csvQuery, {});
+
+        // get data for mapping
+        const map_data = await session.run(map, {});
+
         // end session
         session.close();
 
         // console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
     
-        return (!neo4j_data || !csv_data ? null : {vis: neo4j_data.records, csv: csv_data});
+        return (!neo4j_data || !csv_data || !map_data ? null : {vis: neo4j_data.records, csv: csv_data, map: map_data});
 
     } catch(error) {
 

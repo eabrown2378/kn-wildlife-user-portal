@@ -59,6 +59,7 @@ function QueryFields() {
         minLon: '',
         maxLon: '',
         datasets: [],
+        dataTypes: [],
         taxHier: false,
         locHier: false,
         covars: []
@@ -99,6 +100,7 @@ function QueryFields() {
         statesTemp: [],
         countiesTemp: [],
         datasetsTemp: [],
+        dataTypesTemp: [],
         covarsTemp: []
     });
 
@@ -279,10 +281,10 @@ function QueryFields() {
 
         setIsLoading(true);
 
-        const {cypherString, csvString} = query_to_cypher(query);
+        const {cypherString, csvString, mapString} = query_to_cypher(query);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}`;
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}`;
 
         fetch(call, {
             method: 'GET',

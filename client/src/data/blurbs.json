@@ -11,7 +11,9 @@
         "timeRange":"Time range for which to return wildlife data. NOTE that you must select a month before you can select a day.",
         "coordRange":"Look for wildlife data within a specified coordinate range.",
         "datasetSelect": "Search for wildlife data within specific datasets.",
+        "dataTypeSelect": "Return only specific data types (occurrence, abundance, or density).",
         "taxHier": "Filter taxonomic search options based on taxonomic hierarchy? E.g. if you select the class 'Reptile' you will only see orders, families, genera, and species for reptiles.",
-        "locHier": "Filter location search options based on a geographic hierarchy? E.g. if you select the state 'Washington' you will only see counties and sampling locations for Washington State."
+        "locHier": "Filter location search options based on a geographic hierarchy? E.g. if you select the state 'Washington' you will only see counties and sampling locations for Washington State.",
+        "covars": "Select covariates to join with wildlife data."
     }
 ]
