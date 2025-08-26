@@ -15,6 +15,8 @@ import { MarkerContext } from "../Context/MarkerContext";
 import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
+import { MapDataContext } from "../Context/MapDataContext";
+import { MetadataContext } from "../Context/MetadataContext";
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -68,6 +70,8 @@ function QueryFields() {
     
     // state containing latest neo4j query results and the last query
     const [queryResult, setQueryResult] = useState(null);
+    const [mapData, setMapData] = useState(null);
+    const [metadata, setMetadata] = useState(null);
     const [data, setData] = useState(null);
 
     // state for map-view markers    
@@ -281,10 +285,10 @@ function QueryFields() {
 
         setIsLoading(true);
 
-        const {cypherString, csvString, mapString} = query_to_cypher(query);
+        const {knString, csvString, mapString, metaString} = query_to_cypher(query);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(cypherString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}`;
+        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;
 
         fetch(call, {
             method: 'GET',
@@ -304,7 +308,43 @@ function QueryFields() {
                 const res = process_neo4j_data(data.result.vis);
                 const dat = data.result.csv.records[0]._fields[4];
 
+                const mapDat = data.result.map.records.map((item) => {
+                    const foo = {};
+                  
+                    item._fields.map((x, i) => {
+
+                      foo[item.keys[i]] = x;
+                    
+                    });                
+
+                    return foo;
+                });
+
+                const metaDat = data.result.meta.records.map((item) => {
+                    const foo = {};
+                  
+                    item._fields.map((x, i) => {
+
+                      if (item.keys[i] === "downloadDate") {
+                        const year = x.year.low.toString();
+                        const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
+                        const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
+
+                        foo["downloadDate"] = [year,month,day].join("-");
+
+                      } else {
+
+                        foo[item.keys[i]] = x;
+                      }
+                    
+                    });                
+
+                    return foo;
+                });
+
+                setMetadata(metaDat);
                 setQueryResult(res);
+                setMapData(mapDat);
                 setData(dat);
 
                 setIsLoading(false);
@@ -367,7 +407,9 @@ function QueryFields() {
                 {errorMessage && errorMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
+            <MetadataContext.Provider value={metadata}>
             <QueryResultContext.Provider value={queryResult}>
+            <MapDataContext.Provider value={mapData}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
                 <OutputWindow data={data} isLoading={isLoading} result={queryResult}/>
@@ -397,7 +439,9 @@ function QueryFields() {
                 {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
                 </SelectionDetailsContext.Provider>
             </MarkerContext.Provider>
+            </MapDataContext.Provider>
             </QueryResultContext.Provider>
+            </MetadataContext.Provider>
         </div>
      );
 };

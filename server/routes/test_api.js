@@ -7,10 +7,10 @@ router.get('/', async function (req, res, next) {
     return 700000;
 });
 
-router.get('/neo4j_get/:query/:csv/:map', async function (req, res) {
+router.get('/neo4j_get/:query/:csv/:map/:meta', async function (req, res) {
     try {
         // Get the result from Neo4j API
-        let result = await neo4j_calls.get_neo4j(req.params.query, req.params.csv, req.params.map);
+        let result = await neo4j_calls.get_neo4j(req.params.query, req.params.csv, req.params.map, req.params.meta);
 
         // Send back the result in a JSON response
         res.status(200).send({ result });
