@@ -1,5 +1,5 @@
 import CytoscapeGraph from './CytoscapeGraph';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import LeafletGraph from './LeafletGraph';
 import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
@@ -7,7 +7,8 @@ import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
 import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
-import disclaimers from '../data/disclaimers.json'
+import disclaimers from '../data/disclaimers.json';
+import MetadataContext from '../Context/MetadataContext';
 
 export default function OutputWindow({data, isLoading, result}) {
 
@@ -34,6 +35,9 @@ export default function OutputWindow({data, isLoading, result}) {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
+
+    // pull metadata from context
+    const metadata = useContext(MetadataContext);
 
     // state to control what graphs users are seeing
     // defaults to "cytoscape" (i.e. knowledge graph) view
