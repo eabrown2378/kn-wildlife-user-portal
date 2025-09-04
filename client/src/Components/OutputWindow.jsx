@@ -8,7 +8,7 @@ import TableView from './TableView';
 import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
 import disclaimers from '../data/disclaimers.json';
-import MetadataContext from '../Context/MetadataContext';
+import {MetadataContext} from '../Context/MetadataContext';
 
 export default function OutputWindow({data, isLoading, result}) {
 
@@ -84,11 +84,13 @@ export default function OutputWindow({data, isLoading, result}) {
 
     return (
         <div className="outputwindow">
-            <div className="viewportSelect">
-                <p>Select View:</p>
-                <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
-                <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
-                <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
+            <div className="upperBanner">
+                <div className="viewportSelect">
+                    <p>Select View:</p>
+                    <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                    <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                    <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
+                </div>
             </div>
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
