@@ -10,10 +10,11 @@ import JSZip from 'jszip';
 import disclaimers from '../data/disclaimers.json';
 import {MetadataContext} from '../Context/MetadataContext';
 
-export default function OutputWindow({data, isLoading, result}) {
+export default function OutputWindow({data, isLoading, result, returnedCovars}) {
 
 
     const handleDownload = async (csvString, filename, disclaimerText, citationsText) => {
+
         const zip = new JSZip();
 
         // Add the CSV file
@@ -51,23 +52,36 @@ export default function OutputWindow({data, isLoading, result}) {
     // contents are updated accordingly
     useEffect(() => {
 
-        if (result) {
+        if (metadata) {
 
-            const datasets = result.filter((x) => x.data.category === "Dataset").filter((value, index, self) => index === self.findIndex(t => t.elementId === value.elementId));
+            console.log(returnedCovars)
 
-            const datasetNames = datasets.map((x) => x.data.properties.name);
+            const datasetNames = Array.prototype.concat(metadata.map((x) => x.datasetName), returnedCovars);
+
+            console.log(datasetNames)
 
             const discs = disclaimers.filter((x) => x.dataset.some((y) => datasetNames.includes(y)));
 
             const discString = discs.map((x) => {
-                return (`See below for a list of disclaimers associated with the returned datasets:\n\n\n\nDisclaimers for the following dataset(s): ${x.dataset.join(' AND ')}\n\n${x.disclaimer}`)
-            }).join("\n\n\n\n");
+                const notes = x.notes !== undefined ? `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${x.notes}` : `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${metadata.filter((y) => x.dataset.some((z)=>  z === y.datasetName)).map((y) => y.notes)}`
 
-            const citeString = datasets.map((x) => {
-                return (
-                    `Citations for dataset [${x.data.properties.name}]:\n\n${x.data.properties.dataset_citations.join("\n\n")}\n\n\nRelevant URLs:\n\n${x.data.properties.dataset_urls.join("\n\n")}`
-                );
-            }).join("\n\n\n\n");
+                return (`***See below for a list of disclaimers associated with the returned datasets:\n\n\nDisclaimers for the following dataset(s): ${x.dataset.join(' AND ')}***\n\n${x.disclaimer}` + notes)
+            }).join(`\n\n${'*'.repeat(100)}\n\n`);
+
+            const citeString = Array.prototype.concat(
+                metadata.map((x) => {
+                    return (
+                        `***Citations for dataset [${x.datasetName}]:***\n\n${x.citations.join("\n\n")}\n\n\n***Relevant URLs:***\n\n${x.urls.join("\n\n")}\n\n\n`
+                    );
+                }),                
+                discs.map((x) => {
+                    if (x.citations !== undefined) {
+                        return (
+                            `***Citations for dataset [${x.dataset.join(' AND ')}]:***\n\n${x.citations.join("\n\n")}\n\n\n***Relevant URLs:***\n\n${x.urls.join("\n\n")}\n\n\n`
+                        );
+                    }
+                }).filter((x) => x !== undefined),
+            ).join(`${'*'.repeat(100)}\n\n`);
 
             setDisclaim(discString);
             setCitations(citeString);

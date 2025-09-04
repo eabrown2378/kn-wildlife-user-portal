@@ -74,6 +74,9 @@ function QueryFields() {
     const [metadata, setMetadata] = useState(null);
     const [data, setData] = useState(null);
 
+    // get list of covariates from the last search
+    const [returnedCovars, setReturnedCovars] = useState([]);
+    
     // state for map-view markers    
     const position = [41.7, -86.23];
     const [markers, setMarkers] = useState(
@@ -325,7 +328,7 @@ function QueryFields() {
                   
                     item._fields.map((x, i) => {
 
-                      if (item.keys[i] === "downloadDate") {
+                      if (item.keys[i] === "downloadDate" && typeof item["downloadDate"] === 'object') {
                         const year = x.year.low.toString();
                         const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
                         const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
@@ -346,7 +349,8 @@ function QueryFields() {
                 setQueryResult(res);
                 setMapData(mapDat);
                 setData(dat);
-
+                setReturnedCovars(Array.from(new Set(query.covars.map((x) => x.match(/^[^_]+/)).flat())));
+                
                 setIsLoading(false);
                 
                 if (res.length !== 0) {                  
@@ -412,7 +416,7 @@ function QueryFields() {
             <MapDataContext.Provider value={mapData}>
             <MarkerContext.Provider value={[markers, setMarkers]}>
                 <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow data={data} isLoading={isLoading} result={queryResult}/>
+                <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
                 {/* 💬 Chatbot toggle button */}
                 <div
                     style={{

@@ -15,7 +15,7 @@ html, body {
 
 
 .blurbContainer {
-  position: absolute;
+  position: relative;
   width: 250px;
   height: fit-content;
   text-wrap: wrap;
