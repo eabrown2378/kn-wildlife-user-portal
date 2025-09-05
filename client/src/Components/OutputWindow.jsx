@@ -54,11 +54,7 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
 
         if (metadata) {
 
-            console.log(returnedCovars)
-
             const datasetNames = Array.prototype.concat(metadata.map((x) => x.datasetName), returnedCovars);
-
-            console.log(datasetNames)
 
             const discs = disclaimers.filter((x) => x.dataset.some((y) => datasetNames.includes(y)));
 

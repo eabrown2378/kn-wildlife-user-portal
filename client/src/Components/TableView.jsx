@@ -11,8 +11,7 @@ import Papa from 'papaparse';
 
 function TableView({data}) {
 
-  console.log(data)
-    const parsedData = data ? Papa.parse(data).data : null
+    const parsedData = data ? Papa.parse(data).data : null;
 
     const colnames = parsedData ? parsedData[0] : null;
 
