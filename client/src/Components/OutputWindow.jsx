@@ -9,6 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
 import disclaimers from '../data/disclaimers.json';
 import {MetadataContext} from '../Context/MetadataContext';
+import ReactGA from 'react-ga4';
 
 export default function OutputWindow({data, isLoading, result, returnedCovars}) {
 
@@ -35,6 +36,12 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        // log that a user has successfully downloaded data
+        ReactGA.event({
+            category: "user data download",
+            action: "successful data download",
+            label: "download"
+        });
     };
 
     // pull metadata from context

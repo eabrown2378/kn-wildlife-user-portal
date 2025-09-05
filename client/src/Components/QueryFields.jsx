@@ -17,6 +17,7 @@ import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
 import { MapDataContext } from "../Context/MapDataContext";
 import { MetadataContext } from "../Context/MetadataContext";
+import ReactGA from 'react-ga4';
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -135,7 +136,7 @@ function QueryFields() {
       }).toString();
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch(`http://localhost:8080/test_api/neo4j_search_options/${params}`, {
+        fetch(`https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/${params}`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -285,13 +286,13 @@ function QueryFields() {
           return;
         }
 
-
         setIsLoading(true);
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
 
         // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;
+        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;
+
 
         fetch(call, {
             method: 'GET',
@@ -308,6 +309,12 @@ function QueryFields() {
             })
             .then((data) => {
               if (data !== undefined) {
+                // log that a user has successfully queried data
+                ReactGA.event({
+                  category: "user data search",
+                  action: "successful query",
+                  label: "query"
+                });
                 const res = process_neo4j_data(data.result.vis);
                 const dat = data.result.csv.records[0]._fields[4];
 
