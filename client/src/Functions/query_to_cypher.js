@@ -6,11 +6,11 @@ const query_to_cypher = ({
             maxLat, minLat, maxLon, minLon, 
             sites, states, counties, datasets, 
             fromMonth, toMonth, fromDay, toDay, fromYear, toYear,
-            locHier, taxHier
+            locHier, taxHier, covars
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
-    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)";
+    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), (p)-[z:FROM_DATASET]->(d:Dataset)";
 
     // concatenate dates
     let fromDate = undefined;
@@ -66,8 +66,8 @@ const query_to_cypher = ({
         matchString = matchString + 
             `            
                 UNWIND p.date AS dates 
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, [item in split(dates, "-") | toInteger(item)] AS dateComponents
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, date({day: dateComponents[1], month: dateComponents[0], year: dateComponents[2]}) AS datesFormatted
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, [item in split(dates, "-") | toInteger(item)] AS dateComponents
+                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[2], month: dateComponents[1], year: dateComponents[0]}) AS datesFormatted
                 WHERE
             `;        
     } else {
@@ -96,10 +96,10 @@ const query_to_cypher = ({
             coordString = 
             `
                 (
-                s.longitudes[0] >= ${minLon === '' ? -180 : minLon} 
-                AND s.longitudes[0] <= ${maxLon === '' ? 180 : maxLon} 
-                AND s.latitudes[0] >= ${minLat === '' ? -90 : minLat} 
-                AND s.latitudes[0] <= ${maxLat === '' ? 90 : maxLat}
+                s.longitude_dd >= ${minLon === '' ? -180 : minLon} 
+                AND s.longitude_dd <= ${maxLon === '' ? 180 : maxLon} 
+                AND s.latitude_dd >= ${minLat === '' ? -90 : minLat} 
+                AND s.latitude_dd <= ${maxLat === '' ? 90 : maxLat}
                 )
             `;
 
@@ -125,6 +125,18 @@ const query_to_cypher = ({
 
     }
 
+    // handle dataset search
+    let datasetString = '';
+
+    if (datasets.length !== 0) {
+        datasetString =
+        `
+            (
+                d.name IN ['${datasets.join("','")}'] 
+            )
+        `;
+    }
+
     let cypherString = '';
     
     cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? matchString : '';
@@ -137,13 +149,26 @@ const query_to_cypher = ({
 
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
+    cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
+
+
+    // "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)
+    // -[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), (p)-[z:FROM_DATASET]->(d:Dataset)"
+
     // string to return data in csv format
-    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitudes[0] AS longitude_dd, s.latitudes[0] AS latitude_dd, p1.name AS county, p2.name AS state, p.date AS date" : '';
+    const covarCypherString = covars.map((item) => `, p.${item} AS ${item}`).join("");
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p2.name AS state, p1.name AS county, p2.state_fips AS state_fips, p1.county_fips AS county_fips, p.date AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" + covarCypherString : '';
+    
+    // string to return data for leaflet mapping
+    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, n.name AS species, d.name AS dataset" : '';
 
-    cypherString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2 " : '';
+    // return nodes/relationships for cytoscape graph
+    const knString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, {p1_elementId: elementId(p1), county_fips: p1.county_fips, name: p1.name} AS p1, s2, {p2_elementId: elementId(p2), state_fips: p2.state_fips, state_abbrev: p2.state_abbrev, name: p2.name} AS p2 " : '';
 
+    // return metadata (disclaimer, citation, number of observations)
+    const metaString = cypherString !== '' ? cypherString + " RETURN DISTINCT d.name AS datasetName, d.dataset_citations AS citations, d.dataset_urls AS urls, d.download_date AS downloadDate, d.additional_notes AS notes " : "";
 
-    return {cypherString, csvString};
+    return {knString, csvString, mapString, metaString};
 
 
 };

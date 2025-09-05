@@ -1,20 +1,37 @@
 import CytoscapeGraph from './CytoscapeGraph';
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import LeafletGraph from './LeafletGraph';
 import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
 import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
+import CircularProgress from '@mui/material/CircularProgress';
+import JSZip from 'jszip';
+import disclaimers from '../data/disclaimers.json';
+import {MetadataContext} from '../Context/MetadataContext';
 import ReactGA from 'react-ga4';
 
-export default function OutputWindow({data}) {
+export default function OutputWindow({data, isLoading, result, returnedCovars}) {
 
-    const handleDownload = (csvString, filename) => {
-        const blob = new Blob([csvString], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
+
+    const handleDownload = async (csvString, filename, disclaimerText, citationsText) => {
+
+        const zip = new JSZip();
+
+        // Add the CSV file
+        zip.file(`${filename}.csv`, csvString);
+
+        // Add the DISCLAIMERS.txt file
+        zip.file('DISCLAIMERS.txt', disclaimerText);
+        zip.file('CITATIONS.txt', citationsText);
+
+        // Generate the zip and trigger download
+        const content = await zip.generateAsync({ type: 'blob' });
+
+        const url = URL.createObjectURL(content);
         const link = document.createElement('a');
         link.href = url;
-        link.download = filename || 'data.csv';
+        link.download = `${filename}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -27,9 +44,53 @@ export default function OutputWindow({data}) {
         });
     };
 
+    // pull metadata from context
+    const metadata = useContext(MetadataContext);
+
     // state to control what graphs users are seeing
     // defaults to "cytoscape" (i.e. knowledge graph) view
     const [viewport, setViewport] = useState("leaflet");
+
+    // state to generate the contents of DISCLAIMERS.txt and CITATIONS.txt
+    const [disclaim, setDisclaim] = useState("");
+    const [citations, setCitations] = useState("");
+
+    // when query result changes, make sure the DISCLAIMERS.txt and CITATIONS.txt
+    // contents are updated accordingly
+    useEffect(() => {
+
+        if (metadata) {
+
+            const datasetNames = Array.prototype.concat(metadata.map((x) => x.datasetName), returnedCovars);
+
+            const discs = disclaimers.filter((x) => x.dataset.some((y) => datasetNames.includes(y)));
+
+            const discString = discs.map((x) => {
+                const notes = x.notes !== undefined ? `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${x.notes}` : `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${metadata.filter((y) => x.dataset.some((z)=>  z === y.datasetName)).map((y) => y.notes)}`
+
+                return (`***See below for a list of disclaimers associated with the returned datasets:\n\n\nDisclaimers for the following dataset(s): ${x.dataset.join(' AND ')}***\n\n${x.disclaimer}` + notes)
+            }).join(`\n\n${'*'.repeat(100)}\n\n`);
+
+            const citeString = Array.prototype.concat(
+                metadata.map((x) => {
+                    return (
+                        `***Citations for dataset [${x.datasetName}]:***\n\n${x.citations.join("\n\n")}\n\n\n***Relevant URLs:***\n\n${x.urls.join("\n\n")}\n\n\n`
+                    );
+                }),                
+                discs.map((x) => {
+                    if (x.citations !== undefined) {
+                        return (
+                            `***Citations for dataset [${x.dataset.join(' AND ')}]:***\n\n${x.citations.join("\n\n")}\n\n\n***Relevant URLs:***\n\n${x.urls.join("\n\n")}\n\n\n`
+                        );
+                    }
+                }).filter((x) => x !== undefined),
+            ).join(`${'*'.repeat(100)}\n\n`);
+
+            setDisclaim(discString);
+            setCitations(citeString);
+        }
+
+    }, [result]);
 
     const date = new Date();
     const day = date.getDate().length === 2 ? date.getDate() : "0" + String(date.getDate());
@@ -40,11 +101,13 @@ export default function OutputWindow({data}) {
 
     return (
         <div className="outputwindow">
-            <div className="viewportSelect">
-                <p>Select View:</p>
-                <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
-                <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
-                <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
+            <div className="upperBanner">
+                <div className="viewportSelect">
+                    <p>Select View:</p>
+                    <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                    <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                    <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
+                </div>
             </div>
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
@@ -60,19 +123,23 @@ export default function OutputWindow({data}) {
                         <img src={GitHub_Logo} id='gitLogo' alt="" />
                     </div>
                     <div className='github-links--div'>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
                     </div>
                 </div>                
-                <button onClick={() => handleDownload(data, `${fn}.csv`)} 
-                        disabled={!data}
+                <button onClick={() => handleDownload(data, fn, disclaim, citations)} 
+                        disabled={!data || isLoading}
                         className='csv--button'
                 >
                     Download data as *.csv
                 </button>
+                {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}                
+                <div className='survey--container'>
+                    <a target="_blank" rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLScRwMbBeeuv8X5ZGul_-Px6RaPP4sGJAyr1DtNaFSsQsiAgHw/viewform?usp=dialog'>Please take our User Survey!</a>
+                </div>
             </div>
         </div>
     );
