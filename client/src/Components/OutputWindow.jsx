@@ -11,6 +11,7 @@ import disclaimers from '../data/disclaimers.json';
 import {MetadataContext} from '../Context/MetadataContext';
 import ReactGA from 'react-ga4';
 
+
 export default function OutputWindow({data, isLoading, result, returnedCovars}) {
 
 
@@ -35,7 +36,7 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url);        
         // log that a user has successfully downloaded data
         ReactGA.event({
             category: "user data download",
@@ -101,13 +102,11 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
 
     return (
         <div className="outputwindow">
-            <div className="upperBanner">
-                <div className="viewportSelect">
-                    <p>Select View:</p>
-                    <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
-                    <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
-                    <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
-                </div>
+            <div className="viewportSelect">
+                <p>Select View:</p>
+                <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
             </div>
             <div className="output--container">
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
