@@ -102,16 +102,17 @@ input {
   margin-left: 22%;
 }
 
+
 .searchContainer {
   width: 100%;
   display: flex;
 }
 
 .viewportSelect {
-  display: flex;
+  display: flex;  
+  align-items: center;
   height: 2vh;
   margin-bottom: 1vh;
-  gap: 0.5%;
   align-items: center;
 }
 
@@ -244,6 +245,11 @@ input {
   margin-top: 2.5vh;
   padding: 0.25%;
   height: fit-content;
+}
+
+.survey--container {
+  margin: 1%;
+  margin-top: 2.5vh; 
 }
 
 #gitLogo {

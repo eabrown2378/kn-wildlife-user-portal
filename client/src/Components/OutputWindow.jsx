@@ -116,11 +116,11 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                         <img src={GitHub_Logo} id='gitLogo' alt="" />
                     </div>
                     <div className='github-links--div'>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
-                        <a href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
+                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
                     </div>
                 </div>                
                 <button onClick={() => handleDownload(data, fn, disclaim, citations)} 
@@ -129,7 +129,10 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                 >
                     Download data as *.csv
                 </button>
-                {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}
+                {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}                
+                <div className='survey--container'>
+                    <a target="_blank" rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLScRwMbBeeuv8X5ZGul_-Px6RaPP4sGJAyr1DtNaFSsQsiAgHw/viewform?usp=dialog'>Please take our User Survey!</a>
+                </div>
             </div>
         </div>
     );
