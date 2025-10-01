@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -12,8 +11,7 @@ import Papa from 'papaparse';
 
 function TableView({data}) {
 
-
-    const parsedData = data ? Papa.parse(data).data : null
+    const parsedData = data ? Papa.parse(data).data : null;
 
     const colnames = parsedData ? parsedData[0] : null;
 
@@ -25,8 +23,6 @@ function TableView({data}) {
             row[key] = dat[i];
         });
 
-        console.log(row)
-
         return { ...row };
     }
 
@@ -34,13 +30,8 @@ function TableView({data}) {
         return i !== 0 ? createData(item, colnames) : null
     }).filter(item => item !== null) : null;
 
-    if (data) {
-        console.log(colnames)
-        console.log(rows)
-    }
-
   return (
-    <TableContainer component={Paper} style={{overflow:"scroll", width: "84%", maxHeight:"80vh", position:"absolute", border: "3px solid black", borderRadius:"5px"}}>
+    <TableContainer component={Paper} style={{overflow:"auto", width: "74.5%", maxHeight:"76.25vh", position:"absolute", border: "0.4vh solid black", borderRadius:"5px"}}>
       <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>

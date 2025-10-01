@@ -3,6 +3,7 @@
 const process_neo4j_data = (data) => {
 
     // separate node and relationship data
+    // site, county, and state nodes are returned as maps due to long property values (specifically geometry)
     const extendedData = data.map((x) => {
 
         const result = x._fields.map((y) => {
@@ -32,6 +33,31 @@ const process_neo4j_data = (data) => {
             };
         };
 
+        if (x.s_elementId) {
+            return {
+                id: x.s_elementId,
+                category: "Site",
+                properties: {...x},
+                ...x
+            }
+        }
+        if (x.p1_elementId) {
+            return {
+                id: x.p1_elementId,
+                category: "County",
+                properties: {...x},
+                ...x
+            }
+        }
+        if (x.p2_elementId) {
+            return {
+                id: x.p2_elementId,
+                category: "State",
+                properties: {...x},
+                ...x
+            }
+        }
+
         return {
             id: x.elementId,
             category: x.labels[0],
@@ -52,8 +78,8 @@ const process_neo4j_data = (data) => {
             // Use the exec() method to find the matches in the URL.
             const matches = regex.exec(x.properties.api_url); */
 
-            const latitude = x.properties.latitudes[0];
-            const longitude = x.properties.longitudes[0];
+            const latitude = x.latitude_dd;
+            const longitude = x.longitude_dd; 
 
             return {
                 data: {

@@ -2,7 +2,7 @@
 import Information from "../Information";
 import Select from "react-select";
 
-function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti, query, handleChange }) {
+function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti }) {
 
 
 
@@ -24,6 +24,25 @@ function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti,
                 id="datasetSelect"
                 className="field"
                 placeholder="Default: all datasets"
+                isDisabled={isLoading}
+            />
+            <div style={{display:"flex"}}>
+                <label htmlFor="dataTypeSelect">Data Type:</label>
+                <Information blurb="dataTypeSelect"/>
+            </div>
+            <Select
+                isMulti={true}
+                options={[
+                    {value: "occurrence", label: "Occurrence"},
+                    {value: "density", label: "Density"},
+                    {value: "abundance", label: "Abundance"}
+                ]}
+                value={tempMulti.dataTypesTemp}
+                onChange={(selections) => {handleMultiChange(selections, "dataTypesTemp")}}
+                name="dataTypesTemp"
+                id="dataTypeSelect"
+                className="field"
+                placeholder="Default: any data type"
                 isDisabled={isLoading}
             />
 

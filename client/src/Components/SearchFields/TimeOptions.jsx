@@ -5,9 +5,9 @@ import Information from "../Information";
 function TimeOptions({ handleChange, query, isLoading }) {
 
     // define date options
-    const yearOptions = Array(27).fill().map((e, index) => {
+    const yearOptions = Array(45).fill().map((e, index) => {
         return (
-            <option value={String(1993 + index)}>{String(1993 + index)}</option>
+            <option value={String(1981 + index)}>{String(1981 + index)}</option>
         );
     });
 
