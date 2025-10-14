@@ -17,7 +17,9 @@ import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
 import { MapDataContext } from "../Context/MapDataContext";
 import { MetadataContext } from "../Context/MetadataContext";
+import { SearchOptionsContext } from "../Context/SearchOptionsContext";
 import ReactGA from 'react-ga4';
+import { filterSearchOptions } from "../Functions/filterSearchOptions";
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -112,7 +114,10 @@ function QueryFields() {
         covarsTemp: []
     });
 
-    const [searchOptions, setSearchOptions] = useState({
+    // for search options, one state variable (searchOptionsMaster) will hold the "complete" object returned from the `neo4j_search_options()` call
+    // and the other (searchOptions) hold the filtered subset of search options to be displayed in the selection dropdowns
+
+    const searchObjectTemplate = {
         speciesOptions: [],
         genusOptions: [],
         familyOptions: [],
@@ -122,21 +127,36 @@ function QueryFields() {
         stateOptions: [],
         countyOptions: [],
         datasetOptions: [],
-        covarOptions: []
-    });
+        covarOptions: [],
+        taxMap: [],
+        locMap: []
+    }
 
+    const [searchOptionsMaster, setSearchOptionsMaster] = useState(searchObjectTemplate)
+
+    const [searchOptions, setSearchOptions] = useState(searchObjectTemplate);
+    
+    // the first useEffect hook sets searchOptions equal to what was originally returned by the API call
+    useEffect(() => {
+
+      setSearchOptions(searchOptionsMaster);
+
+    }, [searchOptionsMaster]);
+
+    // the second useEffect hook applies the filterSearchOptions() funtion to searchOptions whenever the query state changes
+    useEffect(() => {
+
+      setSearchOptions(filterSearchOptions(searchOptionsMaster, query));
+
+    }, [query, searchOptionsMaster]);
         
 
     useEffect(() => {
 
       setIsLoading(true);
 
-      const params = new URLSearchParams({
-        query: JSON.stringify(query)
-      }).toString();
-
         // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
-        fetch(`http://localhost:8080/test_api/neo4j_search_options/${params}`, {
+        fetch(`http://localhost:8080/test_api/neo4j_search_options/`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -150,7 +170,7 @@ function QueryFields() {
               return response.json();
             })
             .then((data) => {
-              setSearchOptions((prev) => {
+              setSearchOptionsMaster((prev) => {
                 const res = data.result;
       
                 if (res !== undefined) {
@@ -195,7 +215,9 @@ function QueryFields() {
                     covarOptions: res.covarOptions.map((item) => ({
                       value: item,
                       label: item
-                    }))
+                    })),
+                    taxMap: res.taxMap,
+                    locMap: res.locMap
                   };
                 }
       
@@ -206,11 +228,11 @@ function QueryFields() {
             })
             .catch((err) => {
               console.error("Fetch error:", err);
-              setSearchOptions((prev) => prev);
+              setSearchOptionsMaster((prev) => prev);
               setIsLoading(false);
             });
 
-    }, [query]);
+    }, []);
 
 
     const [isLoading, setIsLoading] = useState(false);
@@ -377,81 +399,82 @@ function QueryFields() {
 
     return ( 
         <div className="searchContainer">
-            <div className="queryfields">
-                <TaxSelect
-                    handleChange={handleChange}
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                />
-                <LocationParams
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
-                <TimeOptions
-                    handleChange={handleChange}
-                    query={query}
-                    isLoading={isLoading}
-                />
-                <DatasetSelect
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
-                <CovariateSelection
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
+            <div className="queryfields">              
+              <SearchOptionsContext.Provider value={searchOptions}>
+                  <TaxSelect
+                      handleChange={handleChange}
+                      handleMultiChange={handleMultiChange}
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                  />
+                  <LocationParams
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                  <TimeOptions
+                      handleChange={handleChange}
+                      query={query}
+                      isLoading={isLoading}
+                  />
+                  <DatasetSelect
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                  <CovariateSelection
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                </SearchOptionsContext.Provider>
                 {errorMessage && errorMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <MetadataContext.Provider value={metadata}>
-            <QueryResultContext.Provider value={queryResult}>
-            <MapDataContext.Provider value={mapData}>
-            <MarkerContext.Provider value={[markers, setMarkers]}>
-                <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
-                {/* 💬 Chatbot toggle button */}
-                <div
-                    style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    backgroundColor: '#007bff',
-                    borderRadius: '50%',
-                    width: '60px',
-                    height: '60px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    color: 'white',
-                    fontSize: '30px',
-                    cursor: 'pointer',
-                    zIndex: 1000
-                    }}
-                    onClick={() => setShowChat(prev => !prev)}
-                >
-                    💬
-                </div>
+              <QueryResultContext.Provider value={queryResult}>
+                <MapDataContext.Provider value={mapData}>
+                  <MarkerContext.Provider value={[markers, setMarkers]}>
+                      <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
+                      <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
+                      {/* 💬 Chatbot toggle button */}
+                      <div
+                          style={{
+                          position: 'fixed',
+                          bottom: '20px',
+                          right: '20px',
+                          backgroundColor: '#007bff',
+                          borderRadius: '50%',
+                          width: '60px',
+                          height: '60px',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          color: 'white',
+                          fontSize: '30px',
+                          cursor: 'pointer',
+                          zIndex: 1000
+                          }}
+                          onClick={() => setShowChat(prev => !prev)}
+                      >
+                          💬
+                      </div>
 
-                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
-                </SelectionDetailsContext.Provider>
-            </MarkerContext.Provider>
-            </MapDataContext.Provider>
-            </QueryResultContext.Provider>
+                      {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
+                      </SelectionDetailsContext.Provider>
+                  </MarkerContext.Provider>
+                </MapDataContext.Provider>
+              </QueryResultContext.Provider>
             </MetadataContext.Provider>
         </div>
      );

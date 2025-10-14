@@ -41,7 +41,7 @@ exports.get_neo4j = async function (query, csv, map, meta) {
 };
 
 
-exports.get_search_options = async function (query) {  
+exports.get_search_options = async function () {  
         
     const session = driver.session();
 
@@ -50,136 +50,43 @@ exports.get_search_options = async function (query) {
        
         // TAXONOMIC SEARCH OPTIONS
 
-        // if taxonomic hierarchical search is enabled (or when specific datasets have been selected), include a WHERE statement in the cypher query
-        let whereStatementTax = '';
-        if (query.datasets.length > 0 || (query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0))) {
-            whereStatementTax = " WHERE ";
-        }
         // retrieve search options (unique values of properties) and send to client
-        const speciesOptions = await session.run(
-            `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                  
-            ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0 ? whereStatementTax : ''}     
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}` : ''}  
-            ${query.taxHier ? 
-                `                
-                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''} 
-                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
-                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                  
-                ${query.order.length > 0 && (query.family.length > 0 || query.genus.length > 0) ? ' AND ' : ''}
-                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''}                                   
-                ${query.family.length > 0 && query.genus.length > 0 ? ' AND ' : ''}
-                ${query.genus.length > 0 ? `g.name IN ['${query.genus.join("','")}']` : ''} 
-                ` : ''}
-            RETURN DISTINCT n.name AS uniqueValues
-            `
-        );
+        const taxOptions = await session.run(`
+            MATCH (n:Observation)
+            OPTIONAL MATCH (n)-[:OBSERVED_IN]->(l:Site)
+            OPTIONAL MATCH (n)-[:IN_COUNTY]->(l2:County)
+            OPTIONAL MATCH (n)-[:IN_STATE] ->(l3:State)
+            OPTIONAL MATCH (n)-[:OBSERVED_ORGANISM]->(s:Species)
+            OPTIONAL MATCH (n)-[:OBSERVED_ORGANISM]->(g1:Genus)
+            OPTIONAL MATCH (s)-[:BELONGS_TO]->(g2:Genus)
+            WITH n, s, coalesce(g1, g2) AS g
+            OPTIONAL MATCH (g)-[:BELONGS_TO]->(f:Family)
+            OPTIONAL MATCH (f)-[:BELONGS_TO]->(o:Order)
+            OPTIONAL MATCH (o)-[:BELONGS_TO]->(c:TaxClass)
+            RETURN DISTINCT
+                s.name AS species,
+                g.name AS genus,
+                f.name AS family,
+                o.name AS order,
+                c.name AS tax_class
+            `);
 
-        const genusOptions = await session.run(
-            `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                
-            ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0 ? whereStatementTax : ''}   
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}']  ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0 || query.family.length > 0) ? ' AND ' : ''}` : ''}  
-            ${query.taxHier ? 
-                `           
-                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}  
-                ${query.tax_class.length > 0 && (query.order.length > 0 || query.family.length > 0) ? ' AND ' : ''}
-                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''}                   
-                ${query.order.length > 0 && query.family.length > 0 ? ' AND ' : ''}
-                ${query.family.length > 0 ? `f.name IN ['${query.family.join("','")}']` : ''} 
-                ` : ''}
-            RETURN DISTINCT g.name AS uniqueValues
-            `
-        );
 
-        const familyOptions = await session.run(
-            `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)                
-            ${query.datasets.length > 0 || query.tax_class.length > 0 || query.order.length > 0 ? whereStatementTax : ''}   
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && (query.tax_class.length > 0 || query.order.length > 0) ? ' AND ' : ''}` : ''}  
-            ${query.taxHier ? 
-                `               
-                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}   
-                ${query.tax_class.length > 0 && query.order.length > 0 ? ' AND ' : ''}
-                ${query.order.length > 0 ? `o.name IN ['${query.order.join("','")}']` : ''} 
-                ` : ''}
-            RETURN DISTINCT f.name AS uniqueValues
-            `
-        );
-
-        const orderOptions = await session.run(
-            `
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)   
-            ${query.datasets.length > 0 || query.tax_class.length > 0 ? whereStatementTax : ''}    
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.taxHier && query.tax_class.length > 0 ? ' AND ' : ''}` : ''} 
-            ${query.taxHier ? 
-                `               
-                ${query.tax_class.length > 0 ? `c.name IN ['${query.tax_class.join("','")}']` : ''}
-                ` : ''}
-            RETURN DISTINCT o.name AS uniqueValues
-            `
-        );
-
-        const classOptions = await session.run(
-            ` 
-            MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[:OBSERVED_ORGANISM]-(:Observation)-[:FROM_DATASET]->(d:Dataset)
-            ${query.datasets.length > 0 ? whereStatementTax : ''}  
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}']` : ''}   
-            RETURN DISTINCT c.name AS uniqueValues
-            `
-        );
 
        
         // LOCATION SEARCH OPTIONS
 
-        // if taxonomic hierarchical search is enabled (or if specific datasets have been selected), include a WHERE statement in the cypher query
-        let whereStatementLoc = '';
-        if (query.datasets.length > 0 || (query.locHier && (query.states.length > 0 || query.counties.length > 0))) {
-            whereStatementLoc = " WHERE ";
-        }
-
-        const stateOptions = await session.run(
-            `
-            MATCH (d:Dataset)<-[:FROM_DATASET]-(:Observation)-[:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)    
-            ${query.datasets.length > 0 ? whereStatementLoc : ''}   
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}']` : ''}  
-            RETURN DISTINCT p2.name AS uniqueValues
-            `
-        );
-
-        const countyOptions = await session.run(
-            `
-            MATCH (d:Dataset)<-[:FROM_DATASET]-(:Observation)-[:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)  
-            ${query.datasets.length > 0 || query.states.length > 0 ? whereStatementLoc : ''}  
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.locHier && query.states.length > 0 ? ' AND ' : ''}` : ''}  
-            ${query.locHier ? 
-                `               
-                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}
-                ` : ''}
-            RETURN DISTINCT p1.name AS uniqueValues
-            `
-        );
-
-        const siteOptions = await session.run(
-            `
-            MATCH (d:Dataset)<-[:FROM_DATASET]-(:Observation)-[:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)                
-            ${query.datasets.length > 0 || query.states.length > 0 || query.counties.length > 0 ? whereStatementLoc : ''}  
-            ${query.datasets.length > 0 ? `d.name IN ['${query.datasets.join("','")}'] ${query.locHier && (query.states.length > 0 || query.counties.length > 0) ? ' AND ' : ''}` : ''}
-            ${query.locHier ? 
-                `               
-                ${query.states.length > 0 ? `p2.name IN ['${query.states.join("','")}']` : ''}   
-                ${query.states.length > 0 && query.counties.length > 0 ? ' AND ' : ''}
-                ${query.counties.length > 0 ? `p1.name IN ['${query.counties.join("','")}']` : ''} 
-                ` : ''}
-            RETURN DISTINCT s.name AS uniqueValues
-            `
-        );
+        const locOptions =  await session.run(`
+            MATCH (n:Observation)-[:OBSERVED_IN]->(l:Site)-[:IN_COUNTY]->(l2:County)-[:IN_STATE]->(l3:State)
+            RETURN DISTINCT l.name AS site, l2.name AS county, l3.name AS state
+        `)
 
         const datasetOptions = await session.run(
             `
             MATCH (d:Dataset) RETURN DISTINCT d.name AS uniqueValues
             `
         );
+
 
         const covarOptions = await session.run(
             `
@@ -190,22 +97,34 @@ exports.get_search_options = async function (query) {
         session.close();
 
         const search_options = {
-            speciesOptions: speciesOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            genusOptions: genusOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            familyOptions: familyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            orderOptions: orderOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            classOptions: classOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            stateOptions: stateOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            countyOptions: countyOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            // for some reason, neo4j is returning some site names as lists, so we need to resolve that:
-            siteOptions: siteOptions.records.map((record) => record.get("uniqueValues")).map((record) => {
+            speciesOptions: (taxOptions.records.map((record) => record.get("species")).filter((value) => value !== null)).sort(),
+            genusOptions: [...new Set(taxOptions.records.map((record) => record.get("genus")).filter((value) => value !== null))].sort(),
+            familyOptions: [...new Set(taxOptions.records.map((record) => record.get("family")).filter((value) => value !== null))].sort(),
+            orderOptions: [...new Set(taxOptions.records.map((record) => record.get("order")).filter((value) => value !== null))].sort(),
+            classOptions: [...new Set(taxOptions.records.map((record) => record.get("tax_class")).filter((value) => value !== null))].sort(),
+            stateOptions: [...new Set(locOptions.records.map((record) => record.get("state")).filter((value) => value !== null))].sort(),
+            countyOptions: [...new Set(locOptions.records.map((record) => record.get("county")).filter((value) => value !== null))].sort(),
+            // for some reason, neo4j is returning some site names as lists/arrays, so we need to resolve that:
+            siteOptions: locOptions.records.map((record) => record.get("site")).map((record) => {
                                                                                             if (Array.isArray(record)) {
                                                                                                 return record.join("")
                                                                                             } else {
                                                                                                 return record
                                                                                             }}).filter((value) => value !== null).sort(),
             datasetOptions: datasetOptions.records.map((record) => record.get("uniqueValues")).filter((value) => value !== null).sort(),
-            covarOptions: covarOptions.records[0].get("uniqueValues").filter((item) => item !== "date").sort()
+            covarOptions: covarOptions.records[0].get("uniqueValues").filter((item) => item !== "date").sort(),
+            taxMap: taxOptions.records.map(record => ({
+                                                species: record.get('species') || null,
+                                                genus: record.get('genus') || null,
+                                                family: record.get('family') || null,
+                                                order: record.get('order') || null,
+                                                tax_class: record.get('tax_class') || null
+                                            })),
+            locMap: locOptions.records.map(record => ({
+                                                state: record.get('state') || null,
+                                                county: record.get('county') || null,
+                                                site: record.get('site') || null
+                                            }))
         };
 
         //console.log(search_options);

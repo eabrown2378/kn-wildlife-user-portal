@@ -1,12 +1,11 @@
-
+import { useContext } from "react";
 import Information from "../Information";
 import Select from "react-select";
+import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
 
-function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti }) {
-
-
-
-
+function DatasetSelect({ handleMultiChange, isLoading, tempMulti }) {
+          
+    const searchOptions = useContext(SearchOptionsContext);
 
     return ( 
         <fieldset>

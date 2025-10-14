@@ -1,9 +1,12 @@
 
 import Select from "react-select";
 import Information from "../Information";
+import { useContext } from "react";
+import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
 
-function CovariateSelection({ handleMultiChange, searchOptions, isLoading, tempMulti }) {
-    
+function CovariateSelection({ handleMultiChange, isLoading, tempMulti }) {
+            
+    const searchOptions = useContext(SearchOptionsContext);
     
     return ( 
         <fieldset>            

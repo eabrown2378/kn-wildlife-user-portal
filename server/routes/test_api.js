@@ -20,11 +20,10 @@ router.get('/neo4j_get/:query/:csv/:map/:meta', async function (req, res) {
     }
 });
 
-router.get('/neo4j_search_options/:query', async function (req, res) {
+router.get('/neo4j_search_options/', async function (req, res) {
     try {
         // Get search options from Neo4j API
-        const parsedQuery = JSON.parse(Object.fromEntries(new URLSearchParams(req.params.query)).query);
-        let result = await neo4j_calls.get_search_options(parsedQuery);
+        let result = await neo4j_calls.get_search_options();
         
         
         // Send back the result in a JSON response

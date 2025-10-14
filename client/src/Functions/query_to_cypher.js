@@ -96,10 +96,10 @@ const query_to_cypher = ({
             coordString = 
             `
                 (
-                s.longitude_dd >= ${minLon === '' ? -180 : minLon} 
-                AND s.longitude_dd <= ${maxLon === '' ? 180 : maxLon} 
-                AND s.latitude_dd >= ${minLat === '' ? -90 : minLat} 
-                AND s.latitude_dd <= ${maxLat === '' ? 90 : maxLat}
+                toFloat(s.longitude_dd) >= ${minLon === '' ? -180 : minLon} 
+                AND toFloat(s.longitude_dd) <= ${maxLon === '' ? 180 : maxLon} 
+                AND toFloat(s.latitude_dd) >= ${minLat === '' ? -90 : minLat} 
+                AND toFloat(s.latitude_dd) <= ${maxLat === '' ? 90 : maxLat}
                 )
             `;
 
