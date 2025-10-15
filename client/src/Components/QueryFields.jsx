@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import OutputWindow from "./OutputWindow";
 import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
@@ -133,22 +133,11 @@ function QueryFields() {
     }
 
     const [searchOptionsMaster, setSearchOptionsMaster] = useState(searchObjectTemplate)
-
-    const [searchOptions, setSearchOptions] = useState(searchObjectTemplate);
     
-    // the first useEffect hook sets searchOptions equal to what was originally returned by the API call
-    useEffect(() => {
-
-      setSearchOptions(searchOptionsMaster);
-
-    }, [searchOptionsMaster]);
-
     // the second useEffect hook applies the filterSearchOptions() funtion to searchOptions whenever the query state changes
-    useEffect(() => {
-
-      setSearchOptions(filterSearchOptions(searchOptionsMaster, query));
-
-    }, [query, searchOptionsMaster]);
+    const searchOptions = useMemo(() => {
+      return filterSearchOptions(searchOptionsMaster, query);
+    }, [searchOptionsMaster, query])
         
 
     useEffect(() => {
@@ -176,46 +165,16 @@ function QueryFields() {
                 if (res !== undefined) {
                   return {
                     ...prev,
-                    speciesOptions: res.speciesOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    genusOptions: res.genusOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    familyOptions: res.familyOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    orderOptions: res.orderOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    classOptions: res.classOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    stateOptions: res.stateOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    countyOptions: res.countyOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    siteOptions: res.siteOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    datasetOptions: res.datasetOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    covarOptions: res.covarOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
+                    speciesOptions: res.speciesOptions,
+                    genusOptions: res.genusOptions,
+                    familyOptions: res.familyOptions,
+                    orderOptions: res.orderOptions,
+                    classOptions: res.classOptions,
+                    stateOptions: res.stateOptions,
+                    countyOptions: res.countyOptions,
+                    siteOptions: res.siteOptions,
+                    datasetOptions: res.datasetOptions,
+                    covarOptions: res.covarOptions,
                     taxMap: res.taxMap,
                     locMap: res.locMap
                   };
@@ -311,6 +270,8 @@ function QueryFields() {
         setIsLoading(true);
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
+
+        console.log(mapString)
 
         // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
         const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;

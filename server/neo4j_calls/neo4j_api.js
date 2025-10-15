@@ -53,13 +53,11 @@ exports.get_search_options = async function () {
         // retrieve search options (unique values of properties) and send to client
         const taxOptions = await session.run(`
             MATCH (n:Observation)
-            OPTIONAL MATCH (n)-[:OBSERVED_IN]->(l:Site)
-            OPTIONAL MATCH (n)-[:IN_COUNTY]->(l2:County)
-            OPTIONAL MATCH (n)-[:IN_STATE] ->(l3:State)
+            OPTIONAL MATCH (n)-[:FROM_DATASET]->(d:Dataset)
             OPTIONAL MATCH (n)-[:OBSERVED_ORGANISM]->(s:Species)
             OPTIONAL MATCH (n)-[:OBSERVED_ORGANISM]->(g1:Genus)
             OPTIONAL MATCH (s)-[:BELONGS_TO]->(g2:Genus)
-            WITH n, s, coalesce(g1, g2) AS g
+            WITH n, s, d, coalesce(g1, g2) AS g
             OPTIONAL MATCH (g)-[:BELONGS_TO]->(f:Family)
             OPTIONAL MATCH (f)-[:BELONGS_TO]->(o:Order)
             OPTIONAL MATCH (o)-[:BELONGS_TO]->(c:TaxClass)
@@ -68,7 +66,8 @@ exports.get_search_options = async function () {
                 g.name AS genus,
                 f.name AS family,
                 o.name AS order,
-                c.name AS tax_class
+                c.name AS tax_class,
+                d.name AS dataset
             `);
 
 
@@ -77,8 +76,8 @@ exports.get_search_options = async function () {
         // LOCATION SEARCH OPTIONS
 
         const locOptions =  await session.run(`
-            MATCH (n:Observation)-[:OBSERVED_IN]->(l:Site)-[:IN_COUNTY]->(l2:County)-[:IN_STATE]->(l3:State)
-            RETURN DISTINCT l.name AS site, l2.name AS county, l3.name AS state
+            MATCH (d:Dataset)<-[:FROM_DATASET]-(n:Observation)-[:OBSERVED_IN]->(l:Site)-[:IN_COUNTY]->(l2:County)-[:IN_STATE]->(l3:State)
+            RETURN DISTINCT l.name AS site, l2.name AS county, l3.name AS state, d.name AS dataset
         `)
 
         const datasetOptions = await session.run(
@@ -118,12 +117,14 @@ exports.get_search_options = async function () {
                                                 genus: record.get('genus') || null,
                                                 family: record.get('family') || null,
                                                 order: record.get('order') || null,
-                                                tax_class: record.get('tax_class') || null
+                                                tax_class: record.get('tax_class') || null,
+                                                dataset: record.get('dataset') || null
                                             })),
             locMap: locOptions.records.map(record => ({
                                                 state: record.get('state') || null,
                                                 county: record.get('county') || null,
-                                                site: record.get('site') || null
+                                                site: Array.isArray(record.get('site')) ? record.get('site').join("") : record.get('site') || null,
+                                                dataset: record.get('dataset') || null
                                             }))
         };
 
