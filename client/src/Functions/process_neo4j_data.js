@@ -6,19 +6,22 @@ const process_neo4j_data = (data) => {
     // site, county, and state nodes are returned as maps due to long property values (specifically geometry)
     const extendedData = data.map((x) => {
 
-        const result = x._fields.map((y) => {
+        const result = Object.keys(x).map((y) => {
+
+            const z = x[y];
+
+            if (!z) return null;
 
             return {
-                ...y,
-                dataType: y.startNodeElementId ? 'relationship' : 'node' // if result has a start or end node ID then it must be a relationship, otherwise it is a node
+                ...z,
+                dataType: z.startNodeElementId ? 'relationship' : 'node' // if result has a start or end node ID then it must be a relationship, otherwise it is a node
 
             };
-        });        
+        }).filter(x => x !== null);        
 
         return result;
 
     }).flat();
-
 
     // format data for a cytoscape graph
     const cleanedData = extendedData.map((x) => {
@@ -33,14 +36,6 @@ const process_neo4j_data = (data) => {
             };
         };
 
-        if (x.s_elementId) {
-            return {
-                id: x.s_elementId,
-                category: "Site",
-                properties: {...x},
-                ...x
-            }
-        }
         if (x.p1_elementId) {
             return {
                 id: x.p1_elementId,
@@ -49,6 +44,7 @@ const process_neo4j_data = (data) => {
                 ...x
             }
         }
+
         if (x.p2_elementId) {
             return {
                 id: x.p2_elementId,
@@ -96,9 +92,7 @@ const process_neo4j_data = (data) => {
         }
 
 
-    })
-
-
+    });
 
     // return array of separated nodes and relationships
     return cytoscapeData;

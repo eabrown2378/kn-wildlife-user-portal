@@ -271,18 +271,22 @@ function QueryFields() {
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
 
-        console.log(mapString)
+        const url = 'http://localhost:8080/test_api/neo4j_get';
 
-        // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
-        const call = `http://localhost:8080/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;
+        const body = {
+          knString,
+          csvString,
+          mapString,
+          metaString
+        };
 
-
-        fetch(call, {
-            method: 'GET',
+          fetch(url, {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json', 
-                'Accept': 'application/json', 
-              }
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(body),
           })
             .then((response) => {
               if (!response.ok) {
@@ -291,6 +295,7 @@ function QueryFields() {
               return response.json();
             })
             .then((data) => {
+
               if (data !== undefined) {
                 // log that a user has successfully queried data
                 ReactGA.event({
@@ -299,41 +304,37 @@ function QueryFields() {
                   label: "query"
                 });
                 const res = process_neo4j_data(data.result.vis);
-                const dat = data.result.csv.records[0]._fields[4];
 
-                const mapDat = data.result.map.records.map((item) => {
-                    const foo = {};
-                  
-                    item._fields.map((x, i) => {
+                console.log(data.result.csv)
+                const dat = data.result.csv.map(x => x.data).join("\\n");
 
-                      foo[item.keys[i]] = x;
-                    
-                    });                
+                console.log(dat)
 
-                    return foo;
+                const mapDat = data.result.map;
+
+                console.log(data.result.meta)
+
+                const metaDat = data.result.meta.map((item) => {
+
+                  if (typeof item["downloadDate"] === 'object') {
+
+                    const x = item["downloadDate"];
+
+                    const year = x.year.low.toString();
+                    const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
+                    const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
+
+                      
+                    item["downloadDate"] =  [year,month,day].join("-");
+
+                  }
+
+                  return item;
+
+ 
                 });
 
-                const metaDat = data.result.meta.records.map((item) => {
-                    const foo = {};
-                  
-                    item._fields.map((x, i) => {
-
-                      if (item.keys[i] === "downloadDate" && typeof item["downloadDate"] === 'object') {
-                        const year = x.year.low.toString();
-                        const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
-                        const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
-
-                        foo["downloadDate"] = [year,month,day].join("-");
-
-                      } else {
-
-                        foo[item.keys[i]] = x;
-                      }
-                    
-                    });                
-
-                    return foo;
-                });
+                console.log(metaDat)
 
                 setMetadata(metaDat);
                 setQueryResult(res);

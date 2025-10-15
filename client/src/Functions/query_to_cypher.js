@@ -10,7 +10,20 @@ const query_to_cypher = ({
         }) => {
 
     // initial match statement to return complete chain of nodes and edges from neo4j
-    let matchString = "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), (p)-[z:FROM_DATASET]->(d:Dataset)";
+    let matchString = `
+        MATCH (p2:State)<-[s2:IN_STATE]-(p1:County)<-[s1:IN_COUNTY]-(s:Site)<-[i:OBSERVED_IN]-(p:Observation)-[z:FROM_DATASET]->(d:Dataset)
+            OPTIONAL MATCH (p)-[r1:OBSERVED_ORGANISM]->(n:Species)
+            OPTIONAL MATCH (p)-[r2:OBSERVED_ORGANISM]->(g1:Genus)
+            OPTIONAL MATCH (n)-[b1:BELONGS_TO]->(g2:Genus)
+            WITH p, n, z, d, b1, p1, p2, s, s1, s2, i, coalesce(g1, g2) AS g, coalesce(r1, r2) AS r
+            OPTIONAL MATCH (g)-[b2:BELONGS_TO]->(f:Family)
+            OPTIONAL MATCH (f)-[b3:BELONGS_TO]->(o:Order)
+            OPTIONAL MATCH (o)-[b4:BELONGS_TO]->(c:TaxClass)
+    `;
+
+    /*"MATCH (p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), 
+    (p)-[z:FROM_DATASET]->(d:Dataset) OPTIONAL MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)
+    <-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p)"*/
 
     // concatenate dates
     let fromDate = undefined;

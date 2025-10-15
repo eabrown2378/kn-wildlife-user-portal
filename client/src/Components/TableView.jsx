@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import Paper from "@mui/material/Paper";
 import Papa from "papaparse";
 import { useVirtualizer } from "@tanstack/react-virtual";

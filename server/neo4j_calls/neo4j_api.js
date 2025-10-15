@@ -25,12 +25,16 @@ exports.get_neo4j = async function (query, csv, map, meta) {
         // get metadata 
         const meta_data = await session.run(meta, {});
 
+        // Convert to plain objects (safe to JSON.stringify)
+        const MAX_RECORDS = 10000; // or smaller for debugging
+        const clean = obj => obj.records.slice(0, MAX_RECORDS).map(r => r.toObject());
+
         // end session
         session.close();
 
         // console.log("RESULT", (!neo4j_data ? null : neo4j_data.records));
     
-        return (!neo4j_data || !csv_data || !map_data || !meta_data ? null : {vis: neo4j_data.records, csv: csv_data, map: map_data, meta: meta_data});
+        return (!neo4j_data || !csv_data || !map_data || !meta_data ? null : {vis: clean(neo4j_data), csv: clean(csv_data), map: clean(map_data), meta: clean(meta_data)});
 
     } catch(error) {
 
