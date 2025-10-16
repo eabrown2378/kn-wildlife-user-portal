@@ -126,7 +126,6 @@ function TableView({ data }) {
           top: 0,
           background: "#fafafa",
           fontWeight: "bold",
-          borderBottom: "1px solid #ccc",
           zIndex: 2,
         }}
       >
@@ -140,6 +139,8 @@ function TableView({ data }) {
               textAlign: i === 0 ? "left" : "right",
               borderRight: "1px solid #eee",
               boxSizing: "border-box",
+              borderBottom: "1px solid #ccc",
+              backgroundColor: "white"
             }}
           >
             {col}

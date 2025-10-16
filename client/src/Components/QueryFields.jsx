@@ -39,6 +39,7 @@ function QueryFields() {
     const [showChat, setShowChat] = useState(false);
 
     const [errorMessage, setErrorMessage] = useState(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
+    const [warningMessage, setWarningMessage] = useState(<p className="warningMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
 
 
     // hold query parameters to be used in API call
@@ -180,7 +181,7 @@ function QueryFields() {
                   };
                 }
       
-                console.log("Issue retrieving search options.");
+                setErrorMessage("Issue retrieving search options.");
                 return { ...prev };
               });              
               setIsLoading(false);
@@ -267,6 +268,25 @@ function QueryFields() {
           return;
         }
 
+        // warnings related to time range selection
+        if (([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) || 
+              ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === ""))) {
+                
+            if ([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'To'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+            if ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === "")) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'From'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+            if (([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) && 
+                  ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === ""))) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'To' and 'From'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+        }
+
         setIsLoading(true);
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
@@ -279,8 +299,6 @@ function QueryFields() {
           mapString,
           metaString
         };
-
-        console.log(csvString)
 
           fetch(url, {
             method: 'POST',
@@ -307,12 +325,9 @@ function QueryFields() {
                 });
                 const res = process_neo4j_data(data.result.vis);
 
-                console.log(data.result.csv)
                 const dat = data.result.csv;
 
                 const mapDat = data.result.map;
-
-                console.log(data.result.meta)
 
                 const metaDat = data.result.meta.map((item) => {
 
@@ -333,8 +348,6 @@ function QueryFields() {
 
  
                 });
-
-                console.log(metaDat)
 
                 setMetadata(metaDat);
                 setQueryResult(res);
@@ -401,6 +414,7 @@ function QueryFields() {
                   />
                 </SearchOptionsContext.Provider>
                 {errorMessage && errorMessage}
+                {warningMessage && warningMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <MetadataContext.Provider value={metadata}>

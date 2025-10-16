@@ -4,7 +4,7 @@
 const query_to_cypher = ({       
             species, genus, family, order, tax_class, 
             maxLat, minLat, maxLon, minLon, 
-            sites, states, counties, datasets, 
+            sites, states, counties, datasets, dataTypes,
             fromMonth, toMonth, fromDay, toDay, fromYear, toYear,
             locHier, taxHier, covars
         }) => {
@@ -74,7 +74,7 @@ const query_to_cypher = ({
     if (dateString !== '') {
         matchString = matchString + 
             `            
-                UNWIND p.date AS dates 
+                UNWIND toString(p.date) AS dates 
                 WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, [item in split(dates, "-") | toInteger(item)] AS dateComponents
                 WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[2], month: dateComponents[1], year: dateComponents[0]}) AS datesFormatted
                 WHERE
@@ -146,9 +146,21 @@ const query_to_cypher = ({
         `;
     }
 
+    // handle data type search
+    let dataTypeString = '';
+
+    if (dataTypes.length !== 0) {
+        dataTypeString =
+        `
+            (
+                r.measurement_type IN ['${dataTypes.join("','")}'] 
+            )
+        `;
+    }
+
     let cypherString = '';
     
-    cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? matchString : '';
+    cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' || datasetString !== '' || dataTypeString !== '' ? matchString : '';
 
     cypherString = cypherString !== '' ? taxString !== '' ? cypherString + taxString : cypherString : '';
 
@@ -159,6 +171,8 @@ const query_to_cypher = ({
     cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
 
     cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
+    
+    cypherString = cypherString !== '' ? dataTypeString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' || datasetString !== '' ? cypherString + " AND " + dataTypeString : cypherString + dataTypeString : cypherString : '';
 
 
     // "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)
@@ -166,10 +180,10 @@ const query_to_cypher = ({
 
     // string to return data in csv format
     const covarCypherString = covars.map((item) => `, p.${item} AS ${item}`).join("");
-    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p2.name AS state, p1.name AS county, p2.state_fips AS state_fips, p1.county_fips AS county_fips, p.date AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" + covarCypherString : '';
+    const csvString = cypherString !== '' ? cypherString + " RETURN n.name AS species, g.name AS genus, f.name AS family, o.name AS order, c.name AS class, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, p2.name AS state, p1.name AS county, p2.state_fips AS state_fips, p1.county_fips AS county_fips, toString(p.date) AS date, d.name AS dataset, d.agency_organization_researchGroup AS agency_organization_researchGroup, d.program_name AS program_name, r.measurement_result AS measurement_result, r.measurement_unit AS measurement_unit, r.measurement_type AS measurement_type, r.sampling_method AS sampling_method, r.sampling_effort AS sampling_effort, r.sampling_effort_unit AS sampling_effort_unit" + covarCypherString : '';
     
     // string to return data for leaflet mapping
-    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, p.date AS date, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, n.name AS species, d.name AS dataset" : '';
+    const mapString = cypherString !== '' ? cypherString + " RETURN s.name AS site, toString(p.date) AS date, s.longitude_dd AS longitude_dd, s.latitude_dd AS latitude_dd, n.name AS species, d.name AS dataset" : '';
 
     // return nodes/relationships for cytoscape graph
     const knString = cypherString !== '' ? cypherString + " RETURN c, b4, o, b3, f, b2, g, b1, n, {p1_elementId: elementId(p1), county_fips: p1.county_fips, name: p1.name} AS p1, s2, {p2_elementId: elementId(p2), state_fips: p2.state_fips, state_abbrev: p2.state_abbrev, name: p2.name} AS p2 " : '';
