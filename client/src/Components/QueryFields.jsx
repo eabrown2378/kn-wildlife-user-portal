@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import OutputWindow from "./OutputWindow";
 import TaxSelect from "./SearchFields/TaxSelect";
 import LocationParams from "./SearchFields/LocationParams";
@@ -17,7 +17,9 @@ import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
 import { MapDataContext } from "../Context/MapDataContext";
 import { MetadataContext } from "../Context/MetadataContext";
+import { SearchOptionsContext } from "../Context/SearchOptionsContext";
 import ReactGA from 'react-ga4';
+import { filterSearchOptions } from "../Functions/filterSearchOptions";
 
 // const [showChat, setShowChat] = useState(false);
 
@@ -37,6 +39,7 @@ function QueryFields() {
     const [showChat, setShowChat] = useState(false);
 
     const [errorMessage, setErrorMessage] = useState(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
+    const [warningMessage, setWarningMessage] = useState(<p className="warningMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
 
 
     // hold query parameters to be used in API call
@@ -112,7 +115,10 @@ function QueryFields() {
         covarsTemp: []
     });
 
-    const [searchOptions, setSearchOptions] = useState({
+    // for search options, one state variable (searchOptionsMaster) will hold the "complete" object returned from the `neo4j_search_options()` call
+    // and the other (searchOptions) hold the filtered subset of search options to be displayed in the selection dropdowns
+
+    const searchObjectTemplate = {
         speciesOptions: [],
         genusOptions: [],
         familyOptions: [],
@@ -122,21 +128,25 @@ function QueryFields() {
         stateOptions: [],
         countyOptions: [],
         datasetOptions: [],
-        covarOptions: []
-    });
+        covarOptions: [],
+        taxMap: [],
+        locMap: []
+    }
 
+    const [searchOptionsMaster, setSearchOptionsMaster] = useState(searchObjectTemplate)
+    
+    // the second useEffect hook applies the filterSearchOptions() funtion to searchOptions whenever the query state changes
+    const searchOptions = useMemo(() => {
+      return filterSearchOptions(searchOptionsMaster, query);
+    }, [searchOptionsMaster, query])
         
 
     useEffect(() => {
 
       setIsLoading(true);
 
-      const params = new URLSearchParams({
-        query: JSON.stringify(query)
-      }).toString();
-
-        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        fetch(`https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/${params}`, {
+        // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
+        fetch(`http://localhost:8080/test_api/neo4j_search_options/`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -150,67 +160,39 @@ function QueryFields() {
               return response.json();
             })
             .then((data) => {
-              setSearchOptions((prev) => {
+              setSearchOptionsMaster((prev) => {
                 const res = data.result;
       
                 if (res !== undefined) {
                   return {
                     ...prev,
-                    speciesOptions: res.speciesOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    genusOptions: res.genusOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    familyOptions: res.familyOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    orderOptions: res.orderOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    classOptions: res.classOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    stateOptions: res.stateOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    countyOptions: res.countyOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    siteOptions: res.siteOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    datasetOptions: res.datasetOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-                    covarOptions: res.covarOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    }))
+                    speciesOptions: res.speciesOptions,
+                    genusOptions: res.genusOptions,
+                    familyOptions: res.familyOptions,
+                    orderOptions: res.orderOptions,
+                    classOptions: res.classOptions,
+                    stateOptions: res.stateOptions,
+                    countyOptions: res.countyOptions,
+                    siteOptions: res.siteOptions,
+                    datasetOptions: res.datasetOptions,
+                    covarOptions: res.covarOptions,
+                    taxMap: res.taxMap,
+                    locMap: res.locMap
                   };
                 }
       
-                console.log("Issue retrieving search options.");
+                setErrorMessage("Issue retrieving search options.");
                 return { ...prev };
               });              
               setIsLoading(false);
             })
             .catch((err) => {
               console.error("Fetch error:", err);
-              setSearchOptions((prev) => prev);
+              setSearchOptionsMaster((prev) => prev);
               setIsLoading(false);
             });
 
-    }, [query]);
+    }, []);
 
 
     const [isLoading, setIsLoading] = useState(false);
@@ -286,20 +268,45 @@ function QueryFields() {
           return;
         }
 
+        // warnings related to time range selection
+        if (([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) || 
+              ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === ""))) {
+                
+            if ([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'To'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+            if ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === "")) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'From'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+            if (([query.toDay, query.toMonth, query.toYear].some(x => x !== "") && [query.toDay, query.toMonth, query.toYear].some(x => x === "")) && 
+                  ([query.fromDay, query.fromMonth, query.fromYear].some(x => x !== "") && [query.fromDay, query.fromMonth, query.fromYear].some(x => x === ""))) {
+              setWarningMessage(<p className="warningMessage">{"WARNING: \"Time Range: 'To' and 'From'\" options not applied unless Year, Month, AND Day are selected"} </p>)
+            }
+
+        }
+
         setIsLoading(true);
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
 
-        // in prod change 'localhost:8080' to 'kn-wildlife.crc.nd.edu'
-        const call = `https://kn-wildlife.crc.nd.edu/test_api/neo4j_get/${encodeURIComponent(knString)}/${encodeURIComponent(csvString)}/${encodeURIComponent(mapString)}/${encodeURIComponent(metaString)}`;
+        const url = 'http://localhost:8080/test_api/neo4j_get';
 
+        const body = {
+          knString,
+          csvString,
+          mapString,
+          metaString
+        };
 
-        fetch(call, {
-            method: 'GET',
+          fetch(url, {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json', 
-                'Accept': 'application/json', 
-              }
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(body),
           })
             .then((response) => {
               if (!response.ok) {
@@ -308,6 +315,7 @@ function QueryFields() {
               return response.json();
             })
             .then((data) => {
+
               if (data !== undefined) {
                 // log that a user has successfully queried data
                 ReactGA.event({
@@ -316,40 +324,29 @@ function QueryFields() {
                   label: "query"
                 });
                 const res = process_neo4j_data(data.result.vis);
-                const dat = data.result.csv.records[0]._fields[4];
 
-                const mapDat = data.result.map.records.map((item) => {
-                    const foo = {};
-                  
-                    item._fields.map((x, i) => {
+                const dat = data.result.csv;
 
-                      foo[item.keys[i]] = x;
-                    
-                    });                
+                const mapDat = data.result.map;
 
-                    return foo;
-                });
+                const metaDat = data.result.meta.map((item) => {
 
-                const metaDat = data.result.meta.records.map((item) => {
-                    const foo = {};
-                  
-                    item._fields.map((x, i) => {
+                  if (typeof item["downloadDate"] === 'object') {
 
-                      if (item.keys[i] === "downloadDate" && typeof item["downloadDate"] === 'object') {
-                        const year = x.year.low.toString();
-                        const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
-                        const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
+                    const x = item["downloadDate"];
 
-                        foo["downloadDate"] = [year,month,day].join("-");
+                    const year = x.year.low.toString();
+                    const month = x.month.low.toString().length === 1 ? "0" + x.month.low.toString() : x.month.low.toString();
+                    const day = x.day.low.toString().length === 1 ? "0" + x.day.low.toString() : x.day.low.toString();
 
-                      } else {
+                      
+                    item["downloadDate"] =  [year,month,day].join("-");
 
-                        foo[item.keys[i]] = x;
-                      }
-                    
-                    });                
+                  }
 
-                    return foo;
+                  return item;
+
+ 
                 });
 
                 setMetadata(metaDat);
@@ -377,81 +374,83 @@ function QueryFields() {
 
     return ( 
         <div className="searchContainer">
-            <div className="queryfields">
-                <TaxSelect
-                    handleChange={handleChange}
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                />
-                <LocationParams
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
-                <TimeOptions
-                    handleChange={handleChange}
-                    query={query}
-                    isLoading={isLoading}
-                />
-                <DatasetSelect
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
-                <CovariateSelection
-                    handleMultiChange={handleMultiChange} 
-                    searchOptions={searchOptions} 
-                    isLoading={isLoading} 
-                    tempMulti={tempMulti}
-                    query={query}
-                    handleChange={handleChange}
-                />
+            <div className="queryfields">              
+              <SearchOptionsContext.Provider value={searchOptions}>
+                  <TaxSelect
+                      handleChange={handleChange}
+                      handleMultiChange={handleMultiChange}
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                  />
+                  <LocationParams
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                  <TimeOptions
+                      handleChange={handleChange}
+                      query={query}
+                      isLoading={isLoading}
+                  />
+                  <DatasetSelect
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                  <CovariateSelection
+                      handleMultiChange={handleMultiChange} 
+                      searchOptions={searchOptions} 
+                      isLoading={isLoading} 
+                      tempMulti={tempMulti}
+                      query={query}
+                      handleChange={handleChange}
+                  />
+                </SearchOptionsContext.Provider>
                 {errorMessage && errorMessage}
+                {warningMessage && warningMessage}
                 <button onClick={() => apiCall(query)}>Generate Results</button>
             </div>
             <MetadataContext.Provider value={metadata}>
-            <QueryResultContext.Provider value={queryResult}>
-            <MapDataContext.Provider value={mapData}>
-            <MarkerContext.Provider value={[markers, setMarkers]}>
-                <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
-                {/* 💬 Chatbot toggle button */}
-                <div
-                    style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    backgroundColor: '#007bff',
-                    borderRadius: '50%',
-                    width: '60px',
-                    height: '60px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    color: 'white',
-                    fontSize: '30px',
-                    cursor: 'pointer',
-                    zIndex: 1000
-                    }}
-                    onClick={() => setShowChat(prev => !prev)}
-                >
-                    💬
-                </div>
+              <QueryResultContext.Provider value={queryResult}>
+                <MapDataContext.Provider value={mapData}>
+                  <MarkerContext.Provider value={[markers, setMarkers]}>
+                      <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
+                      <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
+                      {/* 💬 Chatbot toggle button */}
+                      <div
+                          style={{
+                          position: 'fixed',
+                          bottom: '20px',
+                          right: '20px',
+                          backgroundColor: '#007bff',
+                          borderRadius: '50%',
+                          width: '60px',
+                          height: '60px',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          color: 'white',
+                          fontSize: '30px',
+                          cursor: 'pointer',
+                          zIndex: 1000
+                          }}
+                          onClick={() => setShowChat(prev => !prev)}
+                      >
+                          💬
+                      </div>
 
-                {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
-                </SelectionDetailsContext.Provider>
-            </MarkerContext.Provider>
-            </MapDataContext.Provider>
-            </QueryResultContext.Provider>
+                      {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
+                      </SelectionDetailsContext.Provider>
+                  </MarkerContext.Provider>
+                </MapDataContext.Provider>
+              </QueryResultContext.Provider>
             </MetadataContext.Provider>
         </div>
      );

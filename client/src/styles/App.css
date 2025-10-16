@@ -210,6 +210,10 @@ input {
   color: red;
 }
 
+.warningMessage {
+  color: lightsalmon;
+}
+
 .checkbox--class {
   display: flex;
   flex-direction: row;

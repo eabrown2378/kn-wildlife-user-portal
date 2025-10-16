@@ -1,7 +1,12 @@
 import Select from "react-select";
 import Information from "../Information";
+import { useContext } from "react";
+import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
 
-function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti, query, handleChange }) {
+function LocationParams({ handleMultiChange, isLoading, tempMulti, query, handleChange }) {
+
+    const searchOptions = useContext(SearchOptionsContext);
+
     return (  
         <fieldset>
             <legend style={{color:"white"}}>Search by Location</legend>

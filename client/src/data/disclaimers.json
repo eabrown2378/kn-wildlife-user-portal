@@ -1,6 +1,6 @@
 [
     {
-        "dataset": ["finsyncR: National Rivers and Streams Assessment (NRSA) fish data"],
+        "dataset": ["finsyncR: National Rivers and Streams Assessment (NRSA) fish data", "finsyncR: National Rivers and Streams Assessment (NRSA) benthic macroinvertebrate data", "finsyncR: USGS BioData - fish data", "finsyncR: USGS BioData - benthic macroinvertebrate data"],
         "disclaimer": "Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. government.\nThe findings and conclusions here do not necessarily represent the views or policies of the U.S. Environmental Protection Agency.\n\nThe approaches provided in this package concerning the way the BioData and NRSA data are treated are not necessarily the same\nas the approaches used in other USGS and EPA publications or national assessments. So, replicating analyses using\nthe processed data in this package may not produce identical results. For instance, multimetric indices produced from NRSA data\nfrom finsyncR may not match multimetric indices in EPA national assessment reports. The methods developed to join\nthe EPA and USGS datasets described in this manuscript (see 'CITATIONS.txt') have not been designed with the intent of adding\nother fish and macroinvertebrate datasets. So, the appropriateness of these methods cannot be guaranteed for other datasets."
     },
     {

@@ -10,6 +10,7 @@ import L from "leaflet";
 import marker from "../assets/map-marker.svg";
 import 'leaflet/dist/leaflet.css';
 import { MapDataContext } from "../Context/MapDataContext";
+import MarkerClusterGroup from "react-leaflet-markercluster";
 
 
 // component so set map center when query result changes
@@ -71,7 +72,9 @@ function MapViewComponent({position}) {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {markers}
+            <MarkerClusterGroup>
+                {markers}
+            </MarkerClusterGroup>
             <MapViewComponent position={position}/>
         </MapContainer>
 
