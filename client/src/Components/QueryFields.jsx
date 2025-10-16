@@ -280,6 +280,8 @@ function QueryFields() {
           metaString
         };
 
+        console.log(csvString)
+
           fetch(url, {
             method: 'POST',
             headers: {
@@ -306,9 +308,7 @@ function QueryFields() {
                 const res = process_neo4j_data(data.result.vis);
 
                 console.log(data.result.csv)
-                const dat = data.result.csv.map(x => x.data).join("\\n");
-
-                console.log(dat)
+                const dat = data.result.csv;
 
                 const mapDat = data.result.map;
 

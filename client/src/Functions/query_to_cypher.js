@@ -12,13 +12,9 @@ const query_to_cypher = ({
     // initial match statement to return complete chain of nodes and edges from neo4j
     let matchString = `
         MATCH (p2:State)<-[s2:IN_STATE]-(p1:County)<-[s1:IN_COUNTY]-(s:Site)<-[i:OBSERVED_IN]-(p:Observation)-[z:FROM_DATASET]->(d:Dataset)
-            OPTIONAL MATCH (p)-[r1:OBSERVED_ORGANISM]->(n:Species)
-            OPTIONAL MATCH (p)-[r2:OBSERVED_ORGANISM]->(g1:Genus)
-            OPTIONAL MATCH (n)-[b1:BELONGS_TO]->(g2:Genus)
-            WITH p, n, z, d, b1, p1, p2, s, s1, s2, i, coalesce(g1, g2) AS g, coalesce(r1, r2) AS r
-            OPTIONAL MATCH (g)-[b2:BELONGS_TO]->(f:Family)
-            OPTIONAL MATCH (f)-[b3:BELONGS_TO]->(o:Order)
-            OPTIONAL MATCH (o)-[b4:BELONGS_TO]->(c:TaxClass)
+            OPTIONAL MATCH (p)-[r1:OBSERVED_ORGANISM]->(n:Species)-[b1:BELONGS_TO]->(g1:Genus)-[b21:BELONGS_TO]->(f1:Family)-[b31:BELONGS_TO]->(o1:Order)-[b41:BELONGS_TO]->(c1:TaxClass)
+            OPTIONAL MATCH (p)-[r2:OBSERVED_ORGANISM]->(g2:Genus)-[b22:BELONGS_TO]->(f2:Family)-[b32:BELONGS_TO]->(o2:Order)-[b42:BELONGS_TO]->(c2:TaxClass)
+            WITH p, n, z, d, b1, p1, p2, s, s1, s2, i, coalesce(g1, g2) AS g, coalesce(r1, r2) AS r, coalesce(b21, b22) AS b2, coalesce(f1, f2) AS f, coalesce(b31, b32) AS b3, coalesce(o1, o2) AS o, coalesce(b41, b42) AS b4, coalesce(c1, c2) AS c
     `;
 
     /*"MATCH (p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), 

@@ -2,9 +2,11 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import Paper from "@mui/material/Paper";
 import Papa from "papaparse";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { array_to_csv } from "../Functions/array_to_csv";
 
 function TableView({ data }) {
-  const parsedData = data ? Papa.parse(data).data : [];
+
+  const parsedData = data ? Papa.parse(array_to_csv(data)).data : [];
   const colnames = parsedData[0] || [];
   const rows = parsedData.slice(1) || [];
 

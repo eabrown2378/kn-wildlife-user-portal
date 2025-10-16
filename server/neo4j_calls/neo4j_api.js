@@ -11,13 +11,8 @@ exports.get_neo4j = async function (query, csv, map, meta) {
         // make query
         const neo4j_data = await session.run(query, {});
 
-        // get data as csv
-        const csvQuery = `WITH \"${csv}\" AS query
-                            CALL apoc.export.csv.query(query, null, {stream: true})
-                            YIELD file, nodes, relationships, properties, data
-                            RETURN file, nodes, relationships, properties, data`
                             
-        const csv_data = await session.run(csvQuery, {});
+        const csv_data = await session.run(csv, {});
 
         // get data for mapping
         const map_data = await session.run(map, {});
@@ -26,8 +21,8 @@ exports.get_neo4j = async function (query, csv, map, meta) {
         const meta_data = await session.run(meta, {});
 
         // Convert to plain objects (safe to JSON.stringify)
-        const MAX_RECORDS = 10000; // or smaller for debugging
-        const clean = obj => obj.records.slice(0, MAX_RECORDS).map(r => r.toObject());
+        //const MAX_RECORDS = 10000; // or smaller for debugging
+        const clean = obj => obj.records./*slice(0, MAX_RECORDS).*/map(r => r.toObject());
 
         // end session
         session.close();
