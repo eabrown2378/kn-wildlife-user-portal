@@ -146,7 +146,7 @@ function QueryFields() {
       setIsLoading(true);
 
         // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
-        fetch(`http://localhost:8080/test_api/neo4j_search_options/`, {
+        fetch(`https://kn-wildlife.crc.nd.edu/test_api/neo4j_search_options/`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -291,7 +291,7 @@ function QueryFields() {
 
         const {knString, csvString, mapString, metaString} = query_to_cypher(query);
 
-        const url = 'http://localhost:8080/test_api/neo4j_get';
+        const url = 'https://kn-wildlife.crc.nd.edu/test_api/neo4j_get';
 
         const body = {
           knString,
