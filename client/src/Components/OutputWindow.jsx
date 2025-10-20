@@ -10,6 +10,7 @@ import JSZip from 'jszip';
 import disclaimers from '../data/disclaimers.json';
 import {MetadataContext} from '../Context/MetadataContext';
 import ReactGA from 'react-ga4';
+import { array_to_csv } from '../Functions/array_to_csv';
 
 
 export default function OutputWindow({data, isLoading, result, returnedCovars}) {
@@ -129,7 +130,7 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                         <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
                     </div>
                 </div>                
-                <button onClick={() => handleDownload(data, fn, disclaim, citations)} 
+                <button onClick={() => handleDownload(array_to_csv(data), fn, disclaim, citations)} 
                         disabled={!data || isLoading}
                         className='csv--button'
                 >
