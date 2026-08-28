@@ -2,100 +2,63 @@
 
 const process_neo4j_data = (data) => {
 
-    // separate node and relationship data
-    // site, county, and state nodes are returned as maps due to long property values (specifically geometry)
-    const extendedData = data.map((x) => {
+    // neo4j returns vis as a flat list of the distinct nodes, relationships, and county/state
+    // maps in the result, so each entry maps straight to one cytoscape element
+    return data
+        .filter((z) => z)
+        .map((z) => {
 
-        const result = Object.keys(x).map((y) => {
+            // if result has a start or end node ID then it must be a relationship, otherwise it is a node
+            const dataType = z.startNodeElementId ? 'relationship' : 'node';
+            const tagged = {...z, dataType};
 
-            const z = x[y];
+            let cleaned;
 
-            if (!z) return null;
-
-            return {
-                ...z,
-                dataType: z.startNodeElementId ? 'relationship' : 'node' // if result has a start or end node ID then it must be a relationship, otherwise it is a node
-
-            };
-        }).filter(x => x !== null);        
-
-        return result;
-
-    }).flat();
-
-    // format data for a cytoscape graph
-    const cleanedData = extendedData.map((x) => {
-
-        if (x.dataType === 'relationship') {
-            return {
-                id: x.elementId,
-                source: x.startNodeElementId,
-                target: x.endNodeElementId,
-                category: x.type,
-                ...x
-            };
-        };
-
-        if (x.p1_elementId) {
-            return {
-                id: x.p1_elementId,
-                category: "County",
-                properties: {...x},
-                ...x
-            }
-        }
-
-        if (x.p2_elementId) {
-            return {
-                id: x.p2_elementId,
-                category: "State",
-                properties: {...x},
-                ...x
-            }
-        }
-
-        return {
-            id: x.elementId,
-            category: x.labels[0],
-            ...x
-        };
-
-
-    });
-
-
-    const cytoscapeData = cleanedData.map((x) => {
-
-        if (x.category === "Site") {
-
-/*             // Regular expression to capture latitude and longitude.
-            const regex = /latitude=(-?\d+\.\d+)&longitude=(-?\d+\.\d+)/;
-
-            // Use the exec() method to find the matches in the URL.
-            const matches = regex.exec(x.properties.api_url); */
-
-            const latitude = x.latitude_dd;
-            const longitude = x.longitude_dd; 
-
-            return {
-                data: {
-                    longitude,
-                    latitude,
-                    ...x
-                }
+            if (dataType === 'relationship') {
+                cleaned = {
+                    id: tagged.elementId,
+                    source: tagged.startNodeElementId,
+                    target: tagged.endNodeElementId,
+                    category: tagged.type,
+                    ...tagged
+                };
+            // site, county, and state nodes are returned as maps due to long property values (specifically geometry)
+            } else if (tagged.p1_elementId) {
+                cleaned = {
+                    id: tagged.p1_elementId,
+                    category: "County",
+                    properties: {...tagged},
+                    ...tagged
+                };
+            } else if (tagged.p2_elementId) {
+                cleaned = {
+                    id: tagged.p2_elementId,
+                    category: "State",
+                    properties: {...tagged},
+                    ...tagged
+                };
+            } else {
+                cleaned = {
+                    id: tagged.elementId,
+                    category: tagged.labels[0],
+                    ...tagged
+                };
             }
 
-        }
+            if (cleaned.category === "Site") {
+                return {
+                    data: {
+                        longitude: cleaned.longitude_dd,
+                        latitude: cleaned.latitude_dd,
+                        ...cleaned
+                    }
+                };
+            }
 
-        return {
-            data: x
-        }
+            return {data: cleaned};
 
+        });
 
-    });
-
-    // return array of separated nodes and relationships
-    return cytoscapeData;
 };
 
 

@@ -1,103 +1,60 @@
-import Select from "react-select";
+import { useContext, useMemo } from "react";
 import Information from "../Information";
-import { useContext } from "react";
+import OptionBrowser from "./OptionBrowser";
 import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
+import { build_taxon_options, TAX_RANKS } from "../../Functions/build_chip_options";
 
-function TaxSelect({ handleChange, handleMultiChange, isLoading, tempMulti, query }) {
+// Search by taxonomy, at any level, in one field.
+//
+// This replaced five per-rank dropdowns and a "hierarchical search" checkbox. Those could
+// express combinations that mean nothing - class Aves together with family Cyprinidae - so
+// the checkbox existed to guess which reading was intended, and because it applied to the
+// whole search at once it could not express a mixture of levels. Turning it on discarded the
+// coarser selections; turning it off collapsed a nested pair into its broader member. Naming
+// each taxon directly removes the ambiguity instead of arbitrating it, and lets one search
+// hold a class, a genus and a species side by side.
+function TaxSelect({ isLoading, taxonChips, onTaxonChipsChange }) {
 
     const searchOptions = useContext(SearchOptionsContext);
 
+    // The index depends only on what the datasets contain, so it is built once per options
+    // change rather than on every keystroke.
+    const options = useMemo(
+        () => build_taxon_options(searchOptions.taxMap),
+        [searchOptions.taxMap]
+    );
 
-    return (  
-        <fieldset>            
+    // Selecting is a toggle: picking the same taxon again removes it, so a list you are
+    // browsing doubles as the record of what you have chosen.
+    const onToggle = (option) => {
+        const already = taxonChips.some((chip) => chip.value === option.value);
+        onTaxonChipsChange(already
+            ? taxonChips.filter((chip) => chip.value !== option.value)
+            : [...taxonChips, option]);
+    };
+
+    return (
+        <fieldset>
             <legend style={{color:"white"}}>Search by Taxonomy</legend>
-            <div className="checkbox--class">
-                <div style={{display:"flex"}}>
-                    <label className="query--label" htmlFor="taxHier">Hierarchical Search:</label>
-                </div>
-                <input
-                    type="checkbox"
-                    value={query.taxHier}
-                    onChange={(e) => handleChange(e)}
-                    name="taxHier"
-                    id="taxHier"
-                    className="field"
-                    isDisabled={isLoading}
-                />
-                <Information blurb="taxHier"/>
-            </div>
             <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="class">Class:</label>
-                <Information blurb="class"/>
+                <label className="query--label">Taxa:</label>
+                <Information blurb="taxonChips"/>
             </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.classOptions}
-                value={tempMulti.tax_classTemp}
-                onChange={(selections) => {handleMultiChange(selections, "tax_classTemp")}}
-                name="tax_classTemp"
-                id="tax_class"
-                className="field"
-                isDisabled={isLoading}
+            <OptionBrowser
+                options={options}
+                ranks={TAX_RANKS}
+                selected={taxonChips}
+                onToggle={onToggle}
+                onClear={() => onTaxonChipsChange([])}
+                isLoading={isLoading}
+                emptyMessage="No taxon matches"
             />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="order">Order:</label>
-                <Information blurb="order"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.orderOptions}
-                value={tempMulti.orderTemp}
-                onChange={(selections) => {handleMultiChange(selections, "orderTemp")}}
-                name="orderTemp"
-                id="order"
-                className="field"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="family">Family:</label>
-                <Information blurb="family"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.familyOptions}
-                value={tempMulti.familyTemp}
-                onChange={(selections) => {handleMultiChange(selections, "familyTemp")}}
-                name="familyTemp"
-                id="family"
-                className="field"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="genus">Genus:</label>
-                <Information blurb="genus"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.genusOptions}
-                value={tempMulti.genusTemp}
-                onChange={(selections) => {handleMultiChange(selections, "genusTemp")}}
-                name="genusTemp"
-                id="genus"
-                className="field"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="species">Species:</label>
-                <Information blurb="species"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.speciesOptions}
-                value={tempMulti.speciesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "speciesTemp")}}
-                name="speciesTemp"
-                id="species"
-                className="field"
-                isDisabled={isLoading}
-            />
+            <p className="fieldHint">
+                Pick a level to browse, or leave it on all levels. Add as many taxa as you
+                like at any mix of levels; results include everything within each one.
+            </p>
         </fieldset>
     );
 };
-;
+
 export default TaxSelect;

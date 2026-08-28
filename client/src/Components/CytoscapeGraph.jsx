@@ -1,7 +1,8 @@
-import {Fragment, useEffect, useRef, useContext} from 'react';
+import {Fragment, useEffect, useRef, useContext, useState} from 'react';
 import cytoscape from 'cytoscape';
 import { QueryResultContext } from '../Context/QueryResultContext';
 import { SelectionDetailsContext } from '../Context/SelectionDetailsContext';
+import LoadingOverlay from './LoadingOverlay';
 import fcose from 'cytoscape-fcose';
 
 cytoscape.use( fcose );
@@ -18,9 +19,27 @@ const CytoscapeGraph = () => {
 
     // container to hold current cytoscape graph
     const graphRef = useRef(null);
-    
+
+    // current cytoscape instance, so it can be torn down before the next query redraws it
+    const cyRef = useRef(null);
+
+    // Which results the graph on screen was drawn from. While this differs from the latest
+    // results the graph is out of date, so the overlay belongs up.
+    //
+    // This is derived during render rather than set from an effect on purpose. An effect
+    // runs after the commit, so the overlay would appear one commit late; the search's own
+    // overlay has already gone by then and the gap shows as a flicker.
+    const [renderedResult, setRenderedResult] = useState(null);
+    const isRendering = Boolean(queryResult) && queryResult !== renderedResult;
+
     // draw graph based on query results
-    const drawGraph = (data) => {
+    const drawGraph = (data, onLayoutStop = () => {}) => {
+
+        // without this, re-initializing cytoscape on the same container leaves the previous
+        // query's canvas layered underneath the new one instead of replacing it
+        if (cyRef.current) {
+            cyRef.current.destroy();
+        }
 
         const cy = cytoscape({
 
@@ -118,7 +137,7 @@ const CytoscapeGraph = () => {
 
         cy.on('tap', 'node', function(evt){
             const node = evt.target._private.data;
-            const selectedNode = data.filter((item) => item.data.id === node.id)[0]
+            const selectedNode = data.find((item) => item.data.id === node.id)
             console.log(selectedNode)
             setSelectionDetails(
                 <div className='selectionDetails'>
@@ -134,15 +153,34 @@ const CytoscapeGraph = () => {
 
         var layout = cy.layout({ name: 'fcose', nodeRepulsion: 10000000, nodeSeparation: 1500, idealEdgeLength: 250 });
 
+        layout.one('layoutstop', onLayoutStop);
+
         layout.run(); // apply fcose layout
+
+        cyRef.current = cy;
     };
 
     // re-render graph when queryResult state changes
     useEffect(() => {
-        if (queryResult) {
-            drawGraph(queryResult);
-        }
+        if (!queryResult || queryResult === renderedResult) return;
+
+        // building the graph blocks the main thread, so hand the browser a frame to paint
+        // the overlay first, otherwise the UI just freezes with no indication of progress
+        const frame = requestAnimationFrame(() => {
+            drawGraph(queryResult, () => setRenderedResult(queryResult));
+        });
+
+        return () => cancelAnimationFrame(frame);
     }, [queryResult]);
+
+    // tear down the cytoscape instance when the component unmounts
+    useEffect(() => {
+        return () => {
+            if (cyRef.current) {
+                cyRef.current.destroy();
+            }
+        };
+    }, []);
 
 
 
@@ -152,7 +190,8 @@ const CytoscapeGraph = () => {
         {/* <button style={{height: '32px', width: "124px"}} onClick={() => {apiCall(query)}}>Generate Graph</button> */}
     </div>
     <div ref={graphRef} className='cytoscapeGraph'>
-    </div>    
+    </div>
+    {isRendering && <LoadingOverlay viewport="cytoscape"/>}
     {selectionDetails}
   </Fragment>
  )

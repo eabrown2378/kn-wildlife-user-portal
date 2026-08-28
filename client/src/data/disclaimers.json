@@ -1,17 +1,31 @@
 [
     {
-        "dataset": ["finsyncR: National Rivers and Streams Assessment (NRSA) fish data", "finsyncR: National Rivers and Streams Assessment (NRSA) benthic macroinvertebrate data", "finsyncR: USGS BioData - fish data", "finsyncR: USGS BioData - benthic macroinvertebrate data"],
+        "dataset": [
+            "finsyncR: National Rivers and Streams Assessment (NRSA) fish data",
+            "finsyncR: National Rivers and Streams Assessment (NRSA) benthic macroinvertebrate data",
+            "finsyncR: USGS BioData - fish data",
+            "finsyncR: USGS BioData - benthic macroinvertebrate data"
+        ],
         "disclaimer": "Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. government.\nThe findings and conclusions here do not necessarily represent the views or policies of the U.S. Environmental Protection Agency.\n\nThe approaches provided in this package concerning the way the BioData and NRSA data are treated are not necessarily the same\nas the approaches used in other USGS and EPA publications or national assessments. So, replicating analyses using\nthe processed data in this package may not produce identical results. For instance, multimetric indices produced from NRSA data\nfrom finsyncR may not match multimetric indices in EPA national assessment reports. The methods developed to join\nthe EPA and USGS datasets described in this manuscript (see 'CITATIONS.txt') have not been designed with the intent of adding\nother fish and macroinvertebrate datasets. So, the appropriateness of these methods cannot be guaranteed for other datasets."
     },
     {
-        "dataset": ["iNaturalist"],
+        "dataset": [
+            "iNaturalist: Vertebrates (2025-07-01)",
+            "iNaturalist: US Plants (2025-11-18)"
+        ],
         "disclaimer": "See iNaturalist Terms of Use at https://www.inaturalist.org/pages/terms"
     },
     {
-        "dataset": ["PRISM"],
+        "dataset": [
+            "PRISM"
+        ],
         "disclaimer": "Disclaimer from https://prism.oregonstate.edu/terms/:\n\nAll data and other information available on the prism.oregonstate.edu website are subject to the conditions stated below.\n\nMap Graphics. Map graphics may be freely reproduced and distributed, as long as the PRISM Group copyright notice, URL, \nand the date of map creation are reproduced in full. This applies when the image is reproduced in any form, \nwhether electronically or in hard copy. If an image does not already include that notice, it must be added as follows:\n\nCopyright ©<year>, PRISM Group, Oregon State University, https://prism.oregonstate.edu Map created <date>. \n\nData. All data (gridded, polygon, tabular, graphical) retrieved from this website or otherwise provided on the website may be freely reproduced and distributed.\n\nReferences to the Data. When the data are used, any description should clearly and prominently state, at a minimum, our name, URL, \nand the dates of data creation and access. For example:\nPRISM Group, Oregon State University, https://prism.oregonstate.edu, data created 4 Feb 2014, accessed 16 Dec 2020.\n\nCopyright and Ownership. All data and information presented through this website are protected by United States copyright laws \nand applicable international copyright treaties. The PRISM Group, Oregon State University retains rights to ownership of \nthe data and information.\n\nDisclaimers. It is not recommended that PRISM data be used to calculate very long-term trends.\n\nNo Warranty. All content on this website is provided 'as is,' without warranty of any kind, either express or implied.\n\n\nDisclaimer from https://prism.oregonstate.edu/recent/:\n\nTime series datasets since 1981 are available based on either monthly or daily modeling. As with any averaging technique, \nthe yearly average obtained from monthly values may not exactly match that based on daily values. Moreover, since 1 January 2002, \nthe precipitation observations used for daily modeling includes radar measurements, which monthly modeling \ndoes not take into account. This may cause dramatic local differences between the two datasets in monthly/annual \ntotals for areas east of the Rocky Mountains.\n\nThese datasets use all of the station networks and data sources ingested by the PRISM Group, not just those that have existed \nfor long periods of time. See PRISM datasets for more information; the data available from this page is 'AN' (daily and monthly). \nNote that individual grids contain inhomogeneities due to station equipment and location changes, stations openings and closings, \nand varying observation times. These datasets should be considered 'stable' (unlikely to change until a major version change). \nDatasets from 1895-1980 will be found in the Historical Data section. For information on when the grids were most recently updated, \nsee calendar of PRISM data updates.\n\nAny known issues with the PRISM time series datasets are documented in the Known Issues section",
-        "notes" : "Downloaded from https://prism.oregonstate.edu/recent/ on 2025-07-22 and joined to occurrence/abundance/density data \nbased on latitude, longitude, and collection date (for annual data, collection year; for monthly data, collection month, etc...).",
-        "citations" : ["PRISM Group, Oregon State University, https://prism.oregonstate.edu, data created 4 Feb 2014, accessed 16 Dec 2020."],
-        "urls": ["https://prism.oregonstate.edu/recent/"]
+        "notes": "Downloaded from https://prism.oregonstate.edu/recent/ on 2025-07-22 and joined to occurrence/abundance/density data \nbased on latitude, longitude, and collection date (for annual data, collection year; for monthly data, collection month, etc...).",
+        "citations": [
+            "PRISM Group, Oregon State University, https://prism.oregonstate.edu, data created 4 Feb 2014, accessed 16 Dec 2020."
+        ],
+        "urls": [
+            "https://prism.oregonstate.edu/recent/"
+        ]
     }
 ]
