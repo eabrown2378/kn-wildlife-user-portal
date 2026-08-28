@@ -1,75 +1,61 @@
-import Select from "react-select";
 import Information from "../Information";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
+import OptionBrowser from "./OptionBrowser";
 import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
+import { build_place_options } from "../../Functions/build_chip_options";
 
-function LocationParams({ handleMultiChange, isLoading, tempMulti, query, handleChange }) {
+// Search by place, at any level, in one field.
+//
+// This replaced separate state and county dropdowns with a "hierarchical search" checkbox.
+// The checkbox was there because selecting Iowa alongside a county of Iowa had no defined
+// meaning; naming places directly makes the question disappear, since Adair sits inside Iowa
+// and the union of the two simply is Iowa. It also allows what the old pair could not
+// express at all: all of one state plus a couple of counties in another.
+//
+// County names already carry their state - "Adair (Iowa)" - so a chip identifies exactly one
+// county without a second field beside it.
+// States and counties are the only two levels a place can be chosen at.
+const PLACE_RANKS = [
+    {key: "state", label: "state"},
+    {key: "county", label: "county"},
+];
+
+function LocationParams({ isLoading, query, handleChange, placeChips, onPlaceChipsChange }) {
 
     const searchOptions = useContext(SearchOptionsContext);
 
-    return (  
+    const options = useMemo(
+        () => build_place_options(searchOptions.locMap),
+        [searchOptions.locMap]
+    );
+
+    const onToggle = (option) => {
+        const already = placeChips.some((chip) => chip.value === option.value);
+        onPlaceChipsChange(already
+            ? placeChips.filter((chip) => chip.value !== option.value)
+            : [...placeChips, option]);
+    };
+
+    return (
         <fieldset>
             <legend style={{color:"white"}}>Search by Location</legend>
-            <div className="checkbox--class">
-                <div style={{display:"flex"}}>
-                    <label className="query--label" htmlFor="class">Hierarchical Search:</label>
-                </div>
-                <input
-                    type="checkbox"
-                    value={query.locHier}
-                    onChange={(e) => handleChange(e)}
-                    name="locHier"
-                    id="locHier"
-                    className="field"
-                    isDisabled={isLoading}
-                />
-                <Information blurb="locHier"/>
-            </div>
             <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="stateSelect">States:</label>
-                <Information blurb="stateSelect"/>
+                <label className="query--label">Places:</label>
+                <Information blurb="placeChips"/>
             </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.stateOptions}
-                value={tempMulti.statesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "statesTemp")}}
-                name="statesTemp"
-                id="stateSelect"
-                className="field"
-                placeholder="Default: all states"
-                isDisabled={isLoading}
+            <OptionBrowser
+                options={options}
+                ranks={PLACE_RANKS}
+                selected={placeChips}
+                onToggle={onToggle}
+                onClear={() => onPlaceChipsChange([])}
+                isLoading={isLoading}
+                emptyMessage="No state or county matches"
             />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="countySelect">Counties:</label>
-                <Information blurb="countySelect"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.countyOptions}
-                value={tempMulti.countiesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "countiesTemp")}}
-                name="countiesTemp"
-                id="countySelect"
-                className="field"
-                placeholder="Default: all counties"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="siteSelect">Sampling Locations:</label>
-                <Information blurb="siteSelect"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.siteOptions}
-                value={tempMulti.sitesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "sitesTemp")}}
-                name="sitesTemp"
-                id="siteSelect"
-                className="field"
-                placeholder="Default: all sites"
-                isDisabled={isLoading}
-            />
+            <p className="fieldHint">
+                Browse states or counties, or both. Naming a state includes all of its
+                counties, so the two can be mixed freely.
+            </p>
             <div style={{display:"flex"}}>
                 <label className="query--label" htmlFor="coordRange">Coordinate Range:</label>
                 <Information blurb="coordRange"/>

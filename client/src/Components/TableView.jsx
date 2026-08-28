@@ -6,9 +6,9 @@ import { array_to_csv } from "../Functions/array_to_csv";
 
 function TableView({ data }) {
 
-  const parsedData = data ? Papa.parse(array_to_csv(data)).data : [];
+  const parsedData = useMemo(() => (data ? Papa.parse(array_to_csv(data)).data : []), [data]);
   const colnames = parsedData[0] || [];
-  const rows = parsedData.slice(1) || [];
+  const rows = useMemo(() => parsedData.slice(1) || [], [parsedData]);
 
   const parentRef = useRef(null);
 

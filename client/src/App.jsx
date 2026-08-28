@@ -3,6 +3,9 @@ import ReactGA from 'react-ga4';
 import './styles/App.css';
 import { useEffect } from 'react';
 import AnalyticsDisclosure from './Components/AnalyticsDisclosure';
+import AuthProvider from './Components/Auth/AuthProvider';
+import AuthGate from './Components/Auth/AuthGate';
+import AccountBar from './Components/Auth/AccountBar';
 
 
 
@@ -22,12 +25,15 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div>  
-        <AnalyticsDisclosure/>
-        <QueryFields/>
-      </div>
-    </>
+    <AuthProvider>
+      <AuthGate>
+        <div>
+          <AccountBar/>
+          <AnalyticsDisclosure/>
+          <QueryFields/>
+        </div>
+      </AuthGate>
+    </AuthProvider>
   );
 };
 

@@ -5,9 +5,11 @@ import KNW_Logo from "../assets/Logo.png";
 import NSF_Logo from "../assets/NSF_Official_logo_Med_Res_600ppi_rectangle.png";
 import GitHub_Logo from "../assets/github-mark-white.png";
 import TableView from './TableView';
+import LoadingOverlay from './LoadingOverlay';
 import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
 import disclaimers from '../data/disclaimers.json';
+import { licences_present } from '../Functions/attribution_columns';
 import {MetadataContext} from '../Context/MetadataContext';
 import ReactGA from 'react-ga4';
 import { array_to_csv } from '../Functions/array_to_csv';
@@ -88,8 +90,29 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                 }).filter((x) => x !== undefined),
             ).join(`${'*'.repeat(100)}\n\n`);
 
+            // The licence a publisher chose governs what a record may be used for, and a
+            // single extract mixes several - most iNaturalist records are non-commercial.
+            // GBIF's terms require the licensing information to travel with the download,
+            // so the licences actually present in this result are listed rather than a
+            // generic statement that some exist.
+            const licences = licences_present(data);
+            const licenceNote = licences.length === 0 ? "" : [
+                "*".repeat(100),
+                "",
+                "***Licences covering the records in this download:***",
+                "",
+                ...licences,
+                "",
+                "Each record carries its own licence in the record_licence column, and its",
+                "owner in rights_holder. Where a publisher's licence conflicts with any other",
+                "term, the publisher's licence prevails. Records under a non-commercial (NC)",
+                "licence may not be used commercially.",
+                "",
+                "",
+            ].join("\n");
+
             setDisclaim(discString);
-            setCitations(citeString);
+            setCitations(citeString + licenceNote);
         }
 
     }, [result]);
@@ -113,34 +136,38 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                 {viewport === "cytoscape" && <CytoscapeGraph/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
                 {viewport === "table" && <TableView data={data}/>}
-            </div>       
-            
-            <div className='logo--container'>
-                <img src={KNW_Logo} className='knwLogo' alt="" />
-                <img src={NSF_Logo} className='nsfLogo' alt="" />
-                <div className='github--div'>
-                    <div>
-                        <img src={GitHub_Logo} id='gitLogo' alt="" />
-                    </div>
-                    <div className='github-links--div'>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest dataset</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report taxonomic error</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report bug</a>
-                        <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest feature</a>   
-                    </div>
-                </div>                
-                <button onClick={() => handleDownload(array_to_csv(data), fn, disclaim, citations)} 
-                        disabled={!data || isLoading}
-                        className='csv--button'
-                >
-                    Download data as *.csv
-                </button>
-                {isLoading && <CircularProgress style={{color:'white', width:'2%', marginTop: '2vh'}}/>}                
-                <div className='survey--container'>
-                    <a target="_blank" rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLScRwMbBeeuv8X5ZGul_-Px6RaPP4sGJAyr1DtNaFSsQsiAgHw/viewform?usp=dialog'>Please take our User Survey!</a>
-                </div>
+                {isLoading && <LoadingOverlay viewport={viewport}/>}
             </div>
+            
+            <footer className='portalFooter'>
+
+                <div className='portalFooter--brand'>
+                    <img src={KNW_Logo} className='knwLogo' alt="KN-Wildlife" />
+                    <img src={NSF_Logo} className='nsfLogo' alt="National Science Foundation" />
+                </div>
+
+                <div className='portalFooter--action'>
+                    <button onClick={() => handleDownload(array_to_csv(data), fn, disclaim, citations)}
+                            disabled={!data || isLoading}
+                            className='csv--button'
+                    >
+                        Download data as *.csv
+                    </button>
+                    {isLoading && <CircularProgress size={18} style={{color:'#2a2a2a'}}/>}
+                </div>
+
+                <nav className='portalFooter--links' aria-label="Project links">
+                    <img src={GitHub_Logo} id='gitLogo' alt="" />
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal">Follow us on GitHub</a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=dataset&template=suggest-dataset---.md">Suggest a dataset</a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report a taxonomic error</a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report a bug</a>
+                    <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest a feature</a>
+                </nav>
+
+                <a className='portalFooter--survey' target="_blank" rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLScRwMbBeeuv8X5ZGul_-Px6RaPP4sGJAyr1DtNaFSsQsiAgHw/viewform?usp=dialog'>Take our user survey</a>
+
+            </footer>
         </div>
     );
 };

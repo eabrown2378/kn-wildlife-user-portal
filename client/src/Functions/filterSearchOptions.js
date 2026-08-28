@@ -1,137 +1,117 @@
 
 
-const filterSearchOptions = (options, query) => {  
-       
+// build a sorted {value,label} option list from a Set of distinct values
+const toOptionList = (set) => [...set].sort().map((item) => ({
+    value: item,
+    label: item
+}));
+
+const filterSearchOptions = (options, query) => {
+
         // TAXONOMIC SEARCH OPTIONS
+        //
+        // each level is added to its Set before checking whether that level's own filter
+        // narrows the *next* level down: a level's dropdown should show every option
+        // consistent with the levels above it, not narrow itself based on its own selection.
 
+        const speciesSet = new Set();
+        const genusSet = new Set();
+        const familySet = new Set();
+        const orderSet = new Set();
+        const classSet = new Set();
 
-        const taxOptions = query.taxHier || query.datasets.length > 0 ? options.taxMap.map((item) => {
+        for (const item of options.taxMap) {
 
-            if (query.datasets.length > 0 && !query.datasets.some((dataset) => dataset === item.dataset)) {
-                return null;
+            if (query.datasets.length > 0 && !query.datasets.includes(item.dataset)) {
+                continue;
             }
 
-            let res = {
-                species: item.species,
-                genus: item.genus,
-                family: item.family,
-                order: item.order,
-                tax_class: item.tax_class
-            };
+            if (item.tax_class !== null) classSet.add(item.tax_class);
 
-            if (query.taxHier) {
-
-                if (query.tax_class.length > 0 && !query.tax_class.some((x) => x === item.tax_class)) {
-                    res['order'] = null;
-                    res['family'] = null;
-                    res['genus'] = null;
-                    res['species'] = null;
-
-                    return res;
-                }
-
-                if (query.order.length > 0 && !query.order.some((x) => x === item.order)) {
-                    res['family'] = null;
-                    res['genus'] = null;
-                    res['species'] = null;
-
-                    return res;
-                }
-
-                if (query.family.length > 0 && !query.family.some((x) => x === item.family)) {
-                    res['genus'] = null;
-                    res['species'] = null;
-
-                    return res;
-                }
-
-                if (query.genus.length > 0 && !query.genus.some((x) => x === item.genus)) {
-                    res['species'] = null;
-
-                    return res;
-                }
-
+            if (query.taxHier && query.tax_class.length > 0 && !query.tax_class.includes(item.tax_class)) {
+                continue;
             }
 
-            return res;
+            if (item.order !== null) orderSet.add(item.order);
 
-        }).filter(item => item !== null) : options.taxMap;
-
-        const locOptions = query.locHier || query.datasets.length > 0 ? options.locMap.map((item) => {
-
-            if (query.datasets.length > 0 && !query.datasets.some((dataset) => dataset === item.dataset)) {
-                return null;
+            if (query.taxHier && query.order.length > 0 && !query.order.includes(item.order)) {
+                continue;
             }
 
-            let res = {
-                state: item.state,
-                county: item.county,
-                site: item.site
-            };
+            if (item.family !== null) familySet.add(item.family);
 
-            if (query.locHier) {
-
-                if (query.states.length > 0 && !query.states.some((x) => x === item.state)) {
-                    res['county'] = null;
-                    res['site'] = null;
-
-                    return res;
-                }
-
-                if (query.counties.length > 0 && !query.counties.some((x) => x === item.county)) {
-                    res['site'] = null;
-
-                    return res;
-                }
-
+            if (query.taxHier && query.family.length > 0 && !query.family.includes(item.family)) {
+                continue;
             }
 
-            return res;
+            if (item.genus !== null) genusSet.add(item.genus);
 
-        }).filter(item => item !== null) : options.locMap;
+            if (query.taxHier && query.genus.length > 0 && !query.genus.includes(item.genus)) {
+                continue;
+            }
 
+            if (item.species !== null) speciesSet.add(item.species);
+
+        }
+
+        // LOCATION SEARCH OPTIONS
+        //
+        // same hierarchy logic as above, applied to state/county/site
+
+        const stateSet = new Set();
+        const countySet = new Set();
+
+        for (const item of options.locMap) {
+
+            if (query.datasets.length > 0 && !query.datasets.includes(item.dataset)) {
+                continue;
+            }
+
+            if (item.state !== null) stateSet.add(item.state);
+
+            if (query.locHier && query.states.length > 0 && !query.states.includes(item.state)) {
+                continue;
+            }
+
+            if (item.county !== null) countySet.add(item.county);
+
+        }
 
         const search_options = {
-            speciesOptions: [...new Set(taxOptions.map(x => x.species).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            genusOptions: [...new Set(taxOptions.map(x => x.genus).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            familyOptions: [...new Set(taxOptions.map(x => x.family).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            orderOptions: [...new Set(taxOptions.map(x => x.order).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            classOptions: [...new Set(taxOptions.map(x => x.tax_class).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            stateOptions: [...new Set(locOptions.map(x => x.state).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            countyOptions: [...new Set(locOptions.map(x => x.county).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
-            siteOptions: [...new Set(locOptions.map(x => x.site).filter((value) => value !== null))].sort().map((item) => ({
-                      value: item,
-                      label: item
-                    })),
+            speciesOptions: toOptionList(speciesSet),
+            genusOptions: toOptionList(genusSet),
+            familyOptions: toOptionList(familySet),
+            orderOptions: toOptionList(orderSet),
+            classOptions: toOptionList(classSet),
+            stateOptions: toOptionList(stateSet),
+            countyOptions: toOptionList(countySet),
             datasetOptions: options.datasetOptions.map((item) => ({
                       value: item,
                       label: item
                     })),
-            covarOptions: options.covarOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
+            // The server sends covariate declarations, so the dropdown shows a readable label
+            // while the query uses the property key. A plain string is accepted too, for a
+            // server that does not send declarations.
+            covarOptions: options.covarOptions.map((item) =>
+                typeof item === "string"
+                    ? { value: item, label: item }
+                    : {
+                        value: item.key,
+                        label: item.label || item.key,
+                        shortLabel: item.shortLabel || item.label || item.key,
+                        group: item.group,
+                        temporalScope: item.temporalScope,
+                        bioclimEquivalent: item.bioclimEquivalent,
+                        sourceUrls: item.sourceUrls,
+                        units: item.units,
+                        description: item.description,
+                        source: item.source,
+                        sourceKey: item.sourceKey,
+                        citation: item.citation,
+                        licence: item.licence,
+                        disclaimer: item.disclaimer,
+                        usageCaution: item.usageCaution
+                      }),
             taxMap: options.taxMap,
             locMap: options.locMap
         };

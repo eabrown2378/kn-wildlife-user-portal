@@ -14,6 +14,6 @@
         "dataTypeSelect": "Return only specific data types (occurrence, abundance, or density).",
         "taxHier": "Filter taxonomic search options based on taxonomic hierarchy? E.g. if you select the class 'Reptilia' you will only see orders, families, genera, and species for reptiles.",
         "locHier": "Filter location search options based on a geographic hierarchy? E.g. if you select the state 'Washington' you will only see counties and sampling locations for Washington State.",
-        "covars": "Select covariates to join with wildlife data. Covariate names always follow the general format '<DatabaseName>_<VarName>'"
+        "covars": "Select environmental covariates to join with the wildlife data. Each is attached to the observation, site or species it varies with. Use 'About these covariates' for what each one measures, where it comes from, and any usage notes from the provider."
     }
 ]
