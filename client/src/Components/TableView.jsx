@@ -104,19 +104,7 @@ function TableView({ data }) {
     : `repeat(${colnames.length}, max-content)`; // fallback
 
   return (
-    <Paper
-      ref={parentRef}
-      sx={{
-        overflow: "auto",
-        width: "74.5%",
-        maxHeight: "76.25vh",
-        position: "absolute",
-        border: "0.4vh solid black",
-        borderRadius: "5px",
-        fontFamily: "Roboto, sans-serif",
-        fontSize: "0.875rem",
-      }}
-    >
+    <Paper ref={parentRef} className="tableView">
       {/* Header (grid whose columns are set by gridTemplate) */}
       <div
         style={{

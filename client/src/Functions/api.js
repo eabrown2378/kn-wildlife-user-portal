@@ -10,7 +10,15 @@
  * showing an error for something the user cannot act on.
  */
 
-export const API_BASE = 'http://localhost:8080';
+/**
+ * Where the API lives.
+ *
+ * Set VITE_API_BASE at build time to point a build at a different API; the value is baked into
+ * the bundle, so a production build has to be made with it set. The fallback is the local
+ * development server, which is what `npm run dev` talks to.
+ */
+export const API_BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:8080')
+    .replace(/\/$/, '');
 const TOKEN_KEY = 'kn-wildlife-session';
 
 let onSessionLost = () => {};

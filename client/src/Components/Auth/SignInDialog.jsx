@@ -8,7 +8,7 @@ import SignInPanel from "./SignInPanel";
  * user may have opened it by accident. What they cannot do without signing in is retrieve
  * records, and the panel says so.
  */
-function SignInDialog({ onClose }) {
+function SignInDialog({ initialMode = "signin", onClose }) {
 
     useEffect(() => {
         const onKey = (event) => { if (event.key === "Escape") onClose(); };
@@ -19,10 +19,13 @@ function SignInDialog({ onClose }) {
     return (
         <div className="authDialogBackdrop" onClick={onClose}>
             <div className="authDialogWindow" onClick={(event) => event.stopPropagation()}
-                 role="dialog" aria-label="Sign in to retrieve data">
+                 role="dialog"
+                 aria-label={initialMode === "register" ? "Register for access"
+                                                        : "Sign in to retrieve data"}>
                 <button type="button" className="authDialogClose"
                         onClick={onClose} aria-label="Close">×</button>
                 <SignInPanel
+                    initialMode={initialMode}
                     heading="Sign in to retrieve data"
                     intro={"Browsing what the portal holds is open to everyone. Retrieving records "
                          + "needs a confirmed email address, so we know who the data reaches."}

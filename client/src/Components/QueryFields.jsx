@@ -8,11 +8,8 @@ import { Marker } from "react-leaflet/Marker";
 import L from "leaflet";
 import marker from "../assets/map-marker.svg";
 import { Popup } from "react-leaflet/Popup";
-import { process_neo4j_data } from "../Functions/process_neo4j_data";
 import { query_to_cypher } from "../Functions/query_to_cypher";
-import { QueryResultContext } from "../Context/QueryResultContext";
 import { MarkerContext } from "../Context/MarkerContext";
-import { SelectionDetailsContext } from "../Context/SelectionDetailsContext";
 import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
 import SearchSection from "./SearchFields/SearchSection";
@@ -20,9 +17,9 @@ import { chips_to_query_fields, RANK_TO_QUERY_FIELD } from "../Functions/build_c
 import { MapDataContext } from "../Context/MapDataContext";
 import { MetadataContext } from "../Context/MetadataContext";
 import { SearchOptionsContext } from "../Context/SearchOptionsContext";
-import ReactGA from 'react-ga4';
+import * as analytics from '../Functions/analytics';
 import { filterSearchOptions } from "../Functions/filterSearchOptions";
-import { getToken } from "../Functions/api";
+import { getToken, API_BASE } from "../Functions/api";
 import { AuthContext } from "../Context/AuthContext";
 
 // const [showChat, setShowChat] = useState(false);
@@ -81,7 +78,6 @@ function QueryFields() {
 
     
     // state containing latest neo4j query results and the last query
-    const [queryResult, setQueryResult] = useState(null);
     const [mapData, setMapData] = useState(null);
     const [metadata, setMetadata] = useState(null);
     const [data, setData] = useState(null);
@@ -104,13 +100,6 @@ function QueryFields() {
                 </Popup>
             </Marker>
         ]
-    );
-
-    // state to hold information of last node/edge clicked on by user
-    const [selectionDetails, setSelectionDetails] = useState(
-        <div className='selectionDetails'>
-            <h5>{'CLICK ON AN EDGE OR NODE\nTO VIEW DETAILS'}</h5>
-        </div>
     );
 
     // The taxa and places chosen as chips. These are the search UI's own state; they are
@@ -191,8 +180,7 @@ function QueryFields() {
 
       setIsLoading(true);
 
-        // in prod change 'http://localhost:8080' to 'https://kn-wildlife.crc.nd.edu'
-        fetch(`http://localhost:8080/test_api/neo4j_search_options/`, {
+        fetch(`${API_BASE}/test_api/neo4j_search_options/`, {
             method: 'GET', 
             headers: {
                 'Content-Type': 'application/json', 
@@ -352,21 +340,37 @@ function QueryFields() {
 
         }
 
-        setIsLoading(true);
-
         const {cypherQuery} = query_to_cypher(query);
 
-        const cached = queryCacheRef.current.get(cypherQuery);
-
-        if (cached !== undefined) {
-          applyResult(cached, query);
+        // A search with no criteria builds no query, because it would ask for every record in
+        // the graph. Say so here; the server has nothing to answer with.
+        if (!cypherQuery) {
+          setErrorMessage(
+            <p className="errorMessage">
+              Choose at least one search criterion: a taxon, a place, a coordinate range, a
+              time range, or a dataset.
+            </p>
+          );
           return;
         }
 
-        const url = 'http://localhost:8080/test_api/neo4j_get';
+        setIsLoading(true);
+        const cached = queryCacheRef.current.get(cypherQuery);
+
+        if (cached !== undefined) {
+          applyResult(cached, query, { cached: true });
+          return;
+        }
+
+        const url = `${API_BASE}/test_api/neo4j_get`;
+
+        const searchDescription = analytics.describeSearch(query, taxonChips, placeChips);
 
         const body = {
-          cypherQuery
+          cypherQuery,
+          // What the search asked for, in counts and flags. The server stores this beside the
+          // account so a retrieval can be attributed later; it holds no taxon or place names.
+          filters: searchDescription
         };
 
           fetch(url, {
@@ -401,11 +405,17 @@ function QueryFields() {
                   queryCacheRef.current.delete(oldestKey);
                 }
 
-                applyResult(data, query);
+                applyResult(data, query, { cached: false });
               }
             })
             .catch((error) => {
               console.error('Fetch error:', error);
+              // A refused search is worth counting too; most refusals are a search too large
+              // to assemble, which says the interface let someone ask for too much.
+              analytics.searchFailed({
+                description: searchDescription,
+                reason: error.detail ? 'too_large' : 'error',
+              });
               setIsLoading(false); // Optional: stop loading on error too
               setErrorMessage(
                 <p className="errorMessage">
@@ -415,16 +425,33 @@ function QueryFields() {
             });
     };
 
-    // shared handling for both a fresh API response and a cache hit for an identical query
-    function applyResult(data, query) {
+    // The search behind the result currently on screen, kept so a download can describe what
+    // it contains. Held in a ref because nothing renders from it.
+    const lastSearchRef = useRef(null);
 
-        // log that a user has successfully queried data
-        ReactGA.event({
-          category: "user data search",
-          action: "successful query",
-          label: "query"
+    // shared handling for both a fresh API response and a cache hit for an identical query
+    function applyResult(data, query, { cached = false } = {}) {
+
+        // Counted with what the search contained and how much it returned, and marked when it
+        // came from the cache: an identical search repeated five times is one trip to the
+        // database, and counting all five as queries overstates the load.
+        lastSearchRef.current = analytics.describeSearch(query, taxonChips, placeChips);
+        analytics.searchRun({
+            description: lastSearchRef.current,
+            rows: Array.isArray(data?.result?.csv) ? data.result.csv.length : 0,
+            cached,
         });
-        const res = process_neo4j_data(data.result.vis);
+        // The server answers with a null result when it has nothing to return. Reading the
+        // rows off it directly ends the search in a TypeError, so the absence is checked here.
+        if (!data || !data.result) {
+          setIsLoading(false);
+          setErrorMessage(
+            <p className="errorMessage">
+              WARNING: Search retrived zero results. Try adjusting search criteria.
+            </p>
+          );
+          return;
+        }
 
         const dat = data.result.csv;
 
@@ -451,7 +478,6 @@ function QueryFields() {
         });
 
         setMetadata(metaDat);
-        setQueryResult(res);
         setMapData(mapDat);
         setData(dat);
         // Name the source of each selected covariate, so the download credits it. This used
@@ -470,7 +496,7 @@ function QueryFields() {
 
         setIsLoading(false);
 
-        if (res.length !== 0) {
+        if (dat.length !== 0) {
           setErrorMessage(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
         } else {
           setErrorMessage(<p className="errorMessage">WARNING: Search retrived zero results. Try adjusting search criteria.</p>)
@@ -479,9 +505,9 @@ function QueryFields() {
 
 
     // How many criteria each collapsed group currently holds, so a section that is shaping
-    // the results says so from its header rather than only when opened. Counted from the
-    // committed query rather than from tempMulti, since that is what a search will actually
-    // use, and a coordinate box or a date bound counts as one criterion each.
+    // the results says so from its header, whether or not it is open. The count comes from the
+    // committed query, which is what a search will actually use, and a coordinate box or a
+    // date bound counts as one criterion each.
     const filled = (values) => (Array.isArray(values) ? values.length : 0);
     const set = (value) => (value !== "" && value !== null && value !== undefined ? 1 : 0);
 
@@ -495,11 +521,16 @@ function QueryFields() {
         covariates: filled(query.covars),
     };
 
+    // What a search can be built from. Covariates are left out: they add columns to a result
+    // and cannot select records, so choosing only covariates builds no query.
+    const hasCriteria = activeCounts.taxonomy + activeCounts.location
+        + activeCounts.time + activeCounts.datasets > 0;
+
     return (
         <div className="searchContainer">
             <div className="queryfields">              
               <SearchOptionsContext.Provider value={searchOptions}>
-                  <SearchSection title="Taxonomy" activeCount={activeCounts.taxonomy} defaultOpen>
+                  <SearchSection title="Taxonomy" activeCount={activeCounts.taxonomy}>
                       <TaxSelect
                           isLoading={isLoading}
                           taxonChips={taxonChips}
@@ -545,14 +576,20 @@ function QueryFields() {
                 </SearchOptionsContext.Provider>
                 {errorMessage && errorMessage}
                 {warningMessage && warningMessage}
-                <button onClick={() => apiCall(query)}>Generate Results</button>
+                <button type="button" className="generate--button"
+                        onClick={() => apiCall(query)}
+                        disabled={isLoading || !hasCriteria}
+                        title={hasCriteria ? undefined
+                            : "Choose a taxon, a place, a time period or a dataset first"}>
+                    {isLoading ? "Searching..." : "Generate Results"}
+                </button>
             </div>
             <MetadataContext.Provider value={metadata}>
-              <QueryResultContext.Provider value={queryResult}>
                 <MapDataContext.Provider value={mapData}>
                   <MarkerContext.Provider value={[markers, setMarkers]}>
-                      <SelectionDetailsContext.Provider value={[selectionDetails, setSelectionDetails]}>
-                      <OutputWindow data={data} isLoading={isLoading} result={queryResult} returnedCovars={returnedCovars}/>
+                      <OutputWindow data={data} isLoading={isLoading}
+                                    returnedCovars={returnedCovars}
+                                    searchDescription={lastSearchRef.current}/>
                       {/* 💬 Chatbot toggle button */}
                       <div
                           style={{
@@ -577,10 +614,8 @@ function QueryFields() {
                       </div>
 
                       {showChat && <ChatbotWindow onClose={() => setShowChat(false)} /> }
-                      </SelectionDetailsContext.Provider>
                   </MarkerContext.Provider>
                 </MapDataContext.Provider>
-              </QueryResultContext.Provider>
             </MetadataContext.Provider>
         </div>
      );

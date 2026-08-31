@@ -38,8 +38,8 @@ function LocationParams({ isLoading, query, handleChange, placeChips, onPlaceChi
 
     return (
         <fieldset>
-            <legend style={{color:"white"}}>Search by Location</legend>
-            <div style={{display:"flex"}}>
+            <legend className="field--legend">Search by Location</legend>
+            <div className="field--labelRow">
                 <label className="query--label">Places:</label>
                 <Information blurb="placeChips"/>
             </div>
@@ -56,26 +56,31 @@ function LocationParams({ isLoading, query, handleChange, placeChips, onPlaceChi
                 Browse states or counties, or both. Naming a state includes all of its
                 counties, so the two can be mixed freely.
             </p>
-            <div style={{display:"flex"}}>
+            <div className="field--labelRow">
                 <label className="query--label" htmlFor="coordRange">Coordinate Range:</label>
                 <Information blurb="coordRange"/>
             </div>
             <div id="coordrange--div">
-                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0)'}:</label>
-                <div id = "latitudeDiv" style={{display:"flex"}}>
+                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0N)'}:</label>
+                <div id="latitudeDiv">
                     <label className="query--label" htmlFor="minLat">Min:</label>
                     <input id = "minLat" name = "minLat" value={query.minLat} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLat">Max:</label>
                     <input id = "maxLat" name = "maxLat" value={query.maxLat} onChange={(e) => handleChange(e)}/>
                 </div>
-                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0)'}</label>
-                <div id = "longitudeDiv"  style={{display:"flex"}}>
+                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0E)'}:</label>
+                <div id="longitudeDiv">
                     <label className="query--label" htmlFor="minLon">Min:</label>
                     <input id = "minLon" name = "minLon" value={query.minLon} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLon">Max:</label>
                     <input id = "maxLon" name = "maxLon" value={query.maxLon} onChange={(e) => handleChange(e)}/>
                 </div>
             </div>
+            <p className="fieldHint">
+                Decimal degrees. South of the equator and west of the prime meridian
+                are negative, so the contiguous United States runs about 25 to 49
+                &deg;N and -125 to -67 &deg;E.
+            </p>
         </fieldset>
     );
 }

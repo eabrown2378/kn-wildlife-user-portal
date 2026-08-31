@@ -7,19 +7,22 @@ const FALLBACK_SECTORS = ["Academia", "Industry", "Government", "Student"];
 /**
  * Sign in, or register for access.
  *
- * Registration asks for the sector the account holder works in, which is required, and an
- * optional description of how they intend to use the data. Both are recorded with the account
- * so the project can report on who its data reaches.
+ * Registration asks for the account holder's name and the sector they work in, both
+ * required, and an optional description of how they intend to use the data. All of it is
+ * recorded with the account so the project can report on who its data reaches, and the name
+ * is what the portal shows once they are signed in.
  */
-function SignInPanel({ heading, intro }) {
+function SignInPanel({ heading, intro, initialMode = "signin" }) {
 
     const { signIn, register } = useContext(AuthContext);
 
-    const [mode, setMode] = useState("signin");
+    const [mode, setMode] = useState(initialMode);
     const [sectors, setSectors] = useState(FALLBACK_SECTORS);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [sector, setSector] = useState("");
     const [intendedUse, setIntendedUse] = useState("");
 
@@ -52,7 +55,7 @@ function SignInPanel({ heading, intro }) {
 
         const result = mode === "signin"
             ? await signIn({ email, password })
-            : await register({ email, password, sector, intendedUse });
+            : await register({ email, password, firstName, lastName, sector, intendedUse });
 
         setBusy(false);
         if (!result.ok) {
@@ -108,6 +111,31 @@ function SignInPanel({ heading, intro }) {
 
                 {mode === "register" && (
                     <>
+                        <div className="authNameRow">
+                            <div>
+                                <label className="authLabel" htmlFor="authFirstName">
+                                    First name
+                                </label>
+                                <input
+                                    id="authFirstName" type="text" required maxLength={100}
+                                    autoComplete="given-name" disabled={busy}
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="authLabel" htmlFor="authLastName">
+                                    Last name
+                                </label>
+                                <input
+                                    id="authLastName" type="text" required maxLength={100}
+                                    autoComplete="family-name" disabled={busy}
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         <label className="authLabel" htmlFor="authSector">
                             Which sector do you work in?
                         </label>

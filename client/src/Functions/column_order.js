@@ -18,8 +18,9 @@
 const COLUMN_GROUPS = [
     // what was found
     ["class", "order", "family", "genus", "species"],
-    // where it was found, each coordinate followed by how precisely it is known
-    ["latitude_dd", "longitude_dd", "coordinate_uncertainty_m", "is_polygon", "geo_asWKT",
+    // where it was found: the site itself, then each coordinate followed by how precisely
+    // it is known, then the county and state it falls in
+    ["site", "latitude_dd", "longitude_dd", "coordinate_uncertainty_m", "is_polygon", "geo_asWKT",
      "county", "county_fips", "state", "state_fips"],
     // when
     ["date"],

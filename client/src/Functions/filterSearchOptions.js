@@ -20,11 +20,17 @@ const filterSearchOptions = (options, query) => {
         const orderSet = new Set();
         const classSet = new Set();
 
+        // Rows outside the chosen datasets, so the chip browser and its search index are
+        // built from the same rows these per-rank dropdown lists are.
+        const taxMapFiltered = [];
+
         for (const item of options.taxMap) {
 
             if (query.datasets.length > 0 && !query.datasets.includes(item.dataset)) {
                 continue;
             }
+
+            taxMapFiltered.push(item);
 
             if (item.tax_class !== null) classSet.add(item.tax_class);
 
@@ -61,11 +67,15 @@ const filterSearchOptions = (options, query) => {
         const stateSet = new Set();
         const countySet = new Set();
 
+        const locMapFiltered = [];
+
         for (const item of options.locMap) {
 
             if (query.datasets.length > 0 && !query.datasets.includes(item.dataset)) {
                 continue;
             }
+
+            locMapFiltered.push(item);
 
             if (item.state !== null) stateSet.add(item.state);
 
@@ -85,10 +95,24 @@ const filterSearchOptions = (options, query) => {
             classOptions: toOptionList(classSet),
             stateOptions: toOptionList(stateSet),
             countyOptions: toOptionList(countySet),
-            datasetOptions: options.datasetOptions.map((item) => ({
-                      value: item,
-                      label: item
-                    })),
+            // The server sends each dataset's credit and provenance so the "about the data"
+            // window and the download attribution read from the graph. A plain string is
+            // accepted too, for a server that does not send them.
+            datasetOptions: options.datasetOptions.map((item) =>
+                typeof item === "string"
+                    ? { value: item, label: item }
+                    : {
+                        value: item.name,
+                        label: item.name,
+                        program: item.program,
+                        agency: item.agency,
+                        dataTypes: item.dataTypes,
+                        downloadDate: item.downloadDate,
+                        retrievedVia: item.retrievedVia,
+                        citations: item.citations,
+                        urls: item.urls,
+                        notes: item.notes
+                      }),
             // The server sends covariate declarations, so the dropdown shows a readable label
             // while the query uses the property key. A plain string is accepted too, for a
             // server that does not send declarations.
@@ -112,8 +136,11 @@ const filterSearchOptions = (options, query) => {
                         disclaimer: item.disclaimer,
                         usageCaution: item.usageCaution
                       }),
-            taxMap: options.taxMap,
-            locMap: options.locMap
+            // These are what the taxon and place chip browsers actually build their lists
+            // from, so filtering has to happen here rather than only in the option lists
+            // above, which nothing else reads.
+            taxMap: taxMapFiltered,
+            locMap: locMapFiltered
         };
 
 

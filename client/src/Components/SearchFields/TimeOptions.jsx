@@ -50,9 +50,11 @@ function TimeOptions({ handleChange, query, isLoading }) {
 
     return (
         <fieldset>
-            <legend style={{color:"white", display:"flex", gap:"6px"}}>
-                Time Range<Information blurb="timeRange"/>
-            </legend>
+            <legend className="field--legend">Time Range</legend>
+            <div className="field--labelRow">
+                <label className="query--label">Years:</label>
+                <Information blurb="timeRange"/>
+            </div>
 
             <div className="yearRange">
                 <div className="yearRangeReadout">
