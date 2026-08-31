@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { unitSymbol } from "../../Functions/covariate_units";
 
 /**
  * A window describing every covariate the portal offers: what it measures, where it comes
@@ -61,7 +62,7 @@ function CovariateMetadata({ covariates, onClose }) {
                                 <div key={c.value} className="covariateMetadataItem">
                                     <div className="covariateMetadataName">
                                         {c.label}
-                                        {c.units && <span className="covariateMetadataUnits"> — {c.units}</span>}
+                                        {c.units && <span className="covariateMetadataUnits">{unitSymbol(c.units)}</span>}
                                         {c.bioclimEquivalent && (
                                             <span className="covariateMetadataBadge">{c.bioclimEquivalent}</span>
                                         )}

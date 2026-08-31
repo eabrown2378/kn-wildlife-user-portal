@@ -1,19 +1,11 @@
 [
     {
-        "species":"Search wildlife data by species. Note that, depending on the species, it may take a while to retrieve and display all data.",
-        "genus":"Search wildlife data by genus. Note that, depending on the genus, it may take a while to retrieve and display all data.",
-        "family":"Search wildlife data by taxonomic family. Note that, depending on the family, it may take a while to retrieve and display all data.",
-        "order":"Search wildlife data by taxonomic order. Note that, depending on the order, it may take a while to retrieve and display all data.",
-        "class":"Search wildlife data by taxonomic class. Note that, depending on the class, it may take a while to retrieve and display all data.",
-        "stateSelect":"Select states for which to return wildlife data. If you have selected individual sampling locations that are not in the specified states, those results will still be included.",
-        "countySelect":"Select counties for which to return wildlife data. If you have selected individual sampling locations that are not in the specified counties, those results will still be included.",
-        "siteSelect":"Select sampling locations for which to return wildlife data. If you have also selected states, the search will also return data for all locations in those states.",
-        "timeRange":"Time range for which to return wildlife data. NOTE that you must select a month before you can select a day.",
-        "coordRange":"Look for wildlife data within a specified coordinate range.",
+        "taxonChips": "Choose the taxa to return. Browse one rank at a time or all of them at once, and add as many as you like at any mix of ranks. Results include everything within each taxon chosen, so a family brings back its genera and species.",
+        "placeChips": "Choose the states and counties to return. A state includes all of its counties, and the two can be mixed, so a whole state plus a few counties in another is one search.",
+        "coordRange": "Limit results to a bounding box, given in decimal degrees. South and west are negative. Leave a box empty for no limit on that side.",
+        "timeRange": "The years to return, set with the two handles. Months and days are optional and narrow the range further; choose a month before a day.",
         "datasetSelect": "Search for wildlife data within specific datasets. Selecting a dataset alters search options to only include taxa and locations in the selected dataset(s).",
         "dataTypeSelect": "Return only specific data types (occurrence, abundance, or density).",
-        "taxHier": "Filter taxonomic search options based on taxonomic hierarchy? E.g. if you select the class 'Reptilia' you will only see orders, families, genera, and species for reptiles.",
-        "locHier": "Filter location search options based on a geographic hierarchy? E.g. if you select the state 'Washington' you will only see counties and sampling locations for Washington State.",
         "covars": "Select environmental covariates to join with the wildlife data. Each is attached to the observation, site or species it varies with. Use 'About these covariates' for what each one measures, where it comes from, and any usage notes from the provider."
     }
 ]

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 // Browse and pick taxa (or places) at whatever level you want, without having to type.
@@ -11,12 +11,12 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 //
 // So the rank is a control of its own now, and the list is always there to scroll. Picking a
 // rank answers "at what resolution", the list answers "which one", and the search box only
-// narrows what is already visible rather than being the sole way in. Drilling into a group
+// narrows what is already visible, and is one way in among several. Drilling into a group
 // restricts the list to what sits inside it, which is how you get from Aves to a particular
 // heron without knowing its family in advance.
 //
 // The list is virtualised because the taxon index runs to tens of thousands of entries and
-// the whole point is that it can be scrolled rather than filtered down to nothing first.
+// the whole point is that it can be scrolled through without filtering it down first.
 
 // A starting estimate only. Real heights are measured from the DOM, because a row is two
 // lines of text plus padding and a border, and pinning it to a fixed number made every row
@@ -25,9 +25,20 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 const ESTIMATED_ROW_HEIGHT = 54;
 const VISIBLE_HEIGHT = 280;
 
-function OptionBrowser({options, ranks, selected, onToggle, isLoading, emptyMessage}) {
+function OptionBrowser({options, ranks, selected, onToggle, onClear, isLoading, emptyMessage}) {
     const [rank, setRank] = useState("all");
     const [within, setWithin] = useState(null);
+
+    // Stepping inside a group makes a rank at or above that group unanswerable: nothing
+    // inside a class is a class. The level control goes back to all levels in that case,
+    // so the list holds what is actually in there.
+    const stepInto = (option) => {
+        if (!option) return;
+        const depthOf = (key) => ranks.findIndex((entry) => entry.key === key);
+        if (rank !== "all" && depthOf(rank) <= depthOf(option.rank)) setRank("all");
+        setWithin(option);
+        setText("");
+    };
     const [text, setText] = useState("");
     const scrollRef = useRef(null);
 
@@ -83,11 +94,20 @@ function OptionBrowser({options, ranks, selected, onToggle, isLoading, emptyMess
         });
     }, [within, options]);
 
+    // Choosing a dataset rebuilds the index, and the group being browsed may not survive it.
+    // Holding a scope that no longer exists shows an empty list and no reason for it.
+    useEffect(() => {
+        if (within && !options.some((option) => option.value === within.value)) {
+            setWithin(null);
+            setText("");
+        }
+    }, [options, within]);
+
     const virtualizer = useVirtualizer({
         count: shown.length,
         getScrollElement: () => scrollRef.current,
         estimateSize: () => ESTIMATED_ROW_HEIGHT,
-        // Measure each row as it renders rather than trusting the estimate. Lineages differ
+        // Measure each row as it renders. Lineages differ
         // in length and the browser's own font metrics vary, so the true height is only
         // knowable from the DOM.
         measureElement: (element) => element?.getBoundingClientRect().height ?? ESTIMATED_ROW_HEIGHT,
@@ -151,17 +171,17 @@ function OptionBrowser({options, ranks, selected, onToggle, isLoading, emptyMess
 
             {within && (
                 <nav className="browser--crumbs" aria-label="Where you are">
-                    <button type="button" className="browser--crumb"
+                    <button type="button" className="browser--crumbExit"
                             onClick={() => { setWithin(null); setText(""); }}
                             disabled={isLoading}>
-                        All
+                        &times; Show all
                     </button>
                     {crumbs.map((crumb) => (
                         <span key={crumb.key} className="browser--crumbPart">
                             <span className="browser--crumbSep" aria-hidden="true">›</span>
                             {crumb.option ? (
                                 <button type="button" className="browser--crumb"
-                                        onClick={() => { setWithin(crumb.option); setText(""); }}
+                                        onClick={() => stepInto(crumb.option)}
                                         disabled={isLoading}>
                                     {crumb.name}
                                 </button>
@@ -237,7 +257,7 @@ function OptionBrowser({options, ranks, selected, onToggle, isLoading, emptyMess
                                             type="button"
                                             className="browser--drill"
                                             title={`Show what is inside ${option.name}`}
-                                            onClick={() => { setWithin(option); setText(""); }}
+                                            onClick={() => stepInto(option)}
                                             disabled={isLoading}
                                         >
                                             ›

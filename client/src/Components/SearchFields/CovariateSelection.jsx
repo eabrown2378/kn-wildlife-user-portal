@@ -1,5 +1,7 @@
 
 import Select from "react-select";
+import { unitSymbol } from "../../Functions/covariate_units";
+import { selectStyles } from "../../Functions/select_theme";
 import Information from "../Information";
 import { useContext, useState } from "react";
 import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
@@ -17,18 +19,17 @@ function CovariateSelection({ handleMultiChange, isLoading, tempMulti }) {
     //
     // A label names both the quantity and the period it covers, because the same quantity
     // exists for the observation's year and for its month, and a selected chip shows only the
-    // label. Units follow an em dash rather than a bracket, since several labels already end
-    // in a bracketed period.
+    // label. The unit is bracketed after the name and abbreviated, so the row stays short.
     const options = covariates.map((c) => ({
         ...c,
-        label: c.units ? `${c.shortLabel || c.label} — ${unitSymbol(c.units)}`
+        label: c.units ? `${c.shortLabel || c.label} (${unitSymbol(c.units)})`
                        : (c.shortLabel || c.label),
     }));
 
     return (
         <fieldset>
-            <legend style={{color:"white"}}>Select Covariates</legend>
-            <div style={{display:"flex", alignItems:"center"}}>
+            <legend className="field--legend">Select Covariates</legend>
+            <div className="field--labelRow">
                 <label className="query--label" htmlFor="covarsTemp">Covariates:</label>
                 <Information blurb="covars"/>
                 <button
@@ -50,21 +51,14 @@ function CovariateSelection({ handleMultiChange, isLoading, tempMulti }) {
                 id="covarsTemp"
                 className="field"
                 isDisabled={isLoading}
-            />
+                styles={selectStyles}
+                />
 
             {showMetadata && (
                 <CovariateMetadata covariates={options} onClose={() => setShowMetadata(false)} />
             )}
         </fieldset>
     );
-}
-
-/** Units are stored spelled out so they read properly in a download header. */
-function unitSymbol(units) {
-    const text = String(units).toLowerCase();
-    if (text.includes("celsius")) return "°C";
-    if (text.includes("millimetre") || text.includes("millimeter")) return "mm";
-    return units;
 }
 
 export default CovariateSelection;

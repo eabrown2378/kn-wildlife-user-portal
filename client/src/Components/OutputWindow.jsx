@@ -8,14 +8,16 @@ import TableView from './TableView';
 import LoadingOverlay from './LoadingOverlay';
 import CircularProgress from '@mui/material/CircularProgress';
 import JSZip from 'jszip';
-import disclaimers from '../data/disclaimers.json';
+import { disclaimersFor, entryCovers } from '../Functions/dataset_disclaimers';
 import { licences_present } from '../Functions/attribution_columns';
 import {MetadataContext} from '../Context/MetadataContext';
-import ReactGA from 'react-ga4';
+import * as analytics from '../Functions/analytics';
+import { apiCall } from '../Functions/api';
+import { AnalyticsConsentContext } from '../Context/AnalyticsConsentContext';
 import { array_to_csv } from '../Functions/array_to_csv';
 
 
-export default function OutputWindow({data, isLoading, result, returnedCovars}) {
+export default function OutputWindow({data, isLoading, returnedCovars, searchDescription}) {
 
 
     const handleDownload = async (csvString, filename, disclaimerText, citationsText) => {
@@ -39,13 +41,32 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);        
-        // log that a user has successfully downloaded data
-        ReactGA.event({
-            category: "user data download",
-            action: "successful data download",
-            label: "download"
-        });
+        URL.revokeObjectURL(url);
+
+        const rows = Array.isArray(data) ? data.length : 0;
+        const datasets = [...new Set((metadata || []).map((entry) => entry.datasetName)
+            .filter(Boolean))];
+
+        analytics.downloadTaken({ description: searchDescription, rows, datasets });
+
+        // Told to the server as well, on the authenticated path, because the zip is built here
+        // and the server would otherwise never see that the data left. The account behind the
+        // session is what attributes it. Failing to record must not disturb the download that
+        // has already happened, so nothing is awaited and nothing is reported.
+        apiCall('/test_api/record_download/', {
+            method: 'POST',
+            body: { filters: searchDescription, rows, datasets },
+        }).catch(() => {});
+    };
+
+    // The footer says what the current analytics decision is and lets it be changed, so a
+    // visitor is not asked to clear their browser storage to take consent back.
+    const { consent, reconsider } = useContext(AnalyticsConsentContext);
+
+    // Which view a result is read in says which of the three earns its place.
+    const openView = (view) => {
+        setViewport(view);
+        analytics.viewOpened(view);
     };
 
     // pull metadata from context
@@ -67,10 +88,12 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
 
             const datasetNames = Array.prototype.concat(metadata.map((x) => x.datasetName), returnedCovars);
 
-            const discs = disclaimers.filter((x) => x.dataset.some((y) => datasetNames.includes(y)));
+            // Matched with the snapshot date removed, because a dataset is renamed whenever
+            // its data is re-downloaded.
+            const discs = disclaimersFor(datasetNames);
 
             const discString = discs.map((x) => {
-                const notes = x.notes !== undefined ? `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${x.notes}` : `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${metadata.filter((y) => x.dataset.some((z)=>  z === y.datasetName)).map((y) => y.notes)}`
+                const notes = x.notes !== undefined ? `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${x.notes}` : `\n\n\n***Also see these notes from the KN-Wildlife team:***\n\n${metadata.filter((y) => entryCovers(x, y.datasetName)).map((y) => y.notes)}`
 
                 return (`***See below for a list of disclaimers associated with the returned datasets:\n\n\nDisclaimers for the following dataset(s): ${x.dataset.join(' AND ')}***\n\n${x.disclaimer}` + notes)
             }).join(`\n\n${'*'.repeat(100)}\n\n`);
@@ -115,7 +138,7 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
             setCitations(citeString + licenceNote);
         }
 
-    }, [result]);
+    }, [data]);
 
     const date = new Date();
     const day = date.getDate().length === 2 ? date.getDate() : "0" + String(date.getDate());
@@ -127,13 +150,13 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
     return (
         <div className="outputwindow">
             <div className="viewportSelect">
-                <p>Select View:</p>
-                <button className='viewport--button' onClick={() => setViewport("leaflet")} disabled={viewport === "leaflet"}>Map</button>
-                <button className='viewport--button' onClick={() => setViewport("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
-                <button className='viewport--button' onClick={() => setViewport("table")} disabled={viewport === "table"}>Table</button>
+                <span className="viewportSelect--label">Select view</span>
+                <button className='viewport--button' onClick={() => openView("leaflet")} disabled={viewport === "leaflet"}>Map</button>
+                <button className='viewport--button' onClick={() => openView("cytoscape")} disabled={viewport === "cytoscape"}>Knowledge Graph</button>
+                <button className='viewport--button' onClick={() => openView("table")} disabled={viewport === "table"}>Table</button>
             </div>
             <div className="output--container">
-                {viewport === "cytoscape" && <CytoscapeGraph/>}
+                {viewport === "cytoscape" && <CytoscapeGraph data={data}/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
                 {viewport === "table" && <TableView data={data}/>}
                 {isLoading && <LoadingOverlay viewport={viewport}/>}
@@ -163,6 +186,9 @@ export default function OutputWindow({data, isLoading, result, returnedCovars}) 
                     <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=taxonomy&template=taxonomy-fix---.md">Report a taxonomic error</a>
                     <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=bug&template=bug-report---.md">Report a bug</a>
                     <a target="_blank" rel="noopener noreferrer" href="https://github.com/eabrown2378/kn-wildlife-user-portal/issues/new?labels=enhancement&template=feature-request---.md">Suggest a feature</a>
+                    <button type="button" className='portalFooter--consent' onClick={reconsider}>
+                        Analytics: {consent === 'granted' ? 'on' : consent === 'declined' ? 'off' : 'not set'}
+                    </button>
                 </nav>
 
                 <a className='portalFooter--survey' target="_blank" rel="noopener noreferrer" href='https://docs.google.com/forms/d/e/1FAIpQLScRwMbBeeuv8X5ZGul_-Px6RaPP4sGJAyr1DtNaFSsQsiAgHw/viewform?usp=dialog'>Take our user survey</a>

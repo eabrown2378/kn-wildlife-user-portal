@@ -15,6 +15,7 @@
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "neo4j-driver": "^5.27.0",
+    "nodemailer": "^9.0.6",
     "openai": "^4.95.1"
   },
   "devDependencies": {

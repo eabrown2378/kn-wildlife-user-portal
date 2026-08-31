@@ -3,7 +3,7 @@ const store = require('./store');
 /**
  * Reads the session token a request carries, from the Authorization header.
  *
- * The token is a bearer credential rather than a cookie because the portal is served from a
+ * The token is a bearer credential. The portal is served from a
  * different origin to the API, where a cookie would need SameSite=None and credentialed CORS.
  */
 function tokenFrom(request) {
@@ -52,6 +52,10 @@ function publicUser(user) {
     if (!user) return null;
     return {
         email: user.email,
+        // Null for accounts registered before names were asked for. The client falls back to
+        // the address, so no blank appears where a name should be.
+        firstName: user.first_name || null,
+        lastName: user.last_name || null,
         sector: user.sector,
         intendedUse: user.intended_use || null,
         verified: Boolean(user.verified_at),

@@ -5,6 +5,30 @@
  * Day 0 of the following month is the last day of this one, and December rolls over to
  * January on its own. Leap-year correct for century years, where a `year % 4` test is not.
  */
+// how the per-rank anchor predicates are joined
+const NEWLINE_OR = '\n               OR ';
+
+// The ranks above the taxon an observation was identified to.
+//
+// An identification stops wherever the identifier stopped, so the taxon reached by
+// OBSERVED_ORGANISM may be a species, a genus, a family, an order or a class. Each rank is
+// picked out of the chain above it by label, so a rank missing from the chain leaves its
+// column empty and every rank that is present still lands in its own column.
+const RANK_WALK = `
+            OPTIONAL MATCH (idTaxon)-[:BELONGS_TO]->(t1)
+            OPTIONAL MATCH (t1)-[:BELONGS_TO]->(t2)
+            OPTIONAL MATCH (t2)-[:BELONGS_TO]->(t3)
+            OPTIONAL MATCH (t3)-[:BELONGS_TO]->(t4)
+            OPTIONAL MATCH (t4)-[:BELONGS_TO]->(t5)
+            WITH p, r, s, d, p1, p2,
+                 [x IN [idTaxon, t1, t2, t3, t4, t5] WHERE x IS NOT NULL] AS chain
+            WITH p, r, s, d, p1, p2,
+                 head([x IN chain WHERE x:Species]) AS n,
+                 head([x IN chain WHERE x:Genus]) AS g,
+                 head([x IN chain WHERE x:Family]) AS f,
+                 head([x IN chain WHERE x:Order]) AS o,
+                 head([x IN chain WHERE x:TaxClass]) AS c`;
+
 function lastDayOfMonth(year, month) {
     return new Date(year, month, 0).getDate();
 }
@@ -31,36 +55,101 @@ const query_to_cypher = ({
     // When the search filters on state or county, the county chain is required: such a site
     // has no state and so cannot satisfy those filters anyway, and requiring it lets neo4j
     // seek from the State index rather than scan every observation.
+    // States and counties are OR'd. Naming Iowa together with a county of Iowa is not a
+    // contradiction to be arbitrated: Adair sits inside Iowa, so the union is simply Iowa.
+    // Only the lists the user filled are tested; an empty one written as name IN [''] matches
+    // the empty string, and the OR that results stops the planner seeking on the other.
+    const placePredicates = [
+        states.length !== 0 ? `p2.name IN ['${states.join("','")}']` : null,
+        counties.length !== 0 ? `p1.name IN ['${counties.join("','")}']` : null,
+    ].filter(Boolean).join(" OR ");
+
+    // The chosen places are found first. There are 3,142 counties and 51 states, so reaching
+    // the observations from them costs one pass over a handful of nodes. Reaching the places
+    // from the observations costs a pass over twenty million.
     const locationMatch = hasLocationFilter
-        ? `MATCH (p2:State)<-[s2:IN_STATE]-(p1:County)<-[s1:IN_COUNTY]-(s:Site)<-[i:OBSERVED_IN]-(p:Observation)-[z:FROM_DATASET]->(d:Dataset)`
+        ? `MATCH (p1:County)-[:IN_STATE]->(p2:State)
+            WHERE ${placePredicates}
+            WITH DISTINCT p1, p2
+            MATCH (p1)<-[:IN_COUNTY]-(s:Site)<-[:OBSERVED_IN]-(p:Observation)-[:FROM_DATASET]->(d:Dataset)`
         : `MATCH (s:Site)<-[i:OBSERVED_IN]-(p:Observation)-[z:FROM_DATASET]->(d:Dataset)
             OPTIONAL MATCH (s)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State)`;
 
-    // The spatial filter is applied here, against the first MATCH, rather than being left to
-    // the WHERE further down.
+    // The taxonomic filter is applied first, for the same reason the spatial one is.
     //
-    // Everything below expands three OPTIONAL MATCH chains through the taxonomy for every
-    // observation the first MATCH produced, and the WHERE cannot run before that because it
-    // tests the coalesced taxonomy variables. So a search for one genus in one state was
-    // expanding all 1.17 million observations across the whole taxonomy and only then
-    // discarding the 99% that were not in Iowa - which exhausted the transaction memory and
-    // was reported to the user as "this search returned too much data" for a result of a few
-    // hundred rows.
+    // Selecting a class and testing for it in the WHERE means expanding all twenty million
+    // observations across the taxonomy and discarding almost all of them at the end, which
+    // exhausts the transaction memory. Anchoring on the chosen taxa instead starts from a
+    // handful of nodes and reaches only the observations that hang below them.
     //
-    // p2 and p1 are bound by the first MATCH, so the same predicate placed here cuts the row
-    // count before any of that expansion happens. It is repeated in the WHERE below rather
-    // than moved, which costs nothing and keeps the two readable independently.
-    const earlyLocationFilter = hasLocationFilter
-        ? `\n            WHERE (p2.name IN ['${states.join("','")}'] OR p1.name IN ['${counties.join("','")}'])`
+    // The anchor covers the taxon itself and everything under it, so choosing a class finds
+    // records identified at any rank within it. That matters because an identification stops
+    // wherever the identifier stopped: every observation of class Bivalvia is recorded against
+    // a genus, so a search that only recognised species would find none of them.
+    const taxonRanks = [
+        ["Species", species], ["Genus", genus], ["Family", family],
+        ["Order", order], ["TaxClass", tax_class],
+    ].filter(([, chosen]) => chosen.length !== 0);
+
+    const hasTaxonFilter = taxonRanks.length !== 0;
+
+    // Where a taxonomic search starts.
+    //
+    // The taxa under a chosen rank are always few - a few thousand at most, even for a whole
+    // class - so a taxon-only search starts there and follows OBSERVED_ORGANISM out to the
+    // observations that carry one of them. Walking out from 3,707 fish taxa to every
+    // observation in Washington State took 2 seconds this way.
+    //
+    // That only holds when no place narrows the search first. A coarse rank can reach far more
+    // than a taxon count suggests: class Aves is 1,778 taxa but 13 million observations, more
+    // than the whole state of Washington holds. A search naming a common class together with a
+    // place is faster starting from the place - always bounded at 3,142 counties and 51 states
+    // - and testing the rank columns RANK_WALK already resolves, rather than walking the
+    // taxon's full nationwide reach before the place ever narrows it.
+    const anchorPredicates = taxonRanks
+        .map(([label, chosen]) =>
+            `(anchorTaxon:${label} AND anchorTaxon.name IN ['${chosen.join("','")}'])`)
+        .join(NEWLINE_OR);
+
+    const taxonAnchor = hasTaxonFilter
+        ? `MATCH (anchorTaxon)
+            WHERE ${anchorPredicates}
+            MATCH (anchorTaxon)<-[:BELONGS_TO*0..5]-(idTaxon)
+            WITH DISTINCT idTaxon
+            MATCH (idTaxon)<-[r:OBSERVED_ORGANISM]-(p:Observation)-[z:FROM_DATASET]->(d:Dataset)
+            OPTIONAL MATCH (p)-[:OBSERVED_IN]->(s:Site)-[:IN_COUNTY]->(p1:County)-[:IN_STATE]->(p2:State)
+            ${RANK_WALK}`
         : '';
 
-    // initial match statement to return complete chain of nodes and edges from neo4j
+    // An observation is a sampling event and carries every taxon recorded at it. A search with
+    // no taxonomic criteria wants all of them, so each is expanded here; the anchored path
+    // above already holds the one taxon that matched and does not use this.
+    const organismMatch = `
+            MATCH (p)-[r:OBSERVED_ORGANISM]->(idTaxon)`;
+
+    // Tested against the rank columns RANK_WALK builds, once it has resolved them. RANK_WALK
+    // already runs to fill those columns for the CSV, so this adds no further traversal - just
+    // a property comparison on the columns that are already there. Folded into the predicates
+    // list below rather than appended here directly, since matchString may already end with a
+    // location-anchored WHERE and a second one back to back would not parse.
+    const taxonRankFilter = hasTaxonFilter
+        ? `(${taxonRanks
+              .map(([label, chosen]) => {
+                  const column = { Species: "n", Genus: "g", Family: "f",
+                                    Order: "o", TaxClass: "c" }[label];
+                  return `${column}.name IN ['${chosen.join("','")}']`;
+              })
+              .join(NEWLINE_OR)})`
+        : '';
+
+    // Anchoring on the taxon already restricts the match to the chosen taxa, so nothing more
+    // is needed there. Anchoring on the place still needs the rank filter tested.
+    const usingTaxonAnchor = hasTaxonFilter && !hasLocationFilter;
+
     let matchString = `
-        ${locationMatch}${earlyLocationFilter}
-            OPTIONAL MATCH (p)-[r1:OBSERVED_ORGANISM]->(n:Species)-[b1:BELONGS_TO]->(g1:Genus)-[b21:BELONGS_TO]->(f1:Family)-[b31:BELONGS_TO]->(o1:Order)-[b41:BELONGS_TO]->(c1:TaxClass)
-            OPTIONAL MATCH (p)-[r2:OBSERVED_ORGANISM]->(g2:Genus)-[b22:BELONGS_TO]->(f2:Family)-[b32:BELONGS_TO]->(o2:Order)-[b42:BELONGS_TO]->(c2:TaxClass)
-            OPTIONAL MATCH (p)-[r3:OBSERVED_ORGANISM]->(f3:Family)-[b33:BELONGS_TO]->(o3:Order)-[b43:BELONGS_TO]->(c3:TaxClass)
-            WITH p, n, z, d, b1, p1, p2, s, s1, s2, i, coalesce(g1, g2) AS g, coalesce(r1, r2, r3) AS r, coalesce(b21, b22) AS b2, coalesce(f1, f2, f3) AS f, coalesce(b31, b32, b33) AS b3, coalesce(o1, o2, o3) AS o, coalesce(b41, b42, b43) AS b4, coalesce(c1, c2, c3) AS c
+        ${usingTaxonAnchor
+            ? taxonAnchor
+            : locationMatch + organismMatch + RANK_WALK}
     `;
 
     /*"MATCH (p:Observation)-[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), 
@@ -125,35 +214,21 @@ const query_to_cypher = ({
 
     }
 
+    // The date is split into its parts so it can be compared as a date. The WHERE itself is
+    // added once every filter is known, because a search may have no predicates left to test.
     if (dateString !== '') {
         matchString = matchString + 
             `            
                 UNWIND toString(p.date) AS dates 
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, [item in split(dates, "-") | toInteger(item)] AS dateComponents
-                WITH c, b4, o, b3, f, b2, g, b1, n, r, p, i, s, s1, p1, s2, p2, z, d, date({day: dateComponents[2], month: dateComponents[1], year: dateComponents[0]}) AS datesFormatted
-                WHERE
+                WITH *, [item in split(dates, "-") | toInteger(item)] AS dateComponents
+                WITH *, date({day: dateComponents[2], month: dateComponents[1], year: dateComponents[0]}) AS datesFormatted
             `;        
-    } else {
-        matchString = matchString + ' WHERE ';
     }
 
     // handle location search
     let locationString = '';
 
-    if (counties.length !== 0 || states.length !== 0) {
-        // States and counties are OR'd, for the same reason the taxonomic ranks are. Naming
-        // Iowa together with a county of Iowa is not a contradiction to be arbitrated: Adair
-        // sits inside Iowa, so the union is simply Iowa. Dropping the state list whenever a
-        // county was chosen - which is what `locHier` did - made "all of Iowa plus two
-        // counties in Nebraska" impossible to ask for.
-        locationString =
-        `
-            (
-            p2.name IN ['${states.join("','")}']
-            OR p1.name IN ['${counties.join("','")}']
-            )
-        `;
-    }
+    // Places and taxa are both settled in the match above.
 
 
     // handle coordinate range
@@ -197,11 +272,11 @@ const query_to_cypher = ({
     `;
 
     
-    if (species.length === 0 && genus.length === 0 && family.length === 0 && order.length === 0 && tax_class.length === 0) {
-        
-        taxString = '';
-
-    }
+    // When the taxon anchor was used, it already restricted the match to the chosen taxa and
+    // everything under them, and needs no further test. When the place was the anchor instead,
+    // the rank filter built above is what does that job, tested against the columns RANK_WALK
+    // resolved rather than against the coalesced names a variable-length path would produce.
+    taxString = usingTaxonAnchor ? '' : taxonRankFilter;
 
     // handle dataset search
     let datasetString = '';
@@ -227,40 +302,28 @@ const query_to_cypher = ({
         `;
     }
 
-    let cypherString = '';
-    
-    cypherString = taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' || datasetString !== '' || dataTypeString !== '' ? matchString : '';
+    // Every predicate that survived, joined into one WHERE. A search may have none: anchoring
+    // on a taxon needs no test here, and a query with no filters at all asks for the whole
+    // graph and is not sent.
+    const predicates = [taxString, locationString, coordString, dateString, datasetString, dataTypeString]
+        .map((part) => part.trim())
+        .filter((part) => part !== '');
 
-    cypherString = cypherString !== '' ? taxString !== '' ? cypherString + taxString : cypherString : '';
-
-    cypherString = cypherString !== '' ? locationString !== '' ? taxString !== '' ? cypherString + " AND " + locationString : cypherString + locationString : cypherString : '';
-
-    cypherString = cypherString !== '' ? coordString !== '' ? taxString !== '' || locationString !== '' ? cypherString + " AND " + coordString : cypherString + coordString : cypherString : '';
-
-    cypherString = cypherString !== '' ? dateString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' ? cypherString + " AND " + dateString : cypherString + dateString : cypherString : '';
-
-    cypherString = cypherString !== '' ? datasetString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' ? cypherString + " AND " + datasetString : cypherString + datasetString : cypherString : '';
-    
-    cypherString = cypherString !== '' ? dataTypeString !== '' ? taxString !== '' || locationString !== '' || coordString !== '' || dateString !== '' || datasetString !== '' ? cypherString + " AND " + dataTypeString : cypherString + dataTypeString : cypherString : '';
-
-
-    // "MATCH (c:TaxClass)<-[b4:BELONGS_TO]-(o:Order)<-[b3:BELONGS_TO]-(f:Family)<-[b2:BELONGS_TO]-(g:Genus)<-[b1:BELONGS_TO]-(n:Species)<-[r:OBSERVED_ORGANISM]-(p:Observation)
-    // -[i:OBSERVED_IN]->(s:Site)-[s1:IN_COUNTY]->(p1:County)-[s2:IN_STATE]->(p2:State), (p)-[z:FROM_DATASET]->(d:Dataset)"
+    const cypherString = hasTaxonFilter || hasLocationFilter || predicates.length !== 0
+        ? matchString + (predicates.length !== 0 ? ' WHERE ' + predicates.join(' AND ') : '')
+        : '';
 
     // covariate fields to fold into the csv projection's map literal
     const covarMapString = covars.map((item) => `, ${item}: p.${item}`).join("");
 
-    // derive all four output shapes (vis: graph nodes/relationships, csv: flat observation rows,
-    // map: leaflet marker rows, meta: dataset metadata) from the same matched rows via one
-    // aggregating WITH
+    // derive the three output shapes (csv: flat observation rows, map: leaflet marker rows,
+    // meta: dataset metadata) from the same matched rows via one aggregating WITH. The graph
+    // view is built from the csv rows, which already name every rank and the dataset, so its
+    // node counts agree with the table and nothing extra is asked of the database.
     const cypherQuery = cypherString !== '' ? cypherString + `
-        WITH collect(DISTINCT n) + collect(DISTINCT g) + collect(DISTINCT f) + collect(DISTINCT o) + collect(DISTINCT c) AS visNodes,
-            collect(DISTINCT b1) + collect(DISTINCT b2) + collect(DISTINCT b3) + collect(DISTINCT b4) + collect(DISTINCT s2) AS visRels,
-            collect(DISTINCT CASE WHEN p1 IS NOT NULL THEN {p1_elementId: elementId(p1), county_fips: p1.county_fips, name: p1.name} END) AS visCounties,
-            collect(DISTINCT CASE WHEN p2 IS NOT NULL THEN {p2_elementId: elementId(p2), state_fips: p2.state_fips, state_abbrev: p2.state_abbrev, name: p2.name} END) AS visStates,
-            collect({
+        WITH collect({
                 species: n.name, genus: g.name, family: f.name, \`order\`: o.name, class: c.name,
-                longitude_dd: s.longitude_dd, latitude_dd: s.latitude_dd,
+                site: s.name, longitude_dd: s.longitude_dd, latitude_dd: s.latitude_dd,
                 coordinate_uncertainty_m: s.coordinate_uncertainty_m,
                 is_polygon: coalesce(s.is_polygon, false), geo_asWKT: s.geo_asWKT,
                 state: p2.name, county: p1.name, state_fips: p2.state_fips, county_fips: p1.county_fips,
@@ -285,7 +348,7 @@ const query_to_cypher = ({
             collect(DISTINCT {
                 datasetName: d.name, citations: d.dataset_citations, urls: d.dataset_urls, downloadDate: d.download_date, notes: d.additional_notes
             }) AS meta
-        RETURN visNodes + visRels + visCounties + visStates AS vis, csv, map, meta
+        RETURN csv, map, meta
     ` : '';
 
     return {cypherQuery};

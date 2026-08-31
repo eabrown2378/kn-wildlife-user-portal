@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../../Context/AuthContext";
 import { apiCall, setToken, getToken, setSessionLostHandler } from "../../Functions/api";
 import SignInDialog from "./SignInDialog";
+import * as analytics from "../../Functions/analytics";
 
 /**
  * Holds the signed-in account and the actions that change it.
@@ -13,14 +14,16 @@ function AuthProvider({ children }) {
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [prompting, setPrompting] = useState(false);
+    // null when the panel is closed, otherwise the form to open it on. Registering and signing
+    // in are the same panel, so which one a button means has to travel with the request.
+    const [prompting, setPrompting] = useState(null);
 
-    const promptSignIn = useCallback(() => setPrompting(true), []);
+    const promptSignIn = useCallback((mode = "signin") => setPrompting(mode), []);
 
     // A 401 means the session has gone. Clear it and ask for sign-in, since the only reason
     // a data request was made is that the user wanted the data.
     useEffect(() => {
-        setSessionLostHandler(() => { setUser(null); setPrompting(true); });
+        setSessionLostHandler(() => { setUser(null); setPrompting("signin"); });
     }, []);
 
     useEffect(() => {
@@ -41,11 +44,13 @@ function AuthProvider({ children }) {
         return () => { cancelled = true; };
     }, []);
 
-    const register = useCallback(async ({ email, password, sector, intendedUse }) => {
+    const register = useCallback(async ({ email, password, firstName, lastName, sector,
+                                         intendedUse }) => {
         const { ok, body } = await apiCall("/auth/register", {
             method: "POST", auth: false,
-            body: { email, password, sector, intendedUse },
+            body: { email, password, firstName, lastName, sector, intendedUse },
         });
+        if (ok) analytics.accountEvent("register");
         return ok ? { ok: true } : { ok: false, error: body?.error || "Could not register." };
     }, []);
 
@@ -58,7 +63,9 @@ function AuthProvider({ children }) {
         }
         setToken(body.token);
         setUser(body.user);
-        setPrompting(false);
+        setPrompting(null);
+        analytics.identify(body.token);
+        analytics.accountEvent("sign_in");
         return { ok: true };
     }, []);
 
@@ -78,6 +85,7 @@ function AuthProvider({ children }) {
         await apiCall("/auth/logout", { method: "POST" });
         setToken(null);
         setUser(null);
+        analytics.identify(null);
     }, []);
 
     const value = useMemo(
@@ -87,7 +95,9 @@ function AuthProvider({ children }) {
     return (
         <AuthContext.Provider value={value}>
             {children}
-            {prompting && !user && <SignInDialog onClose={() => setPrompting(false)} />}
+            {prompting && !user && (
+                <SignInDialog initialMode={prompting} onClose={() => setPrompting(null)} />
+            )}
         </AuthContext.Provider>
     );
 }

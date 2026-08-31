@@ -1,0 +1,8 @@
+{
+    "ignore": [
+        "data/*",
+        "config/*",
+        "public/*"
+    ],
+    "ext": "js,mjs,cjs,json"
+}

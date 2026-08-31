@@ -33,11 +33,24 @@ router.post('/register', async function (request, response) {
     try {
         const email = store.normaliseEmail(request.body?.email);
         const password = request.body?.password;
+        const firstName = String(request.body?.firstName || '').trim();
+        const lastName = String(request.body?.lastName || '').trim();
         const sector = String(request.body?.sector || '').trim();
         const intendedUse = String(request.body?.intendedUse || '').trim();
 
         if (!EMAIL.test(email)) {
             return response.status(400).send({ error: 'Enter a valid email address.' });
+        }
+        // Checked on the server as well as in the form, because a request can be made without
+        // one. Only presence and length are checked: names vary too widely across scripts and
+        // cultures for a pattern to reject anything without also rejecting real people.
+        if (!firstName || !lastName) {
+            return response.status(400).send({ error: 'Enter your first and last name.' });
+        }
+        if (firstName.length > store.MAX_NAME || lastName.length > store.MAX_NAME) {
+            return response.status(400).send({
+                error: `Keep each name under ${store.MAX_NAME} characters.`,
+            });
         }
         if (!store.SECTORS.includes(sector)) {
             return response.status(400).send({
@@ -66,7 +79,9 @@ router.post('/register', async function (request, response) {
         }
 
         const hash = await passwords.hash(password);
-        const id = store.createUser({ email, passwordHash: hash, sector, intendedUse });
+        const id = store.createUser({
+            email, passwordHash: hash, firstName, lastName, sector, intendedUse,
+        });
         const token = store.createVerification(id);
         await mailer.sendVerification(email, token);
 

@@ -35,8 +35,8 @@ function TaxSelect({ isLoading, taxonChips, onTaxonChipsChange }) {
 
     return (
         <fieldset>
-            <legend style={{color:"white"}}>Search by Taxonomy</legend>
-            <div style={{display:"flex"}}>
+            <legend className="field--legend">Search by Taxonomy</legend>
+            <div className="field--labelRow">
                 <label className="query--label">Taxa:</label>
                 <Information blurb="taxonChips"/>
             </div>
