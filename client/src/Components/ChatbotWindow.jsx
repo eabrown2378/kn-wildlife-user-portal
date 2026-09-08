@@ -19,7 +19,7 @@ export default function ChatbotWindow({ onClose }) {
     try {
 
       throw Error();
-      /* const res = await axios.post('http://localhost:8080/chatbot', {
+      /* const res = await axios.post(`${API_BASE}/chatbot`, {
         message: userMessage,
         graphResult: queryResult   
       });

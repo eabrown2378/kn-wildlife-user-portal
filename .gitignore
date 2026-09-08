@@ -1,0 +1,41 @@
+# Secrets, wherever they appear.
+#
+# The per-directory ignores anchor their patterns, so `server/.gitignore` catching `/.env`
+# does not catch `server/routes/.env` — a file that has been committed here before. These
+# patterns are unanchored and apply to the whole tree.
+.env
+.env.*
+!.env.example
+!.env.production
+**/credentials.js
+*.pem
+*.key
+*.p12
+id_rsa*
+
+docs/DEPLOYMENT.md
+
+# The account store: real user records, password hashes and session tokens, created at
+# runtime and impossible to regenerate.
+server/data/
+
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.sw?

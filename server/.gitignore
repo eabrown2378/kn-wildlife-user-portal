@@ -1,3 +1,8 @@
 config/
 node_modules/
 /.env
+# Local account store: real user records, created at runtime
+data/
+
+# Scratch probe scripts. Nothing here belongs in the repository.
+__*.cjs
