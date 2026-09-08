@@ -1,90 +1,86 @@
-import Select from "react-select";
 import Information from "../Information";
+import { useContext, useMemo } from "react";
+import OptionBrowser from "./OptionBrowser";
+import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
+import { build_place_options } from "../../Functions/build_chip_options";
 
-function LocationParams({ handleMultiChange, searchOptions, isLoading, tempMulti, query, handleChange }) {
-    return (  
+// Search by place, at any level, in one field.
+//
+// This replaced separate state and county dropdowns with a "hierarchical search" checkbox.
+// The checkbox was there because selecting Iowa alongside a county of Iowa had no defined
+// meaning; naming places directly makes the question disappear, since Adair sits inside Iowa
+// and the union of the two simply is Iowa. It also allows what the old pair could not
+// express at all: all of one state plus a couple of counties in another.
+//
+// County names already carry their state - "Adair (Iowa)" - so a chip identifies exactly one
+// county without a second field beside it.
+// States and counties are the only two levels a place can be chosen at.
+const PLACE_RANKS = [
+    {key: "state", label: "state"},
+    {key: "county", label: "county"},
+];
+
+function LocationParams({ isLoading, query, handleChange, placeChips, onPlaceChipsChange }) {
+
+    const searchOptions = useContext(SearchOptionsContext);
+
+    const options = useMemo(
+        () => build_place_options(searchOptions.locMap),
+        [searchOptions.locMap]
+    );
+
+    const onToggle = (option) => {
+        const already = placeChips.some((chip) => chip.value === option.value);
+        onPlaceChipsChange(already
+            ? placeChips.filter((chip) => chip.value !== option.value)
+            : [...placeChips, option]);
+    };
+
+    return (
         <fieldset>
-            <legend style={{color:"white"}}>Search by Location</legend>
-            <div className="checkbox--class">
-                <div style={{display:"flex"}}>
-                    <label className="query--label" htmlFor="class">Hierarchical Search:</label>
-                </div>
-                <input
-                    type="checkbox"
-                    value={query.locHier}
-                    onChange={(e) => handleChange(e)}
-                    name="locHier"
-                    id="locHier"
-                    className="field"
-                    isDisabled={isLoading}
-                />
-                <Information blurb="locHier"/>
+            <legend className="field--legend">Search by Location</legend>
+            <div className="field--labelRow">
+                <label className="query--label">Places:</label>
+                <Information blurb="placeChips"/>
             </div>
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="stateSelect">States:</label>
-                <Information blurb="stateSelect"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.stateOptions}
-                value={tempMulti.statesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "statesTemp")}}
-                name="statesTemp"
-                id="stateSelect"
-                className="field"
-                placeholder="Default: all states"
-                isDisabled={isLoading}
+            <OptionBrowser
+                options={options}
+                ranks={PLACE_RANKS}
+                selected={placeChips}
+                onToggle={onToggle}
+                onClear={() => onPlaceChipsChange([])}
+                isLoading={isLoading}
+                emptyMessage="No state or county matches"
             />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="countySelect">Counties:</label>
-                <Information blurb="countySelect"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.countyOptions}
-                value={tempMulti.countiesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "countiesTemp")}}
-                name="countiesTemp"
-                id="countySelect"
-                className="field"
-                placeholder="Default: all counties"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
-                <label className="query--label" htmlFor="siteSelect">Sampling Locations:</label>
-                <Information blurb="siteSelect"/>
-            </div>
-            <Select
-                isMulti={true}
-                options={searchOptions.siteOptions}
-                value={tempMulti.sitesTemp}
-                onChange={(selections) => {handleMultiChange(selections, "sitesTemp")}}
-                name="sitesTemp"
-                id="siteSelect"
-                className="field"
-                placeholder="Default: all sites"
-                isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
+            <p className="fieldHint">
+                Browse states or counties, or both. Naming a state includes all of its
+                counties, so the two can be mixed freely.
+            </p>
+            <div className="field--labelRow">
                 <label className="query--label" htmlFor="coordRange">Coordinate Range:</label>
                 <Information blurb="coordRange"/>
             </div>
             <div id="coordrange--div">
-                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0)'}:</label>
-                <div id = "latitudeDiv" style={{display:"flex"}}>
+                <label className="query--label" htmlFor="latitudeDiv">{'Latitude (\u00b0N)'}:</label>
+                <div id="latitudeDiv">
                     <label className="query--label" htmlFor="minLat">Min:</label>
                     <input id = "minLat" name = "minLat" value={query.minLat} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLat">Max:</label>
                     <input id = "maxLat" name = "maxLat" value={query.maxLat} onChange={(e) => handleChange(e)}/>
                 </div>
-                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0)'}</label>
-                <div id = "longitudeDiv"  style={{display:"flex"}}>
+                <label className="query--label" htmlFor="longitudeDiv">{'Longitude (\u00b0E)'}:</label>
+                <div id="longitudeDiv">
                     <label className="query--label" htmlFor="minLon">Min:</label>
                     <input id = "minLon" name = "minLon" value={query.minLon} onChange={(e) => handleChange(e)}/>
                     <label className="query--label" htmlFor="maxLon">Max:</label>
                     <input id = "maxLon" name = "maxLon" value={query.maxLon} onChange={(e) => handleChange(e)}/>
                 </div>
             </div>
+            <p className="fieldHint">
+                Decimal degrees. South of the equator and west of the prime meridian
+                are negative, so the contiguous United States runs about 25 to 49
+                &deg;N and -125 to -67 &deg;E.
+            </p>
         </fieldset>
     );
 }

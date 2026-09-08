@@ -4,13 +4,22 @@ const { OpenAI } = require('openai');
 require('dotenv').config();
 
 // 初始化 OpenAI 客户端
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Built only when a key is configured. Constructing the client without one throws, and this
+// module is required at startup, so a missing key would stop the whole API from serving the
+// portal over a feature the portal does not currently call.
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 // 主路由处理：POST /chatbot
 router.post('/', async (req, res) => {
   const { message, graphResult } = req.body;
+
+  if (!openai) {
+    return res.status(503).json({
+      response: 'The chatbot is not configured on this server; OPENAI_API_KEY is not set.',
+    });
+  }
 
   // message 是必须的
   if (!message || typeof message !== 'string') {

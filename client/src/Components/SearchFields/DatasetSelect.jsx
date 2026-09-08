@@ -1,19 +1,32 @@
-
+import { useContext, useState } from "react";
 import Information from "../Information";
 import Select from "react-select";
+import { selectStyles } from "../../Functions/select_theme";
+import { SearchOptionsContext } from "../../Context/SearchOptionsContext";
+import DatasetMetadata from "./DatasetMetadata";
 
-function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti }) {
+function DatasetSelect({ handleMultiChange, isLoading, tempMulti }) {
+          
+    const searchOptions = useContext(SearchOptionsContext);
+    const [showMetadata, setShowMetadata] = useState(false);
 
-
-
-
+    const datasets = searchOptions.datasetOptions || [];
 
     return ( 
         <fieldset>
-            <legend style={{color:"white"}}>Search by Dataset</legend>
-            <div style={{display:"flex"}}>
+            <legend className="field--legend">Search by Dataset</legend>
+            <div className="field--labelRow">
                 <label htmlFor="datasetSelect">Dataset:</label>
                 <Information blurb="datasetSelect"/>
+                <button
+                    type="button"
+                    className="covariateMetadataButton"
+                    onClick={() => setShowMetadata(true)}
+                    disabled={datasets.length === 0}
+                    title="Producers, retrieval dates, citations and provider disclaimers"
+                >
+                    About these datasets
+                </button>
             </div>
             <Select
                 isMulti={true}
@@ -25,8 +38,9 @@ function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti 
                 className="field"
                 placeholder="Default: all datasets"
                 isDisabled={isLoading}
-            />
-            <div style={{display:"flex"}}>
+                styles={selectStyles}
+                />
+            <div className="field--labelRow">
                 <label htmlFor="dataTypeSelect">Data Type:</label>
                 <Information blurb="dataTypeSelect"/>
             </div>
@@ -44,9 +58,12 @@ function DatasetSelect({ handleMultiChange, searchOptions, isLoading, tempMulti 
                 className="field"
                 placeholder="Default: any data type"
                 isDisabled={isLoading}
-            />
+                styles={selectStyles}
+                />
 
-
+            {showMetadata && (
+                <DatasetMetadata datasets={datasets} onClose={() => setShowMetadata(false)} />
+            )}
         </fieldset>        
      );
 }
