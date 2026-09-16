@@ -8,7 +8,6 @@ import { Marker } from "react-leaflet/Marker";
 import L from "leaflet";
 import marker from "../assets/map-marker.svg";
 import { Popup } from "react-leaflet/Popup";
-import { query_to_cypher } from "../Functions/query_to_cypher";
 import { MarkerContext } from "../Context/MarkerContext";
 import ChatbotWindow from './ChatbotWindow';
 import CovariateSelection from "./SearchFields/CovariateSelection";
@@ -47,8 +46,8 @@ function QueryFields() {
 
 
     // hold query parameters to be used in API call
-    // if you change structure of this object, make sure
-    // to update the query_to_cypher.js function accordingly
+    // the server builds the cypher from these values, so a change to this object's shape
+    // needs a matching change to normaliseFilters in server/neo4j_calls/query_filters.js
     const [query, setQuery] = useState({
         fromYear: "",
         toYear: "",
@@ -85,7 +84,7 @@ function QueryFields() {
     // get list of covariates from the last search
     const [returnedCovars, setReturnedCovars] = useState([]);
 
-    // cache of raw API responses keyed by the exact cypher query sent, capped at
+    // cache of raw API responses keyed by the values the search chose, capped at
     // MAX_CACHED_QUERIES since responses for large data pulls can be sizable
     const queryCacheRef = useRef(new Map());
     const MAX_CACHED_QUERIES = 5;
@@ -340,11 +339,28 @@ function QueryFields() {
 
         }
 
-        const {cypherQuery} = query_to_cypher(query);
+        // What the user chose, sent as it stands. The server builds the query from it, which
+        // is what lets it weigh each filter against the observation counts it holds and start
+        // the search from the narrowest one.
+        const search = {
+          species: query.species, genus: query.genus, family: query.family,
+          order: query.order, tax_class: query.tax_class,
+          phyla: query.phyla, kingdoms: query.kingdoms,
+          states: query.states, counties: query.counties,
+          datasets: query.datasets, dataTypes: query.dataTypes,
+          covars: query.covars,
+          fromYear: query.fromYear, fromMonth: query.fromMonth, fromDay: query.fromDay,
+          toYear: query.toYear, toMonth: query.toMonth, toDay: query.toDay,
+          minLat: query.minLat, maxLat: query.maxLat,
+          minLon: query.minLon, maxLon: query.maxLon,
+        };
 
-        // A search with no criteria builds no query, because it would ask for every record in
-        // the graph. Say so here; the server has nothing to answer with.
-        if (!cypherQuery) {
+        // A search with no criteria asks for every record in the graph. Say so here; the
+        // server refuses it as well, and this saves the round trip.
+        const namesSomething = Object.values(search).some((value) =>
+          Array.isArray(value) ? value.length !== 0 : value !== '' && value !== null && value !== undefined);
+
+        if (!namesSomething) {
           setErrorMessage(
             <p className="errorMessage">
               Choose at least one search criterion: a taxon, a place, a coordinate range, a
@@ -354,8 +370,12 @@ function QueryFields() {
           return;
         }
 
+        // Two searches choosing the same values are the same search, so the cache is keyed on
+        // the values themselves.
+        const cacheKey = JSON.stringify(search);
+
         setIsLoading(true);
-        const cached = queryCacheRef.current.get(cypherQuery);
+        const cached = queryCacheRef.current.get(cacheKey);
 
         if (cached !== undefined) {
           applyResult(cached, query, { cached: true });
@@ -367,7 +387,8 @@ function QueryFields() {
         const searchDescription = analytics.describeSearch(query, taxonChips, placeChips);
 
         const body = {
-          cypherQuery,
+          // The values chosen. The server validates them, plans the query and runs it.
+          search,
           // What the search asked for, in counts and flags. The server stores this beside the
           // account so a retrieval can be attributed later; it holds no taxon or place names.
           filters: searchDescription
@@ -398,7 +419,7 @@ function QueryFields() {
               if (data !== undefined) {
 
                 // cache the raw response, evicting the oldest entry once past the cap
-                queryCacheRef.current.set(cypherQuery, data);
+                queryCacheRef.current.set(cacheKey, data);
 
                 if (queryCacheRef.current.size > MAX_CACHED_QUERIES) {
                   const oldestKey = queryCacheRef.current.keys().next().value;

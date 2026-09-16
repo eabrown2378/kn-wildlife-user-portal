@@ -19,12 +19,31 @@ router.get('/', async function (req, res, next) {
     return 700000;
 });
 
+/**
+ * Run a search.
+ *
+ * The body carries the filters the user chose. The server builds the query from them, which
+ * is what lets it weigh each filter against the cached observation counts and start from the
+ * narrowest one. Values reach the database as query parameters, so a name is data and can
+ * never alter the query.
+ */
 router.post('/neo4j_get/', requireVerifiedUser, async function (req, res) {
-    try {
-        const { cypherQuery, filters } = req.body;
+    const body = req.body || {};
 
-        // Get the result from Neo4j API
-        let result = await neo4j_calls.get_neo4j(cypherQuery);
+    // A client sending finished Cypher is one built before the server took over query
+    // construction, and its query would bypass both the planner and the parameter boundary.
+    if (body.cypherQuery !== undefined) {
+        return res.status(400).send({
+            error: 'This portal build sends a query the server no longer accepts. '
+                + 'Reload the page to pick up the current version.'
+        });
+    }
+
+    try {
+        // `search` is what the user chose and the query is built from it. `filters` is the
+        // description of that search kept for the audit trail, which holds counts and flags
+        // and no names.
+        const { result, plan } = await neo4j_calls.run_search(body.search || {});
 
         // Recorded after the result exists, so a failed search is not counted as a retrieval.
         // The row count and the datasets come from the result itself; only the description of
@@ -32,14 +51,25 @@ router.post('/neo4j_get/', requireVerifiedUser, async function (req, res) {
         store.recordDataRequest({
             userId: req.user.id,
             kind: 'query',
-            filters,
+            filters: body.filters,
             rows: result && Array.isArray(result.csv) ? result.csv.length : 0,
             datasets: datasetsIn(result),
         });
 
-        // Send back the result in a JSON response
-        res.status(200).send({ result });
+        res.status(200).send({ result, plan });
     } catch (error) {
+        // Refused on the estimate, before the database was asked. Reported as 413 so the
+        // client shows it the same way it shows a search the database gave up on.
+        if (error && error.tooLarge) {
+            return res.status(413).send({ error: error.message });
+        }
+
+        // A filter the server cannot honour is the caller's to fix, and the message says what
+        // is wrong with it.
+        if (error && error.userFacing) {
+            return res.status(400).send({ error: error.message });
+        }
+
         console.error('Error fetching data from Neo4j:', error);
 
         // neo4j aborts a query that exceeds dbms.memory.transaction.total.max; tell the client
@@ -52,6 +82,16 @@ router.post('/neo4j_get/', requireVerifiedUser, async function (req, res) {
                 : 'Internal Server Error'
         });
     }
+});
+
+/**
+ * What the statistics cache holds.
+ *
+ * Describes what the graph holds, so it needs no account. It is how you tell whether the
+ * pipeline's graph-stats stage has been run against this database.
+ */
+router.get('/graph_stats_status/', function (req, res) {
+    res.status(200).send({ status: neo4j_calls.graph_stats_status() });
 });
 
 /**

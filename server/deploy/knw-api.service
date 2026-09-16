@@ -1,0 +1,71 @@
+# KN-Wildlife portal API.
+#
+# Install:
+#   sudo cp ~/knw_srv/deploy/knw-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now knw-api
+#
+# Check ExecStart against `command -v node-22` before installing. The path differs between
+# a dnf module install and a NodeSource package, and systemd needs an absolute one.
+
+[Unit]
+Description=KN-Wildlife portal API
+After=network-online.target
+Wants=network-online.target
+
+# Ten failed starts within ten minutes stop the retry loop. A bad deploy then comes to rest in
+# a failed state that `systemctl status` reports, and the restarts stop consuming the machine.
+# Clear it with `systemctl reset-failed knw-api` once the cause is fixed.
+#
+# The allowance is generous because reaching it takes the portal down until somebody logs in.
+# A search too large to assemble is refused on its estimate before the database is asked, so
+# repeated crashes from one heavy search should not arise; this is sized for the case where
+# one slips through anyway.
+StartLimitIntervalSec=600
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=ebrown23
+Group=ebrown23
+WorkingDirectory=/home/ebrown23/knw_srv
+
+# Plain KEY=value lines. systemd reads this file itself and runs no shell over it, so an
+# `export` prefix becomes part of the variable name and the setting is silently lost.
+EnvironmentFile=/home/ebrown23/knw_srv/.env.conf
+
+# node directly. `npm start` runs nodemon, which restarts the process whenever a file
+# changes and parks permanently when the app exits; both belong to development and fight
+# with a supervisor.
+#
+# --max-old-space-size caps the JavaScript heap. A search whose result does not fit then fails
+# as a clean "JavaScript heap out of memory" abort that systemd restarts, and the process
+# cannot grow until the kernel's OOM killer steps in. That killer picks its victim by its own
+# scoring, so it may shoot Apache instead.
+#
+# 3 GB of an 8 GB VM. The graph database runs on its own host, so this machine serves only
+# Apache and this service. A result row costs about 5,461 bytes of heap at peak, so 3 GB holds
+# roughly 550,000 rows; KN_MAX_SEARCH_OBSERVATIONS refuses a search long before that. Move the
+# two together.
+ExecStart=/usr/bin/node-22 --max-old-space-size=3072 app.js
+
+Restart=on-failure
+RestartSec=5s
+
+# Names the service in the journal, so `journalctl -t knw-api` reads only this.
+SyslogIdentifier=knw-api
+
+# The ceiling sits above the heap cap, so Node reaches its own limit first and fails with a
+# readable error. A process killed at the cgroup boundary is sent SIGKILL and says nothing.
+MemoryMax=4G
+
+# data/accounts.sqlite holds real accounts and cannot be regenerated from anything, so the
+# service is given write access to that one directory and read-only access elsewhere.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ebrown23/knw_srv/data
+
+[Install]
+WantedBy=multi-user.target
