@@ -1,4 +1,9 @@
 let neo4j = require('neo4j-driver');
+const { normaliseFilters, FilterError } = require('./query_filters');
+const { planQuery, SearchTooLargeError, LARGE_SEARCH_OBSERVATIONS }
+    = require('./query_planner');
+const { buildCypher } = require('./build_cypher');
+const graphStats = require('./graph_stats');
 
 // Where the graph is, and who connects to it.
 //
@@ -6,9 +11,10 @@ let neo4j = require('neo4j-driver');
 // TLS scheme in the URI, as in neo4j+s://<id>.databases.neo4j.io, which is how the driver is
 // told to encrypt the connection.
 //
-// config/credentials.js is the fallback, because a development machine already keeps the
-// password there for the pipeline. It is loaded defensively: it is git-ignored, so it does
-// not exist on a host that supplies the details through the environment.
+// config/credentials.js is the fallback for a development machine that keeps the password on
+// disk. It must be CommonJS exporting a named `creds`, because it is loaded with require. It
+// is loaded defensively: it is git-ignored, so it does not exist on a host that supplies the
+// details through the environment.
 function connectionSettings() {
     let file = {};
     try {
@@ -30,51 +36,140 @@ if (!settings.user || !settings.password) {
         "server/config/credentials.js exporting { creds: { neo4jusername, neo4jpw } }.");
 }
 
+/**
+ * The largest search the server will assemble, in estimated observations.
+ *
+ * The whole result is held in the heap and then serialised to JSON, so a result large enough
+ * exhausts the process and takes every other request in flight down with it. Refusing on the
+ * estimate costs nothing and happens before the database is touched.
+ *
+ * This only bites once the pipeline's graph-stats stage has written the counts. Without them
+ * the planner has no estimate and every search runs, which is the behaviour to expect on a
+ * graph that has not had the stage run against it.
+ */
+const MAX_SEARCH_OBSERVATIONS = Number(process.env.KN_MAX_SEARCH_OBSERVATIONS)
+    || LARGE_SEARCH_OBSERVATIONS;
+
 let driver = neo4j.driver(settings.uri, neo4j.auth.basic(settings.user, settings.password));
 console.log(`Neo4j at ${settings.uri} as ${settings.user}.`);
 
-// run a single read-only query on its own session, always closing the session afterward
-const run_read_query = async (cypher) => {
+// run a single read-only query on its own session, always closing the session afterward.
+//
+// Values travel as parameters, so a name containing a quote is data and cannot alter the
+// query, and the database reuses one compiled plan across every search of the same shape.
+const run_read_query = async (cypher, parameters = {}) => {
     const session = driver.session({ defaultAccessMode: neo4j.session.READ });
 
     try {
-        return await session.run(cypher, {});
+        return await session.run(cypher, parameters);
     } finally {
         await session.close();
     }
 };
 
-exports.get_neo4j = async function (cypherQuery) {
+/**
+ * Run a search described by its filters.
+ *
+ * The client sends what the user chose. The server decides how to ask for it: the planner
+ * weighs each filter against the cached observation counts and names the one to anchor on, the
+ * builder turns that into parameterised Cypher, and the result comes back in the same three
+ * shapes as before. Every anchor returns the same rows, so the choice only affects speed.
+ *
+ * A search the statistics show to be empty is answered without touching the database.
+ */
+exports.run_search = async function (body) {
 
-    if (!cypherQuery) return null;
+    const covariateKeys = await allowedCovariateKeys();
 
-    try {
-        // the query derives csv/map/meta from the same matched rows via collect()
-        const result = await run_read_query(cypherQuery);
+    // Throws FilterError, which the route reports to the user, for a request that cannot be
+    // honoured.
+    const filters = normaliseFilters(body, covariateKeys);
 
-        const record = result.records[0];
+    if (!filters.hasAnyFilter) {
+        throw new FilterError('Choose at least one filter before searching.');
+    }
 
-        if (!record) return null;
+    const stats = await graphStats.getGraphStats(run_read_query);
+    const plan = planQuery(filters, stats, { largeThreshold: MAX_SEARCH_OBSERVATIONS });
 
+    // Refused before the database is asked. The estimate is a floor on the result, because an
+    // observation carries one row per taxon recorded at it, so a search over the limit is at
+    // least this large and usually larger.
+    if (plan.large && plan.usedStatistics) {
+        throw new SearchTooLargeError(
+            `This search covers about ${plan.estimatedObservations.toLocaleString()} `
+            + 'observations, which is more than the portal can assemble at once. Please narrow '
+            + 'it with additional filters, for example a state, a date range, or a smaller '
+            + 'taxonomic group.',
+            plan.estimatedObservations);
+    }
+
+    if (plan.definitelyEmpty) {
         return {
-            csv: record.get('csv'),
-            map: record.get('map'),
-            meta: record.get('meta')
+            result: { csv: [], map: [], meta: [] },
+            plan: describePlan(plan),
         };
+    }
 
-    } catch(error) {
+    const { query, parameters } = buildCypher(filters, plan.anchor);
 
-        console.error('Error fetching neo4j data:', error);
+    const started = Date.now();
+    const outcome = await run_read_query(query, parameters);
+    const elapsedMs = Date.now() - started;
 
-        // rethrow so the route can report the failure: swallowing it here made a query that
-        // errored (most often the transaction memory limit on a large result) look to the
-        // client exactly like a search that legitimately matched nothing
-        throw error;
+    const record = outcome.records[0];
 
-    };
+    const result = record
+        ? { csv: record.get('csv'), map: record.get('map'), meta: record.get('meta') }
+        : { csv: [], map: [], meta: [] };
 
+    // The plan is logged with what it actually cost, so a bad estimate is visible in the log
+    // and can be checked against the counts the pipeline wrote.
+    console.log(`search anchored on ${plan.anchor} in ${elapsedMs}ms, `
+        + `${result.csv.length} row(s). ${plan.reason}`);
+
+    return { result, plan: { ...describePlan(plan), elapsedMs } };
 };
 
+/** What the client is told about how its search was run. */
+function describePlan(plan) {
+    return {
+        anchor: plan.anchor,
+        estimatedObservations: plan.estimatedObservations,
+        large: plan.large,
+        usedStatistics: plan.usedStatistics,
+        emptyReason: plan.emptyReason,
+    };
+}
+
+/**
+ * The covariate keys the graph declares, used to check the columns a search asks for.
+ *
+ * A covariate key names a property in the projection, which cannot travel as a parameter, so
+ * it is matched against this set. The set comes from the same search options the panel was
+ * built from, so any key the panel can offer is accepted.
+ */
+async function allowedCovariateKeys() {
+    try {
+        const options = await exports.get_search_options();
+        const declared = (options && options.covarOptions) || [];
+        return new Set(declared.map((covariate) => covariate.key).filter(Boolean));
+    } catch (error) {
+        console.error('Could not read the declared covariates; no covariate column will be '
+            + 'added to this search:', error.message);
+        return new Set();
+    }
+}
+
+/** Diagnostics for the statistics cache, surfaced by the route of the same name. */
+exports.graph_stats_status = function () {
+    return graphStats.describeGraphStats();
+};
+
+/** Drops the cached statistics so the next search re-reads them after a pipeline run. */
+exports.refresh_graph_stats = function () {
+    graphStats.clearGraphStats();
+};
 
 // Search options are the taxonomy, location, dataset and covariate values the search panel
 // offers. They come from the IN_DATASET links and the dataset year bounds the build writes, so
