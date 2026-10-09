@@ -12,6 +12,7 @@
  */
 
 const { TAXON_FIELDS } = require('./query_filters');
+const { csvProjectionEntries, datasetMetaEntries, nullUnknownProperties } = require('./result_columns');
 
 /** The parameter name each rank filter travels under. */
 const RANK_PARAMS = {
@@ -198,9 +199,10 @@ function queryParameters(filters) {
  * The three output shapes, derived from the same matched rows by one aggregating WITH.
  *
  * csv is the flat observation rows, map is the marker rows the leaflet view reads, and meta is
- * the dataset attribution. The graph view is built from the csv rows, which already name every
- * rank and the dataset, so its node counts agree with the table and nothing extra is asked of
- * the database.
+ * the dataset attribution and the fields each dataset declares, from which the server works out
+ * the result's columns. The csv columns come from result_columns.js. The graph view is built
+ * from the csv rows, which already name every rank and the dataset, so its node counts agree
+ * with the table and nothing extra is asked of the database.
  */
 function projection(covars) {
     // Each covariate key is checked against the keys the graph declares before it reaches
@@ -209,20 +211,7 @@ function projection(covars) {
 
     return `
     WITH collect({
-            species: n.name, genus: g.name, family: f.name, \`order\`: o.name, class: c.name,
-            site: s.name, longitude_dd: s.longitude_dd, latitude_dd: s.latitude_dd,
-            coordinate_uncertainty_m: s.coordinate_uncertainty_m,
-            is_polygon: coalesce(s.is_polygon, false), geo_asWKT: s.geo_asWKT,
-            state: p2.name, county: p1.name, state_fips: p2.state_fips, county_fips: p1.county_fips,
-            date: toString(p.date), dataset: d.name,
-            observation_url: p.source_url, record_licence: p.record_licence,
-            rights_holder: p.rights_holder,
-            agency_organization_researchGroup: d.agency_organization_researchGroup, program_name: d.program_name,
-            measurement_result: coalesce(r.measurement_value_numeric, r.measurement_value_text),
-            measurement_unit: r.measurement_unit, measurement_type: r.measurement_type,
-            sampling_method: r.sampling_method,
-            sampling_effort: coalesce(r.sampling_effort_numeric, r.sampling_effort_text),
-            sampling_effort_unit: r.sampling_effort_unit${covarEntries}
+            ${csvProjectionEntries()}${covarEntries}
         }) AS csv,
         collect({
             site: s.name, date: toString(p.date),
@@ -234,7 +223,8 @@ function projection(covars) {
         }) AS map,
         collect(DISTINCT {
             datasetName: d.name, citations: d.dataset_citations, urls: d.dataset_urls,
-            downloadDate: d.download_date, notes: d.additional_notes
+            downloadDate: d.download_date, notes: d.additional_notes,
+            ${datasetMetaEntries()}
         }) AS meta
     RETURN csv, map, meta`;
 }
@@ -245,7 +235,7 @@ function projection(covars) {
  * `anchor` comes from the planner and names which filter the query starts from. Returns the
  * query text and the parameters to send with it.
  */
-function buildCypher(filters, anchor) {
+function buildCypher(filters, anchor, knownKeys = null) {
     if (!filters.hasAnyFilter) {
         throw new Error('A search with no filters asks for the whole graph and is not built.');
     }
@@ -273,7 +263,8 @@ function buildCypher(filters, anchor) {
         predicates.push('d.name IN $datasets');
     }
     if (filters.dataTypes.length !== 0) {
-        predicates.push('r.measurement_type IN $dataTypes');
+        // A dataset holds one kind of measurement, recorded on its Dataset node.
+        predicates.push('any(dataType IN coalesce(d.data_type, []) WHERE dataType IN $dataTypes)');
     }
     if (filters.hasCoordinateFilter) {
         predicates.push(`(toFloat(s.longitude_dd) >= $minLon
@@ -303,7 +294,9 @@ function buildCypher(filters, anchor) {
         ? `\n    WHERE ${predicates.join('\n      AND ')}`
         : '';
 
-    const query = match + RANK_WALK + dateProjection + where + projection(filters.covars);
+    // Properties the database has never stored are written as null. See nullUnknownProperties.
+    const query = nullUnknownProperties(
+        match + RANK_WALK + dateProjection + where + projection(filters.covars), knownKeys);
 
     return { query, parameters: queryParameters(filters) };
 }

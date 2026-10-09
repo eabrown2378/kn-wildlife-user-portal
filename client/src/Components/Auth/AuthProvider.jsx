@@ -20,8 +20,8 @@ function AuthProvider({ children }) {
 
     const promptSignIn = useCallback((mode = "signin") => setPrompting(mode), []);
 
-    // A 401 means the session has gone. Clear it and ask for sign-in, since the only reason
-    // a data request was made is that the user wanted the data.
+    // A 401 means the session has gone. Only the authenticated calls (recording a download,
+    // the account itself) can see one, so clear it and ask for sign-in again.
     useEffect(() => {
         setSessionLostHandler(() => { setUser(null); setPrompting("signin"); });
     }, []);

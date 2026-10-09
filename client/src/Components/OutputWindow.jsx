@@ -14,13 +14,25 @@ import {MetadataContext} from '../Context/MetadataContext';
 import * as analytics from '../Functions/analytics';
 import { apiCall } from '../Functions/api';
 import { AnalyticsConsentContext } from '../Context/AnalyticsConsentContext';
+import { AuthContext } from '../Context/AuthContext';
 import { array_to_csv } from '../Functions/array_to_csv';
 
 
-export default function OutputWindow({data, isLoading, returnedCovars, searchDescription}) {
+export default function OutputWindow({data, preview, columns, isLoading, returnedCovars, searchDescription}) {
 
+
+    // Without an account a search returns a preview and no records, so there is nothing to
+    // download until the visitor signs in, after which the search is re-run for the records.
+    // Sign-in only succeeds for a verified address.
+    const { user, promptSignIn } = useContext(AuthContext);
 
     const handleDownload = async (csvString, filename, disclaimerText, citationsText) => {
+
+        if (!user) {
+            promptSignIn("register");
+            return;
+        }
+        if (!data) return;
 
         const zip = new JSZip();
 
@@ -156,9 +168,26 @@ export default function OutputWindow({data, isLoading, returnedCovars, searchDes
                 <button className='viewport--button' onClick={() => openView("table")} disabled={viewport === "table"}>Table</button>
             </div>
             <div className="output--container">
-                {viewport === "cytoscape" && <CytoscapeGraph data={data}/>}
+                {viewport === "cytoscape" && <CytoscapeGraph data={preview ? preview.taxa : data}/>}
                 {viewport === "leaflet" && <LeafletGraph/>}
-                {viewport === "table" && <TableView data={data}/>}
+                {viewport === "table" && (preview
+                    ? <div className="tablePreviewNotice">
+                          <p>
+                              This search matched {preview.recordCount.toLocaleString()} record
+                              {preview.recordCount === 1 ? "" : "s"}. The map and knowledge graph
+                              show summaries of them; individual records are available with a
+                              free account.
+                          </p>
+                          <button type="button" className="csv--button"
+                                  onClick={() => promptSignIn("register")}>
+                              Register to see records
+                          </button>
+                          <button type="button" className="authLink"
+                                  onClick={() => promptSignIn("signin")}>
+                              I already have an account
+                          </button>
+                      </div>
+                    : <TableView data={data} columns={columns}/>)}
                 {isLoading && <LoadingOverlay viewport={viewport}/>}
             </div>
             
@@ -170,11 +199,11 @@ export default function OutputWindow({data, isLoading, returnedCovars, searchDes
                 </div>
 
                 <div className='portalFooter--action'>
-                    <button onClick={() => handleDownload(array_to_csv(data), fn, disclaim, citations)}
-                            disabled={!data || isLoading}
+                    <button onClick={() => handleDownload(array_to_csv(data, columns), fn, disclaim, citations)}
+                            disabled={(!data && !preview) || isLoading}
                             className='csv--button'
                     >
-                        Download data as *.csv
+                        {user ? "Download data as *.csv" : "Register to download data"}
                     </button>
                     {isLoading && <CircularProgress size={18} style={{color:'#2a2a2a'}}/>}
                 </div>

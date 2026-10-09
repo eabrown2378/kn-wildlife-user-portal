@@ -26,8 +26,10 @@ import { AuthContext } from "../Context/AuthContext";
 
 function QueryFields() {
 
-    // Retrieving records needs an account; browsing the search options does not.
-    const { user, promptSignIn } = useContext(AuthContext);
+    // Searching needs no account, but without one the server answers with a preview: site
+    // summaries for the map and taxon counts for the graph, and no records. A verified account
+    // is sent the records, which the table and the download are made of.
+    const { user } = useContext(AuthContext);
 
 
     // default leaflet map marker
@@ -80,6 +82,12 @@ function QueryFields() {
     const [mapData, setMapData] = useState(null);
     const [metadata, setMetadata] = useState(null);
     const [data, setData] = useState(null);
+    // The columns the server names for the result, from the datasets it drew on.
+    const [columns, setColumns] = useState(null);
+
+    // The preview on screen when the search was answered without an account, else null.
+    // Holds the record count and the taxon counts the graph is drawn from.
+    const [preview, setPreview] = useState(null);
 
     // get list of covariates from the last search
     const [returnedCovars, setReturnedCovars] = useState([]);
@@ -187,9 +195,15 @@ function QueryFields() {
                 ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
               }
           })
-            .then((response) => {
+            .then(async (response) => {
               if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // The route explains a database it could not reach, and that message is the
+                // only thing here the user can act on. Without it the panel comes up with no
+                // species, no datasets and no places and says nothing about why.
+                const detail = await response.json().catch(() => null);
+                const err = new Error(`HTTP error! status: ${response.status}`);
+                err.detail = detail && detail.error;
+                throw err;
               }
               return response.json();
             })
@@ -221,6 +235,11 @@ function QueryFields() {
             })
             .catch((err) => {
               console.error("Fetch error:", err);
+              // Shown, not only logged. A failure here leaves every dropdown empty, which on
+              // its own reads as a portal that holds nothing rather than one that could not
+              // ask.
+              setErrorMessage(err.detail
+                || "Could not load the search options. Please try again shortly.");
               setSearchOptionsMaster((prev) => prev);
               setIsLoading(false);
             });
@@ -308,11 +327,6 @@ function QueryFields() {
     //send a query (Cypher code) to neo4j API 
     const apiCall = (query) => {
 
-        if (!user) {
-            promptSignIn();
-            return;
-        }
-
         // check for issues with coordinate range
         if ((query.minLat !== '' && query.maxLat !== '' && query.minLat > query.maxLat) ||
               (query.minLon !== '' && query.maxLon !== '' && query.minLon > query.maxLon)) {
@@ -371,8 +385,9 @@ function QueryFields() {
         }
 
         // Two searches choosing the same values are the same search, so the cache is keyed on
-        // the values themselves.
-        const cacheKey = JSON.stringify(search);
+        // the values themselves, and on whether the answer was a preview or the records.
+        const cacheKey = (user ? "records|" : "preview|") + JSON.stringify(search);
+        lastQueryRef.current = query;
 
         setIsLoading(true);
         const cached = queryCacheRef.current.get(cacheKey);
@@ -409,6 +424,7 @@ function QueryFields() {
                 // which is more actionable to the user than the status code alone
                 const detail = await response.json().catch(() => null);
                 const err = new Error(`HTTP error! status: ${response.status}`);
+                err.status = response.status;
                 err.detail = detail && detail.error;
                 throw err;
               }
@@ -435,7 +451,7 @@ function QueryFields() {
               // to assemble, which says the interface let someone ask for too much.
               analytics.searchFailed({
                 description: searchDescription,
-                reason: error.detail ? 'too_large' : 'error',
+                reason: error.status === 429 ? 'rate_limited' : error.detail ? 'too_large' : 'error',
               });
               setIsLoading(false); // Optional: stop loading on error too
               setErrorMessage(
@@ -450,6 +466,16 @@ function QueryFields() {
     // it contains. Held in a ref because nothing renders from it.
     const lastSearchRef = useRef(null);
 
+    // The query behind the result on screen, so a preview can be replaced by the records once
+    // the visitor signs in, without asking them to search again.
+    const lastQueryRef = useRef(null);
+
+    useEffect(() => {
+        if (user && preview && lastQueryRef.current) apiCall(lastQueryRef.current);
+        // Only a sign-in should trigger this; the query and preview are read as they stand.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
     // shared handling for both a fresh API response and a cache hit for an identical query
     function applyResult(data, query, { cached = false } = {}) {
 
@@ -459,7 +485,8 @@ function QueryFields() {
         lastSearchRef.current = analytics.describeSearch(query, taxonChips, placeChips);
         analytics.searchRun({
             description: lastSearchRef.current,
-            rows: Array.isArray(data?.result?.csv) ? data.result.csv.length : 0,
+            rows: data?.result?.preview ? data.result.recordCount
+                : Array.isArray(data?.result?.csv) ? data.result.csv.length : 0,
             cached,
         });
         // The server answers with a null result when it has nothing to return. Reading the
@@ -474,9 +501,15 @@ function QueryFields() {
           return;
         }
 
-        const dat = data.result.csv;
+        const isPreview = Boolean(data.result.preview);
 
-        const mapDat = data.result.map;
+        const dat = isPreview ? null : data.result.csv;
+
+        // A preview's sites are already summarised and rounded by the server; the map draws
+        // them as they come rather than summarising observation rows.
+        const mapDat = isPreview ? { sites: data.result.sites } : data.result.map;
+
+        const recordCount = isPreview ? data.result.recordCount : dat.length;
 
         const metaDat = data.result.meta.map((item) => {
 
@@ -501,6 +534,8 @@ function QueryFields() {
         setMetadata(metaDat);
         setMapData(mapDat);
         setData(dat);
+        setPreview(isPreview ? { recordCount, taxa: data.result.taxa } : null);
+        setColumns(Array.isArray(data.result.columns) ? data.result.columns : null);
         // Name the source of each selected covariate, so the download credits it. This used
         // to take the text before the first underscore in the property name, which worked
         // only while every covariate property happened to be prefixed with its source.
@@ -517,7 +552,7 @@ function QueryFields() {
 
         setIsLoading(false);
 
-        if (dat.length !== 0) {
+        if (recordCount !== 0) {
           setErrorMessage(<p className="errorMessage" style={{height:'0vh', margin: '0', padding: '0'}}></p>);
         } else {
           setErrorMessage(<p className="errorMessage">WARNING: Search retrived zero results. Try adjusting search criteria.</p>)
@@ -608,7 +643,7 @@ function QueryFields() {
             <MetadataContext.Provider value={metadata}>
                 <MapDataContext.Provider value={mapData}>
                   <MarkerContext.Provider value={[markers, setMarkers]}>
-                      <OutputWindow data={data} isLoading={isLoading}
+                      <OutputWindow data={data} preview={preview} columns={columns} isLoading={isLoading}
                                     returnedCovars={returnedCovars}
                                     searchDescription={lastSearchRef.current}/>
                       {/* 💬 Chatbot toggle button */}
