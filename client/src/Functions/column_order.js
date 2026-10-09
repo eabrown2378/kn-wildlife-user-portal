@@ -21,13 +21,15 @@ const COLUMN_GROUPS = [
     // where it was found: the site itself, then each coordinate followed by how precisely
     // it is known, then the county and state it falls in
     ["site", "latitude_dd", "longitude_dd", "coordinate_uncertainty_m", "is_polygon", "geo_asWKT",
-     "county", "county_fips", "state", "state_fips"],
+     "coordinate_datum", "datum_converted", "county", "county_fips", "state", "state_fips"],
     // when
     ["date"],
     // what was measured, each value beside its unit
     ["measurement_type", "measurement_result", "measurement_unit"],
     // how the measuring was done
-    ["sampling_method", "sampling_effort", "sampling_effort_unit"],
+    ["sampling_method", "sampling_effort", "sampling_effort_unit", "reach_length_fished_m"],
+    // how much of the sample was identified, and how finely
+    ["PropID", "Gen_ID_Prop"],
     // where the record came from, and who owns it
     ["dataset", "program_name", "agency_organization_researchGroup",
      "observation_url", "record_licence", "rights_holder"],

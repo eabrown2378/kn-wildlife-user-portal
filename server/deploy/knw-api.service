@@ -26,8 +26,10 @@ StartLimitBurst=10
 
 [Service]
 Type=simple
+# No Group= line, so the service runs under the user's primary group. That group is not
+# named after the user on campus hosts (ebrown23's is "campus"), and a Group= naming a group
+# that does not exist stops the start with status=216/GROUP.
 User=ebrown23
-Group=ebrown23
 WorkingDirectory=/home/ebrown23/knw_srv
 
 # Plain KEY=value lines. systemd reads this file itself and runs no shell over it, so an

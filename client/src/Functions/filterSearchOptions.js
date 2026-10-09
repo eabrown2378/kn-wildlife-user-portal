@@ -111,7 +111,8 @@ const filterSearchOptions = (options, query) => {
                         retrievedVia: item.retrievedVia,
                         citations: item.citations,
                         urls: item.urls,
-                        notes: item.notes
+                        notes: item.notes,
+                        columns: item.columns
                       }),
             // The server sends covariate declarations, so the dropdown shows a readable label
             // while the query uses the property key. A plain string is accepted too, for a

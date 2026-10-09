@@ -6,6 +6,10 @@
 // backbone; nothing extra has to be asked of the database, and the counts here agree with the
 // table exactly. An identification that stopped at a higher rank leaves the ranks below it
 // empty, so a chain ends wherever the identification ended.
+//
+// A search answered without an account sends no records, only one row per lineage per
+// dataset with a `count` of the records it stands for. Each row is weighted by that count,
+// so the graph is the same as the one the records would have drawn.
 
 const TAXON_RANKS = ["class", "order", "family", "genus", "species"];
 
@@ -33,21 +37,21 @@ function build_taxonomy_graph(rows) {
     const parentIds = new Map();
     const hasParent = new Set();
 
-    const countNode = (rank, name) => {
+    const countNode = (rank, name, weight) => {
         const id = node_id(rank, name);
         let node = nodes.get(id);
         if (!node) {
             node = { id, rank, name, count: 0 };
             nodes.set(id, node);
         }
-        node.count += 1;
+        node.count += weight;
         return node;
     };
 
     // Edges run from parent to child, which is the direction the hierarchical layout walks.
     // The arrowhead is drawn at the source end so it still points from the child to its
     // parent, the way BELONGS_TO reads.
-    const countEdge = (parentId, childId, type) => {
+    const countEdge = (parentId, childId, type, weight) => {
         const id = parentId + ">" + childId;
         let edge = edges.get(id);
         if (!edge) {
@@ -59,27 +63,32 @@ function build_taxonomy_graph(rows) {
             parentIds.get(childId).add(parentId);
             hasParent.add(childId);
         }
-        edge.count += 1;
+        edge.count += weight;
     };
 
+    let rowCount = 0;
+
     for (const row of rows || []) {
+
+        const weight = Number.isFinite(row.count) ? row.count : 1;
+        rowCount += weight;
 
         const chain = [];
         for (const rank of TAXON_RANKS) {
             const name = row[rank];
             if (name === null || name === undefined || name === "") break;
-            chain.push(countNode(rank, name));
+            chain.push(countNode(rank, name, weight));
         }
 
         if (chain.length === 0) continue;
 
         for (let i = 1; i < chain.length; i += 1) {
-            countEdge(chain[i - 1].id, chain[i].id, "BELONGS_TO");
+            countEdge(chain[i - 1].id, chain[i].id, "BELONGS_TO", weight);
         }
 
         if (row.dataset) {
-            const dataset = countNode("dataset", row.dataset);
-            countEdge(dataset.id, chain[0].id, "FROM_DATASET");
+            const dataset = countNode("dataset", row.dataset, weight);
+            countEdge(dataset.id, chain[0].id, "FROM_DATASET", weight);
         }
     }
 
@@ -118,7 +127,7 @@ function build_taxonomy_graph(rows) {
         parentsOf,
         roots,
         totals,
-        rowCount: (rows || []).length,
+        rowCount,
     };
 }
 

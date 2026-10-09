@@ -1,44 +1,39 @@
 import { order_columns } from "./column_order";
-import { strip_unused_attribution } from "./attribution_columns";
 
-function array_to_csv(data) {
-  // Attribution columns are only meaningful for the sources that supply them. A result set
-  // with no iNaturalist rows would otherwise carry three permanently empty columns; where a
-  // search mixes sources they stay, and the rows without them read NA like any other gap.
-  data = strip_unused_attribution(data);
-  // 1. Get all unique headers from all objects in the array, grouped so that columns
-  //    describing the same thing sit together. The driver returns Cypher map keys in
-  //    alphabetical order, which splits the taxonomic ranks across the whole table.
-  const allHeaders = order_columns([...new Set(data.flatMap(obj => Object.keys(obj)))]);
+/**
+ * The columns to show for a result, in reading order.
+ *
+ * The server names them from the datasets the result drew on, so a column appears when a
+ * returned dataset carries it and reads NA on the rows of any other dataset. A server that sends
+ * no list gets every key the rows hold.
+ *
+ * @param {Array} data result rows, as objects
+ * @param {string[]|null|undefined} columns the column names the server sent
+ * @returns {string[]} the ordered column names
+ */
+function result_columns(data, columns) {
+  const names = Array.isArray(columns) && columns.length !== 0
+    ? columns
+    : [...new Set((data || []).flatMap((row) => Object.keys(row)))];
+  return order_columns(names);
+}
 
-  // 2. Format the headers for the CSV file
-  const headerString = allHeaders.map(header => `"${header.replace(/"/g, '""')}"`).join(',');
+/** A value as it is shown and written: NA when the record has none. */
+function display_value(value) {
+  return value === null || value === undefined ? "NA" : String(value);
+}
 
-  // 3. Map the data objects to CSV rows
-  const rowStrings = data.map(obj => {
-    // For each object, get the values in the same order as the headers
-    const rowValues = allHeaders.map(header => {
-      let value = obj[header];
+function array_to_csv(data, columns) {
+  const headers = result_columns(data, columns);
+  const quote = (text) => (text.includes(",") || text.includes('"') || text.includes("\n")
+    ? `"${text.replace(/"/g, '""')}"`
+    : text);
 
-      // Replace null or undefined with "NA"
-      if (value === null || value === undefined) {
-        value = 'NA';
-      }
-      
-      // Handle commas or double quotes within values by enclosing in double quotes
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-        // Escape double quotes by replacing them with two double quotes
-        value = `"${value.replace(/"/g, '""')}"`;
-      }
-      return value;
-    });
+  const headerString = headers.map((header) => `"${header.replace(/"/g, '""')}"`).join(",");
+  const rowStrings = (data || []).map((row) =>
+    headers.map((header) => quote(display_value(row[header]))).join(","));
 
-    // Join the row values with a comma
-    return rowValues.join(',');
-  });
+  return [headerString, ...rowStrings].join("\n");
+}
 
-  // 4. Combine the header and rows
-  return [headerString, ...rowStrings].join('\n');
-};
-
-export {array_to_csv}
+export { array_to_csv, result_columns, display_value };

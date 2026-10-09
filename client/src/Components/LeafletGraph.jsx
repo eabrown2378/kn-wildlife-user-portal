@@ -78,8 +78,20 @@ function SiteSummary({site}) {
 
     return (
         <div className="sitePopup">
-            <p className="leafletP"><strong>{site.name || "Unnamed site"}</strong></p>
-            <p className="leafletP">{site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}</p>
+            {site.approximate ? (
+                <>
+                    <p className="leafletP"><strong>Approximate location</strong></p>
+                    <p className="leafletP">
+                        {site.latitude.toFixed(2)}, {site.longitude.toFixed(2)}
+                        <span className="sitePopup--note"> (within about 1 km; sign in for exact sites)</span>
+                    </p>
+                </>
+            ) : (
+                <>
+                    <p className="leafletP"><strong>{site.name || "Unnamed site"}</strong></p>
+                    <p className="leafletP">{site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}</p>
+                </>
+            )}
             <p className="leafletP">
                 {summary.observations.toLocaleString()} observation{summary.observations === 1 ? "" : "s"}
                 {summary.samplingEvents > 0 && ` across ${summary.samplingEvents.toLocaleString()} sampling event${summary.samplingEvents === 1 ? "" : "s"}`}
@@ -152,7 +164,8 @@ function SiteSummary({site}) {
             // one marker per sampling site, not per observation: rows sharing a coordinate
             // are the same place recorded repeatedly, and plotting each one stacks hundreds
             // of identical pins that the cluster then fans out into a meaningless circle
-            const sites = summarize_sites(mapData);
+            // Without an account the server sends sites already summarised and rounded.
+            const sites = Array.isArray(mapData) ? summarize_sites(mapData) : mapData.sites || [];
 
             // first, get average lat/long of query results to determine map center position
             const {latValues, lonValues} = sites.reduce((acc, site) => {

@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 import Paper from "@mui/material/Paper";
-import Papa from "papaparse";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { array_to_csv } from "../Functions/array_to_csv";
+import { display_value, result_columns } from "../Functions/array_to_csv";
 
-function TableView({ data }) {
+function TableView({ data, columns }) {
 
-  const parsedData = useMemo(() => (data ? Papa.parse(array_to_csv(data)).data : []), [data]);
-  const colnames = parsedData[0] || [];
-  const rows = useMemo(() => parsedData.slice(1) || [], [parsedData]);
+  // Cells are read from the row objects as each row scrolls into view, with NA where a record
+  // has no value, so only the visible rows are ever turned into text.
+  const colnames = useMemo(() => result_columns(data || [], columns), [data, columns]);
+  const rows = useMemo(() => data || [], [data]);
 
   const parentRef = useRef(null);
 
@@ -38,11 +38,7 @@ function TableView({ data }) {
   // Use first non-empty row (or empty strings if none).
   const sampleRow = useMemo(() => {
     if (!rows || rows.length === 0) return colnames.map(() => "");
-    const first = rows[0];
-    // rows are arrays from Papa.parse; if your rows are objects adapt accordingly.
-    // Here we treat `first` as an array; if it's object, map from colnames.
-    if (Array.isArray(first)) return first;
-    return colnames.map((c) => first[c] ?? "");
+    return colnames.map((c) => display_value(rows[0][c]));
   }, [rows, colnames]);
 
   // measure function: reads header cell offsets and sample row cell offsets
@@ -85,7 +81,7 @@ function TableView({ data }) {
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, parsedData.length]);
+  }, [data, colnames.length]);
 
   // re-measure on window resize
   useEffect(() => {
@@ -172,10 +168,7 @@ function TableView({ data }) {
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
-          // row may be array (Papa default) or object depending on your parsing
-          const values = Array.isArray(row)
-            ? row
-            : colnames.map((c) => (row ? row[c] ?? "" : ""));
+          const values = colnames.map((c) => display_value(row ? row[c] : null));
 
           return (
             <div

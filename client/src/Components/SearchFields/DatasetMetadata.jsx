@@ -51,6 +51,11 @@ function DatasetMetadata({ datasets, onClose }) {
                                         Holds {dataset.dataTypes.join(", ")} measurements.
                                     </p>
                                 )}
+                                {Array.isArray(dataset.columns) && dataset.columns.length > 0 && (
+                                    <p className="covariateMetadataScope">
+                                        Adds the columns {dataset.columns.join(", ")}.
+                                    </p>
+                                )}
                                 {dataset.downloadDate && (
                                     <p className="covariateMetadataScope">
                                         Retrieved {dataset.downloadDate}

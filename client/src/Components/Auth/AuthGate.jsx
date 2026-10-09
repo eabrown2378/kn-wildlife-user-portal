@@ -4,9 +4,9 @@ import VerifyEmail from "./VerifyEmail";
 /**
  * Shows the portal, or the verification landing page when a confirmation link is followed.
  *
- * The portal itself is open: browsing the taxonomy, places, datasets and covariates needs no
- * account, so somebody can establish whether the data suits them before being asked for
- * anything. Sign-in is requested at the point records are retrieved.
+ * The portal itself is open: searching, and viewing results on the map, graph and table, needs
+ * no account, so somebody can establish whether the data suits them before being asked for
+ * anything. Sign-in is requested at the point records are downloaded.
  *
  * A verification link arrives at /verify?token=..., handled here rather than through a router,
  * since the portal is otherwise a single page.

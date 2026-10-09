@@ -4,6 +4,8 @@ const { planQuery, SearchTooLargeError, LARGE_SEARCH_OBSERVATIONS }
     = require('./query_planner');
 const { buildCypher } = require('./build_cypher');
 const graphStats = require('./graph_stats');
+const { columnsFor, completeMapRows, completeRows, datasetColumns, fieldListEntries }
+    = require('./result_columns');
 
 // Where the graph is, and who connects to it.
 //
@@ -67,6 +69,78 @@ const run_read_query = async (cypher, parameters = {}) => {
     }
 };
 
+/** The driver codes that mean the database could not be reached at all. */
+const UNREACHABLE_CODES = new Set(['ServiceUnavailable', 'SessionExpired']);
+
+/**
+ * True when an error means the graph was unavailable rather than the request being wrong.
+ *
+ * The driver reports `ServiceUnavailable` for a connection it never established and
+ * `SessionExpired` for one that died under a running session. Both mean the same thing from
+ * here: nothing about the request is at fault and retrying later is the only remedy. Telling
+ * that apart from a genuine fault is what lets a route answer 503 rather than 500, which is
+ * the difference between "the database is down" and "this query is broken" when somebody reads
+ * the portal's own error message months later.
+ */
+exports.isDatabaseUnreachable = function (error) {
+    return Boolean(error) && UNREACHABLE_CODES.has(error.code);
+};
+
+/** How long a health check waits for an answer before calling the database unreachable. */
+const HEALTH_TIMEOUT_MS = Number(process.env.KN_HEALTH_TIMEOUT_MS) || 5000;
+
+const TIMED_OUT = Symbol('timed out');
+
+/**
+ * Ask the database whether it is actually there.
+ *
+ * Every other status this module offers is served from a cache held for the life of the
+ * process, so through an outage they keep reporting the graph as it stood when the process last
+ * reached it. A total outage therefore looks healthy from outside until somebody runs a search.
+ * This runs a query on every call and is the only check that separates a live database from a
+ * warm cache. `RETURN 1` is answered without touching the store, so it costs nothing.
+ *
+ * The driver waits thirty seconds for a connection it cannot make, which is far too long for
+ * something a monitor polls, so the wait is bounded here. The abandoned attempt is left to
+ * settle on its own; its rejection is absorbed rather than left to surface as an unhandled
+ * rejection after the race is decided, and run_read_query closes the session either way.
+ */
+exports.check_database = async function (timeoutMs = HEALTH_TIMEOUT_MS) {
+    const started = Date.now();
+
+    const attempt = run_read_query('RETURN 1').then(() => null, (error) => error);
+
+    let timer;
+    const expiry = new Promise((resolve) => {
+        timer = setTimeout(resolve, timeoutMs, TIMED_OUT);
+    });
+
+    const outcome = await Promise.race([attempt, expiry]);
+    clearTimeout(timer);
+
+    const elapsedMs = Date.now() - started;
+
+    if (outcome === null) {
+        return { reachable: true, elapsedMs };
+    }
+
+    if (outcome === TIMED_OUT) {
+        return {
+            reachable: false,
+            elapsedMs,
+            code: 'Timeout',
+            message: `The database did not answer within ${timeoutMs}ms.`,
+        };
+    }
+
+    return {
+        reachable: false,
+        elapsedMs,
+        code: (outcome && outcome.code) || null,
+        message: (outcome && outcome.message) || String(outcome),
+    };
+};
+
 /**
  * Run a search described by its filters.
  *
@@ -106,12 +180,12 @@ exports.run_search = async function (body) {
 
     if (plan.definitelyEmpty) {
         return {
-            result: { csv: [], map: [], meta: [] },
+            result: { csv: [], map: [], meta: [], columns: columnsFor([], filters.covars) },
             plan: describePlan(plan),
         };
     }
 
-    const { query, parameters } = buildCypher(filters, plan.anchor);
+    const { query, parameters } = buildCypher(filters, plan.anchor, await knownPropertyKeys());
 
     const started = Date.now();
     const outcome = await run_read_query(query, parameters);
@@ -123,6 +197,12 @@ exports.run_search = async function (body) {
         ? { csv: record.get('csv'), map: record.get('map'), meta: record.get('meta') }
         : { csv: [], map: [], meta: [] };
 
+    // The columns follow from the datasets the result drew on, which meta already names, so
+    // working them out reads nothing more from the database.
+    result.columns = columnsFor(result.meta, filters.covars);
+    completeRows(result.csv, result.meta);
+    completeMapRows(result.map, result.meta);
+
     // The plan is logged with what it actually cost, so a bad estimate is visible in the log
     // and can be checked against the counts the pipeline wrote.
     console.log(`search anchored on ${plan.anchor} in ${elapsedMs}ms, `
@@ -130,6 +210,29 @@ exports.run_search = async function (body) {
 
     return { result, plan: { ...describePlan(plan), elapsedMs } };
 };
+
+/**
+ * The property names the database holds, read once for the life of the process.
+ *
+ * The search query writes null for any other property, which a graph without that property
+ * returns anyway. A rebuilt graph can add property names, so restart the API after a build, as
+ * the cached counts already require. Returns null when the names cannot be read, which leaves
+ * the query as built.
+ */
+let knownKeysPromise = null;
+
+function knownPropertyKeys() {
+    if (!knownKeysPromise) {
+        knownKeysPromise = run_read_query('CALL db.propertyKeys() YIELD propertyKey RETURN propertyKey')
+            .then((outcome) => new Set(outcome.records.map((record) => record.get('propertyKey'))))
+            .catch((error) => {
+                console.error('Could not read the property names; queries run as built:', error.message);
+                knownKeysPromise = null;
+                return null;
+            });
+    }
+    return knownKeysPromise;
+}
 
 /** What the client is told about how its search was run. */
 function describePlan(plan) {
@@ -256,7 +359,8 @@ async function deriveSearchOptions() {
                        d.retrieved_via AS retrievedVia,
                        d.dataset_citations AS citations,
                        d.dataset_urls AS urls,
-                       d.additional_notes AS notes
+                       d.additional_notes AS notes,
+                       {${fieldListEntries()}} AS fields
                 ORDER BY d.name
             `),
 
@@ -367,7 +471,9 @@ async function deriveSearchOptions() {
                     retrievedVia: record.get("retrievedVia") || null,
                     citations: record.get("citations") || null,
                     urls: record.get("urls") || null,
-                    notes: record.get("notes") || null
+                    notes: record.get("notes") || null,
+                    // the columns this dataset adds to a result, or null on a graph without field lists
+                    columns: datasetColumns(record.get("fields"))
                 }))
                 .filter((dataset) => dataset.name),
             // Each covariate carries the label, units and credit the portal needs, so a
@@ -414,7 +520,13 @@ async function deriveSearchOptions() {
 
     } catch(error) {
 
+        // Rethrown, not swallowed. Returning undefined here made the route answer 200 with an
+        // empty body, so a database that could not be reached was indistinguishable from a
+        // graph holding nothing: the panel offered no species, no datasets and no places, and
+        // said nothing about why. Nothing is cached on this path, so the next request after
+        // the database returns derives the options afresh.
         console.error('Error fetching search options from neo4j:', error);
+        throw error;
 
     };
   }

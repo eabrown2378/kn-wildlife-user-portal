@@ -248,6 +248,7 @@ fieldset {
 .graphView,
 .leafletMap,
 .tableView,
+.tablePreviewNotice,
 .loadingOverlay {
   position: absolute;
   width: 96.75%;
@@ -257,6 +258,19 @@ fieldset {
   border-radius: 5px;
   box-sizing: border-box;
 }
+
+/* Shown in place of the table when a search was answered without an account. */
+.tablePreviewNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.tablePreviewNotice p { max-width: 46ch; line-height: 1.5; margin: 0; }
 
 .graphView,
 .leafletMap {
